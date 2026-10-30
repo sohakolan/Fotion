@@ -1,14 +1,15 @@
 import { createSignal, createMemo, createEffect, onMount, onCleanup, For, Show } from 'solid-js';
-import { Search, House, ChevronDown, ChevronRight, ChevronsLeft, PanelLeft, Plus, Settings, Trash2, Star, MoreHorizontal, LockKeyhole, Check, ArrowUpRight, X, Download, Copy, Undo2, FolderOpen, Upload, Smile, ImagePlus, RefreshCw, ArrowLeft, ArrowRight, CircleHelp, CheckCheck, SquarePen, Pencil, FileText, CornerUpRight, GripVertical, Link, Clock, CornerDownLeft, ArrowDownLeft, SlidersHorizontal } from 'lucide-solid';
+import { Search, House, ChevronDown, ChevronRight, ChevronsLeft, PanelLeft, Plus, Settings, Trash2, Star, MoreHorizontal, LockKeyhole, Check, ArrowUpRight, X, Download, Copy, Undo2, FolderOpen, Upload, Smile, ImagePlus, RefreshCw, ArrowLeft, ArrowRight, CircleHelp, CheckCheck, SquarePen, Pencil, FileText, CornerUpRight, GripVertical, Link, Clock, ArrowDownLeft, SlidersHorizontal } from 'lucide-solid';
 import type { Editor } from '@tiptap/core';
 import { PageTitle } from '../features/pages';
-import { PageIndex, recencyGroup, normalizeSearch } from '../../engine';
+import { PageIndex, normalizeSearch } from '../../engine';
 import { VersionHistory } from '../features/pages';
 import { DocumentEditor } from '../features/editor';
 import type { Page, PageEdit } from '../../engine';
 import { byOrder, planPageMove, countWords, type PagePlacement } from '../../engine';
 import { Menu, MenuItem, MenuDivider, MenuFootnote, MenuLabel, Switch, EmojiPicker, modKey } from '../kit';
 import { SidebarSection, defaultSectionPrefs, type SectionPrefs } from '../features/sidebar';
+import { SearchDialog } from '../features/search';
 
 const blank: PageEdit = { title: '', icon: '', parent: null, favorite: false, cover: '', content: '', trashed: false };
 const recoveryKey = 'fotion-recovery-v1';
@@ -37,7 +38,6 @@ export default function App() {
   const [pageDrop, setPageDrop] = createSignal<{ id: string | null; placement: PagePlacement }>();
   const [sidebarWidth, setSidebarWidth] = createSignal(Math.max(220, Math.min(420, Number(localStorage.getItem('fotion-sidebar-width')) || 240)));
   const [query, setQuery] = createSignal('');
-  const [searchIndex, setSearchIndex] = createSignal(0);
   const [status, setStatus] = createSignal<'saved' | 'pending' | 'saving' | 'error'>('saved');
   const [error, setError] = createSignal('');
   const [notice, setNotice] = createSignal('');
@@ -55,7 +55,6 @@ export default function App() {
   let running: Promise<boolean> | undefined;
   let titleInput!: HTMLTextAreaElement;
   let importInput!: HTMLInputElement;
-  let searchInput!: HTMLInputElement;
   const active = createMemo(() => pages().find(p => p.id === activeId()));
   const wide = () => active()?.fullWidth ?? false;
   const small = () => active()?.smallText ?? false;
@@ -68,15 +67,7 @@ export default function App() {
   const children = (id: string) => visible().filter(p => p.parent === id);
   const pageIndex = new PageIndex();
   const indexed = createMemo(() => { pageIndex.update(pages()); return pages(); });
-  const [titleOnly, setTitleOnly] = createSignal(false);
-  const searchResults = createMemo(() => pageIndex.search(indexed(), query(), { titleOnly: modal() === 'search' && titleOnly() }));
-  // Notion groups recent pages by date when nothing is typed, and ranks matches otherwise.
-  const searchGroups = createMemo(() => {
-    if (query().trim()) return [{ label: 'Meilleurs résultats', items: searchResults() }];
-    const groups = new Map<string, ReturnType<typeof searchResults>>();
-    for (const result of searchResults()) { const label = recencyGroup(result.page.updated); groups.set(label, [...(groups.get(label) || []), result]); }
-    return [...groups].map(([label, items]) => ({ label, items }));
-  });
+  const searchResults = createMemo(() => pageIndex.search(indexed(), query()));
   const [trashQuery, setTrashQuery] = createSignal('');
   const [confirmDelete, setConfirmDelete] = createSignal('');
   const trashed = createMemo(() => { const q = normalizeSearch(trashQuery().trim()); return pages().filter(p => p.trashed && normalizeSearch(p.title || 'Sans titre').includes(q)).sort((a, b) => b.updated.localeCompare(a.updated)); });
@@ -89,7 +80,6 @@ export default function App() {
     finally { setConfirmDelete(''); }
   }
   const parentPath = (page: Page) => { const parent = pages().find(p => p.id === page.parent); return parent ? parent.title || 'Sans titre' : ''; };
-  const shortDate = (updated: string) => recencyGroup(updated) === 'Aujourd’hui' ? '' : new Date(updated).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
   const openInNewTab = (id: string) => window.open(pageUrl(id), '_blank', 'noopener');
   const results = createMemo(() => searchResults().map(result => result.page));
   const incoming = createMemo(() => pageIndex.backlinks(indexed(), activeId()));
@@ -253,7 +243,7 @@ export default function App() {
   }
   function preference(name: string, value: string) { localStorage.setItem(`fotion-${name}`, value); }
   function applyTheme(value: string) { setTheme(value); preference('theme', value); document.documentElement.dataset.theme = value; }
-  function openSearch() { setQuery(''); setSearchIndex(0); setTitleOnly(false); setModal('search'); requestAnimationFrame(() => searchInput?.focus()); }
+  function openSearch() { setModal('search'); }
   createEffect(() => {
     if (!modal()) return;
     const previous = document.activeElement as HTMLElement | null;
@@ -436,17 +426,7 @@ export default function App() {
     </div></>}</Show>
     <Show when={modal()}><div class="modal-backdrop" onMouseDown={e => { if (e.target === e.currentTarget && !restoringHistory()) setModal(null); }}><section class="modal" classList={{ 'search-dialog': modal() === 'search', 'history-dialog': modal() === 'versions', 'trash-dialog': modal() === 'trash' }} role="dialog" aria-modal="true" aria-label={modal() === 'search' ? 'Rechercher une page' : modal() === 'trash' ? 'Corbeille' : 'Espace Fotion'} onKeyDown={e => { if (e.key === 'Tab') { const elements = [...e.currentTarget.querySelectorAll<HTMLElement>('button:not([disabled]), input, select, [tabindex="0"]')]; const first = elements[0], last = elements[elements.length - 1]; if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last?.focus(); } else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first?.focus(); } } }}>
       <Show when={modal() === 'search'} fallback={<button class="modal-close icon-button" aria-label="Fermer la fenêtre" disabled={restoringHistory()} onClick={() => setModal(null)}><X size={20}/></button>}>
-        <div class="search-input"><Search size={20}/><input ref={searchInput} aria-label="Rechercher" placeholder="Rechercher dans Espace de Sohane…" value={query()} onInput={e => { setQuery(e.currentTarget.value); setSearchIndex(0); }} onKeyDown={e => {
-          const chosen = results()[searchIndex()];
-          if (e.key === 'Enter' && chosen) { e.preventDefault(); if (e.metaKey || e.ctrlKey) { openInNewTab(chosen.id); setModal(null); } else void navigate(chosen.id); }
-          if (['ArrowDown', 'ArrowUp'].includes(e.key) && results().length) { e.preventDefault(); setSearchIndex(i => (i + (e.key === 'ArrowDown' ? 1 : -1) + results().length) % results().length); document.querySelector('.search-results .chosen')?.scrollIntoView({ block: 'nearest' }); }
-        }}/><button class="key-button" onClick={() => setModal(null)}>esc</button></div>
-        <div class="search-filters"><button class="search-chip" aria-pressed={titleOnly()} onClick={() => { setTitleOnly(!titleOnly()); setSearchIndex(0); searchInput.focus(); }}><span class="chip-aa">Aa</span>Titres uniquement</button></div>
-        <div class="search-results"><For each={searchGroups()}>{group => <><div class="search-group">{group.label}</div><For each={group.items}>{result => { const index = () => results().indexOf(result.page); return <button classList={{ chosen: searchIndex() === index() }} onMouseEnter={() => setSearchIndex(index())} onClick={e => { if (e.metaKey || e.ctrlKey) { openInNewTab(result.page.id); setModal(null); } else void navigate(result.page.id); }}>
-          <span class="search-emoji">{result.page.icon || <FileText size={18}/>}</span>
-          <span class="search-text"><span class="search-title"><strong>{result.page.title || 'Sans titre'}</strong><Show when={parentPath(result.page)}><span class="search-parent"> — {parentPath(result.page)}</span></Show></span><Show when={query().trim() && result.excerpt}><small>{result.excerpt}</small></Show></span>
-          <Show when={searchIndex() === index()} fallback={<span class="search-date">{shortDate(result.page.updated)}</span>}><CornerDownLeft size={14} class="search-enter"/></Show>
-        </button>; }}</For></>}</For><Show when={!results().length}><div class="empty-message">Aucun résultat. Essayez un autre mot{titleOnly() ? ' ou recherchez aussi dans le contenu' : ''}.</div></Show></div><div class="search-footer"><span><kbd>↑↓</kbd> Sélectionner</span><span><kbd>↵</kbd> Ouvrir</span><span><kbd>{modKey}↵</kbd> Ouvrir dans un nouvel onglet</span></div>
+        <SearchDialog pages={indexed()} index={pageIndex} workspace="Espace de Sohane" parentTitle={parentPath} onOpen={id => void navigate(id)} onOpenInNewTab={openInNewTab} onClose={() => setModal(null)}/>
       </Show>
       <Show when={modal() === 'move'}><div class="modal-content"><h2>Déplacer vers</h2><p>Choisissez la page qui contiendra « {pages().find(p => p.id === movingPage())?.title || 'Sans titre'} ».</p><input class="move-search" aria-label="Rechercher une destination" placeholder="Rechercher une page…" value={query()} onInput={e => setQuery(e.currentTarget.value)}/><div class="move-destinations"><button onClick={() => void movePage(movingPage(), null, 'root')}><LockKeyhole size={16}/>Privé <span>À la racine de l’espace</span></button><For each={results().filter(p => planPageMove(pages(), movingPage(), p.id, 'inside').length)}>{page => <button onClick={() => void movePage(movingPage(), page.id, 'inside')}><span>{page.icon || '📄'}</span>{page.title || 'Sans titre'}</button>}</For></div></div></Show>
       <Show when={modal() === 'settings'}><div class="modal-content"><span class="modal-symbol">⚙️</span><h2>Votre espace</h2><p>Un peu plus à votre image.</p><div class="setting-row"><span><strong>Apparence</strong><small>Choisissez votre ambiance de travail.</small></span><select aria-label="Apparence" value={theme()} onChange={e => applyTheme(e.currentTarget.value)}><option value="light">Clair</option><option value="dark">Sombre</option></select></div><div class="setting-row"><span><strong>Stockage</strong><small>Documents Markdown sur cet ordinateur.</small></span><button class="secondary-button" onClick={() => setModal('files')}>Voir les fichiers</button></div><div class="settings-about"><span class="brand-mark">F</span><div><strong>Fotion</strong><small>Version 0.2 · Open source · MIT</small></div></div></div></Show>
