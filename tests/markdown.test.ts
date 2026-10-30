@@ -96,3 +96,15 @@ test('plain code stays plain and known languages receive syntax decorations with
   assert.equal(editor.getAttributes('codeBlock').language, 'python fotion=broken');
   editor.destroy();
 });
+
+
+test('internal file links remain relative and keep their label through Markdown', () => {
+  const editor = new Editor({ extensions: editorExtensions(), content: 'Une sélection', contentType: 'markdown' });
+  editor.commands.setTextSelection({ from: 1, to: 4 });
+  editor.commands.setLink({ href: './R%C3%A9union%20%231%20(%C3%A9t%C3%A9).md' });
+  const before = editor.getJSON();
+  editor.commands.setContent(editor.getMarkdown(), { contentType: 'markdown' });
+  assert.deepEqual(editor.getJSON(), before);
+  assert.match(editor.getHTML(), /href="\.\/R%C3%A9union/);
+  editor.destroy();
+});

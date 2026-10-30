@@ -33,7 +33,7 @@ Références : [S01](NOTION_REFERENCE.md#s01), [S02](NOTION_REFERENCE.md#s02), [
 - [ ] **FN-019** Verrouiller et déverrouiller une page contre les modifications accidentelles.
 - [ ] **FN-020** Déplacer un bloc vers une page existante ou une nouvelle page.
 - [ ] **FN-021** Transformer un bloc en page et réintégrer une page sous forme de blocs.
-- [ ] **FN-022** Gérer les liens vers une page supprimée, inaccessible ou déplacée.
+- [ ] **FN-022** [PARTIEL] Gérer les liens vers une page supprimée, inaccessible ou déplacée.
 - [ ] **FN-023** Supprimer/restaurer un sous-arbre avec un comportement explicite pour ses descendants.
 - [ ] **FN-024** Choisir un emplacement lors de la création, duplication, importation ou restauration.
 
@@ -68,7 +68,7 @@ Références : [S01](NOTION_REFERENCE.md#s01), [S03](NOTION_REFERENCE.md#s03), [
 - [ ] **FN-044** [PARTIEL] Appliquer et retirer gras, italique, souligné, barré et code en ligne.
 - [ ] **FN-045** Gérer les combinaisons de marques et les états mixtes dans une sélection.
 - [ ] **FN-046** [PARTIEL] Créer, modifier et supprimer un lien avec un formulaire contextuel.
-- [ ] **FN-047** Ouvrir/copier un lien, afficher sa destination et détecter les liens internes.
+- [ ] **FN-047** [PARTIEL] Ouvrir/copier un lien, afficher sa destination et détecter les liens internes.
 - [ ] **FN-048** [PARTIEL] Appliquer les couleurs de texte et de fond proposées par la référence.
 - [ ] **FN-049** [PARTIEL] Mémoriser la dernière couleur et fournir son raccourci.
 - [ ] **FN-050** [PARTIEL] Supprimer toute la mise en forme d’une sélection.
@@ -170,22 +170,22 @@ Références : [S06](NOTION_REFERENCE.md#s06).
 
 Références : [S08](NOTION_REFERENCE.md#s08), [S09](NOTION_REFERENCE.md#s09), [S10](NOTION_REFERENCE.md#s10).
 
-- [ ] **FN-129** Créer un lien interne avec @, [[ et le menu de lien selon la référence.
+- [ ] **FN-129** [PARTIEL] Créer un lien interne avec @, [[ et le menu de lien selon la référence.
 - [ ] **FN-130** Créer une nouvelle page depuis une recherche de lien sans résultat.
-- [ ] **FN-131** Afficher les mentions entrantes et les backlinks d’une page.
+- [ ] **FN-131** [PARTIEL] Afficher les mentions entrantes et les backlinks d’une page.
 - [ ] **FN-132** Mettre à jour les libellés des références après renommage.
 - [ ] **FN-133** Afficher un aperçu de page au survol d’une mention.
 - [ ] **FN-134** Créer une mention de date et interpréter les dates relatives.
 - [ ] **FN-135** Définir une heure, un fuseau et un rappel.
 - [ ] **FN-136** Afficher les rappels arrivés à échéance et permettre leur modification.
 - [ ] **FN-137** [PARTIEL] Rechercher dans le titre et le contenu des pages.
-- [ ] **FN-138** [PARTIEL] Ouvrir la recherche avec Cmd/Ctrl+K et parcourir les résultats au clavier.
-- [ ] **FN-139** Trier les résultats par pertinence, récence et critères de la référence.
+- [ ] **FN-138** [PARTIEL] Ouvrir la recherche avec Cmd/Ctrl+P (K hors éditeur) et parcourir les résultats au clavier ; réserver K au lien dans l’éditeur.
+- [ ] **FN-139** [PARTIEL] Trier les résultats par pertinence, récence et critères de la référence.
 - [ ] **FN-140** Filtrer par parent, type, auteur, dates, espace et emplacement disponibles.
-- [ ] **FN-141** Surligner les occurrences et afficher des extraits pertinents.
-- [ ] **FN-142** Indexer incrémentalement le coffre sans relire toutes les pages à chaque recherche.
+- [ ] **FN-141** [PARTIEL] Surligner les occurrences et afficher des extraits pertinents.
+- [ ] **FN-142** [PARTIEL] Indexer incrémentalement le coffre sans relire toutes les pages à chaque recherche.
 - [ ] **FN-143** Rechercher dans la page courante avec navigation entre occurrences.
-- [ ] **FN-144** Respecter la corbeille, les autorisations et les contenus non indexables.
+- [ ] **FN-144** [PARTIEL] Respecter la corbeille, les autorisations et les contenus non indexables.
 - [ ] **FN-145** Afficher recherches récentes, suggestions et résultats vides.
 - [ ] **FN-146** Ouvrir les résultats au bon bloc plutôt qu’en haut de page.
 
@@ -543,3 +543,11 @@ Preuves : [extension couleur](../src/colors.ts), [tests de round-trip](../tests/
 FN-072 : langage recherchable, coloration des 37 entrées communes Lowlight, copie avec états de réussite/échec, retour à la ligne et légende sont implémentés. Le langage inconnu importé est conservé. Les extraits contenant leurs propres clôtures Markdown ne tronquent plus la page à la sauvegarde.
 
 Preuves : [extension de code](../src/code-block.ts), [round-trips Markdown et HTML](../tests/markdown.test.ts), [recette DOM des commandes et du presse-papiers](../scripts/check-ui.mjs). Référence : [blocs de code Notion](https://www.notion.com/help/code-blocks). Le catalogue complet des langages de la référence, le chargement des grammaires à la demande, les mesures de performance sur longs extraits et la validation visuelle restent ouverts. FN-072 et UI-156 restent partiels.
+
+## Avancement — recherche et liens
+
+Recherche accent-insensible sur plusieurs termes, classement titre/contenu/récence et extraits autour du résultat. Un cache en mémoire évite de réanalyser les documents inchangés. Le formulaire de lien propose les pages du coffre ; les chemins Markdown relatifs utilisent leurs identifiants stables. Navigation avec sauvegarde préalable, message pour une cible absente/à la corbeille et panneau de liens entrants.
+
+Preuves : [index et résolution des liens](../src/page-index.ts), [tests de recherche et de backlinks](../tests/page-index.test.ts), [round-trip des liens](../tests/markdown.test.ts), [parcours DOM insertion → navigation → backlink → recherche](../scripts/check-ui.mjs). L’index utilise un parseur isolé, car l’éditeur enregistre ses propres tokenizers Markdown.
+
+Restent notamment les menus @ et [[, les mentions au titre dynamique, les aperçus, les wikiliens, le surlignage des résultats, les filtres, les ancres, un index inversé et les mesures sur grands coffres. Aucun critère de parité UI n’est déclaré validé par ces seuls tests DOM.

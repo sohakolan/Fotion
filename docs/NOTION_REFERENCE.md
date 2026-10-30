@@ -320,6 +320,8 @@ Les produits Calendar et Mail sont des produits adjacents, inclus pour délimite
 
 ## Compléments et suivi
 
+- [Liens et backlinks](https://www.notion.com/help/create-links-and-backlinks).
+
 - [Blocs de code : langage, coloration, copie, retour à la ligne et légende](https://www.notion.com/help/code-blocks).
 
 - [Sources de données et bases liées](https://www.notion.com/en-gb/help/data-sources-and-linked-databases).

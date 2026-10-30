@@ -1,6 +1,8 @@
 import { createSignal, createMemo, onMount, onCleanup, Show, For } from 'solid-js';
 import { Editor, type ChainedCommands } from '@tiptap/core';
 import Placeholder from '@tiptap/extension-placeholder';
+import type { Page } from './types';
+import { normalizeSearch, pageIdFromHref, pageHref } from './page-index';
 import { textColors, colorId, type ColorId } from './colors';
 import { editorExtensions } from './extensions';
 import { TextSelection } from '@tiptap/pm/state';
@@ -27,7 +29,7 @@ const blocks: { label: string; hint: string; icon: string; keywords: string; act
   { label: 'Tableau', hint: 'Organisez des informations simplement.', icon: '▦', keywords: 'table tableau', action: c => c.insertTable({ rows: 3, cols: 3, withHeaderRow: true }) },
 ];
 
-export default function DocumentEditor(props: { content: string; onChange: (content: string) => void; onReady: (editor: Editor | undefined) => void; onCreatePage: () => void }) {
+export default function DocumentEditor(props: { content: string; onChange: (content: string) => void; onReady: (editor: Editor | undefined) => void; onCreatePage: () => void; pages: Page[]; onOpenPage: (id: string) => void }) {
   let element!: HTMLDivElement;
   let editor!: Editor;
   const [ready, setReady] = createSignal(false);
@@ -39,6 +41,7 @@ export default function DocumentEditor(props: { content: string; onChange: (cont
   const [imageDraft, setImageDraft] = createSignal<string>();
   const [imageError, setImageError] = createSignal('');
   let imagePosition = 0;
+  const linkPages = () => props.pages.filter(page => normalizeSearch(page.title).includes(normalizeSearch(linkDraft()?.value || ''))).slice(0, 20);
   const [linkError, setLinkError] = createSignal('');
   const [slash, setSlash] = createSignal<{ from: number; to: number; query: string; x: number; y: number }>();
   const [choice, setChoice] = createSignal(0);
@@ -131,7 +134,14 @@ export default function DocumentEditor(props: { content: string; onChange: (cont
       contentType: 'markdown',
       editorProps: {
         attributes: { class: 'prose', 'aria-label': 'Contenu de la page', role: 'textbox', 'aria-multiline': 'true', spellcheck: 'true' },
+        handleDOMEvents: { click: (_view, event) => {
+          const link = (event.target as HTMLElement).closest('a[href]');
+          const id = pageIdFromHref(link?.getAttribute('href') || '');
+          if (!id) return false;
+          event.preventDefault(); props.onOpenPage(id); return true;
+        } },
         handleKeyDown: (_, event) => {
+          if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') { event.preventDefault(); event.stopPropagation(); link(); return true; }
           if ((event.metaKey || event.ctrlKey) && event.shiftKey && event.key.toLowerCase() === 'h' && lastColor) {
             applyColor(lastColor.kind, lastColor.value); event.preventDefault(); return true;
           }
@@ -153,7 +163,8 @@ export default function DocumentEditor(props: { content: string; onChange: (cont
       },
       onUpdate: () => { props.onChange(editor.getMarkdown()); updateMenus(); },
       onSelectionUpdate: updateMenus,
-      onBlur: () => { setTimeout(() => { if (!document.activeElement?.closest('.bubble-menu, .link-popover, .color-menu')) setSelection(undefined); }, 180); },
+      onFocus: updateMenus,
+      onBlur: () => { setTimeout(() => { if (!editor.isFocused && !document.activeElement?.closest('.bubble-menu, .link-popover, .color-menu')) setSelection(undefined); }, 180); },
     });
     setReady(true);
     props.onReady(editor);
@@ -169,13 +180,20 @@ export default function DocumentEditor(props: { content: string; onChange: (cont
     const range = editor.state.selection;
     const coords = editor.view.coordsAtPos(range.from);
     setLinkError('');
-    setLinkDraft({ value: editor.getAttributes('link').href || '', from: range.from, to: range.to, x: Math.max(8, Math.min(coords.left, window.innerWidth - 340)), y: Math.max(8, Math.min(coords.bottom + 10, window.innerHeight - 150)) });
+    setLinkDraft({ value: editor.getAttributes('link').href || '', from: range.from, to: range.to, x: Math.max(8, Math.min(coords.left, window.innerWidth - 340)), y: Math.max(8, Math.min(coords.bottom + 10, window.innerHeight - 360)) });
     requestAnimationFrame(() => document.querySelector<HTMLInputElement>('.link-popover input')?.focus());
+  }
+  function linkPage(page: Page) {
+    const draft = linkDraft(); if (!draft) return;
+    const chain = editor.chain().focus().setTextSelection({ from: draft.from, to: draft.to });
+    if (draft.from === draft.to) chain.insertContent({ type: 'text', text: page.title || 'Sans titre', marks: [{ type: 'link', attrs: { href: pageHref(page.id) } }] }).unsetLink().run();
+    else chain.setLink({ href: pageHref(page.id) }).run();
+    setLinkDraft(undefined);
   }
   function saveLink() {
     const draft = linkDraft(); if (!draft) return;
     const value = draft.value.trim();
-    if (value && !/^(https?:\/\/|mailto:)/i.test(value)) { setLinkError('Utilisez une adresse https:// ou mailto:.'); return; }
+    if (value && !/^(https?:\/\/|mailto:)/i.test(value) && !pageIdFromHref(value)) { setLinkError('Utilisez une adresse https://, mailto: ou choisissez une page.'); return; }
     const chain = editor.chain().focus().setTextSelection({ from: draft.from, to: draft.to }).extendMarkRange('link');
     if (value) chain.setLink({ href: value }).run(); else chain.unsetLink().run();
     setLinkDraft(undefined);
@@ -236,6 +254,8 @@ export default function DocumentEditor(props: { content: string; onChange: (cont
     <Show when={linkDraft()}>{draft => <><div class="dismiss-layer" onClick={() => setLinkDraft(undefined)}/><form class="link-popover popover" style={{ left: `${draft().x}px`, top: `${draft().y}px` }} onSubmit={e => { e.preventDefault(); saveLink(); }}>
       <label for="link-url">Lien</label><div class="link-field"><Link size={16}/><input id="link-url" placeholder="Collez un lien…" value={draft().value} onInput={e => setLinkDraft({ ...draft(), value: e.currentTarget.value })}/><button type="submit" aria-label="Appliquer le lien"><Check size={16}/></button></div>
       <Show when={linkError()}><p class="field-error">{linkError()}</p></Show>
+      <Show when={linkPages().length}><div class="link-page-options"><div class="menu-label">Pages de l’espace</div><For each={linkPages()}>{page => <button type="button" onClick={() => linkPage(page)}><span>{page.icon || '📄'}</span><span>{page.title || 'Sans titre'}</span></button>}</For></div></Show>
+      <Show when={pageIdFromHref(draft().value)}><button type="button" onClick={() => { const id = pageIdFromHref(draft().value); if (id) props.onOpenPage(id); setLinkDraft(undefined); }}>Ouvrir la page liée</button></Show>
       <button type="button" onClick={() => { setLinkDraft({ ...draft(), value: '' }); saveLink(); }}>Supprimer le lien</button>
     </form></>}</Show>
     <Show when={imageDraft() !== undefined}><div class="modal-backdrop" onMouseDown={e => { if (e.target === e.currentTarget) setImageDraft(undefined); }}><form class="modal image-dialog" role="dialog" aria-modal="true" aria-label="Ajouter une image" onSubmit={e => {

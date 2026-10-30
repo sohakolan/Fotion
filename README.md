@@ -52,7 +52,7 @@ Le serveur écoute uniquement sur la boucle locale. Ne pas exposer ce serveur de
 
 La disposition est rapprochée des références publiques de Notion. Une correspondance pixel à pixel avec chaque version de Notion n’est pas certifiée. Les tests DOM simulent les interactions ; ils ne remplacent pas une validation visuelle et tactile sur navigateur réel.
 
-Ce n’est pas encore la parité fonctionnelle complète de Notion : pas de bases de données relationnelles, vues de base de données, colonnes, pièces jointes locales, backlinks ou plugins Obsidian. Pas de surveillance automatique du disque ni de fusion des conflits. La hiérarchie est gérée par des propriétés, pas par les wikiliens Obsidian.
+Ce n’est pas encore la parité fonctionnelle complète de Notion : pas de bases de données relationnelles, vues de base de données, colonnes, pièces jointes locales ou plugins Obsidian. Pas de surveillance automatique du disque ni de fusion des conflits. La hiérarchie est gérée par des propriétés, pas par les wikiliens Obsidian.
 
 Le Markdown Tiptap est encore annoncé en bêta. Les constructions non prises en charge (HTML complexe, extensions Obsidian, blocs personnalisés) peuvent être normalisées ou perdues dans la version éditée ; le fichier précédent reste dans `.history/`. L’historique n’est pas purgé automatiquement. L’accès à un dossier personnalisé nécessite de relancer le serveur avec `FOTION_VAULT`.
 
@@ -69,6 +69,14 @@ Chaque bloc propose un langage recherchable, la copie avec retour d’état, le 
 Le code reste dans des clôtures Markdown standard, allongées si l’extrait contient lui-même des clôtures. Quand une légende ou le retour à la ligne est défini, la ligne d’ouverture reçoit `fotion=` suivi d’un objet JSON encodé comme composant d’URL (`wrap`, `caption`). Les lecteurs externes peuvent ignorer ces propriétés de présentation ; supprimer ce suffixe les retire de Fotion sans supprimer le code.
 
 Les grammaires sont actuellement chargées avec l’éditeur : le build de cette étape représente environ 251 Ko gzip de JavaScript. Le chargement à la demande et les mesures en navigateur réel restent nécessaires pour l’objectif de légèreté.
+
+## Recherche et liens entre pages
+
+`Ctrl/Cmd + P` ouvre la recherche globale ; `Ctrl/Cmd + K` ouvre le formulaire de lien quand l’éditeur a le focus, et la recherche ailleurs. La recherche ignore les différences d’accents et de casse, accepte plusieurs termes et classe les titres avant le contenu, puis les modifications récentes. L’extrait se place autour d’un terme trouvé. L’index en mémoire réanalyse uniquement les pages dont le contenu a changé ; il n’est pas encore un index inversé sur disque.
+
+Dans le formulaire de lien, saisir un titre puis choisir une page. Le lien est enregistré en Markdown sous la forme `[libellé](./identifiant.md)` et reste valide après un changement de titre. Son libellé reste du texte éditable : il ne suit pas encore automatiquement les renommages comme une mention Notion. Cliquer sur le lien ouvre la destination après sauvegarde du brouillon ; une destination manquante ou à la corbeille laisse le document courant ouvert avec un message.
+
+Les liens entrants apparaissent au-dessus du titre et permettent de revenir aux pages sources. Ils sont calculés à partir des liens Markdown, y compris les liens par référence et dans les dépliants ; les exemples dans les blocs de code, les images, la page elle-même et les pages à la corbeille sont exclus. Les wikiliens Obsidian, les liens HTML arbitraires et les ancres de blocs ne sont pas encore couverts. Exporter une seule page ne copie pas ses destinations.
 
 ## Vérifications
 
