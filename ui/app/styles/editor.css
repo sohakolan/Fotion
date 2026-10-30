@@ -1538,3 +1538,8 @@ h3) {
   box-shadow: inset 0 0 0 1px rgba(35, 131, 226, .4);
   pointer-events: none;
 }
+
+/* FotionMark indent: children of the block above, offset like Notion's nested blocks. */
+.prose .fm-indent {
+  margin-left: 1.5em;
+}

@@ -581,3 +581,21 @@ test('block selection: Escape, Shift+arrows, Shift+click, marquee, delete and du
   await page.keyboard.press('Backspace');
   await expect(lines).toHaveText(['Un', 'Deux', 'Trois']);
 });
+
+test('Tab nests a paragraph under the block above and survives reloading', async ({ page }) => {
+  await createDocument(page, 'Parent\n\nEnfant');
+  await page.locator('.prose > p').nth(1).click();
+  await expect.poll(() => page.evaluate(() => window.getSelection()?.anchorNode?.textContent)).toBe('Enfant');
+  await page.keyboard.press('Tab');
+  await expect(page.locator('.prose .fm-indent')).toHaveText('Enfant');
+  await expect(page.getByRole('textbox', { name: 'Contenu de la page' })).toBeFocused();
+  const indented = (await page.locator('.prose .fm-indent p').boundingBox())!, parent = (await page.locator('.prose > p').first().boundingBox())!;
+  expect(indented.x - parent.x).toBeGreaterThan(20);
+  await expect(page.locator('.save-status')).toHaveText('Enregistré');
+  await page.reload();
+  await expect(page.locator('.prose .fm-indent')).toHaveText('Enfant');
+  await page.locator('.prose .fm-indent p').click();
+  await expect.poll(() => page.evaluate(() => window.getSelection()?.anchorNode?.textContent)).toBe('Enfant');
+  await page.keyboard.press('Shift+Tab');
+  await expect(page.locator('.prose .fm-indent')).toHaveCount(0);
+});

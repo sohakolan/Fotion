@@ -71,6 +71,7 @@ Les déclarations ([`blocks/`](../engine/fotionmark/blocks/)) fixent pour chaque
 | --- | --- | --- | --- |
 | `columns` | conteneur | 2 à 5 `column` | — |
 | `column` | conteneur, dans `columns` | FotionMark | `width` : `percent` (entre 0 et 100 exclus) |
+| `indent` | conteneur | FotionMark | — · enfants du bloc précédent (Tab dans Notion) |
 
 ## Garanties
 

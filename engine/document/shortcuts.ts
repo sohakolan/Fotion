@@ -4,6 +4,7 @@ import { Decoration, DecorationSet } from '@tiptap/pm/view';
 import { blockAt, moveBlockTransaction } from '../operations/block-move';
 import { BlockSelection, extendBlockSelection, duplicateBlocks, moveBlocks } from '../operations/block-selection';
 import { convertToggle } from '../operations/toggle-conversion';
+import { indentBlock, outdentBlock, handlesTab } from '../operations/indentation';
 
 /**
  * Cursor position as displayed. Right after a click, ProseMirror may not have read the new DOM
@@ -13,6 +14,14 @@ export function caretPosition(editor: Editor) {
   const selection = editor.view.dom.ownerDocument.getSelection();
   if (editor.state.selection instanceof NodeSelection || editor.state.selection instanceof BlockSelection || !selection?.anchorNode || !editor.view.dom.contains(selection.anchorNode)) return editor.state.selection.from;
   try { return editor.view.posAtDOM(selection.anchorNode, selection.anchorOffset); } catch { return editor.state.selection.from; }
+}
+
+/** Aligns ProseMirror's caret with the displayed one before a block command reads the state. */
+export function syncCaret(editor: Editor) {
+  const { selection } = editor.state;
+  if (!selection.empty || !(selection instanceof TextSelection)) return;
+  const pos = caretPosition(editor);
+  if (pos !== selection.from) editor.view.dispatch(editor.state.tr.setSelection(TextSelection.near(editor.state.doc.resolve(pos))));
 }
 
 /** Selects the whole block around the cursor, as Notion does with Escape. */
@@ -113,7 +122,8 @@ export const NotionShortcuts = Extension.create({
       8: () => editor.commands.toggleCodeBlock(),
     };
     // macOS uses Cmd+Option+digit, Windows and Linux Ctrl+Shift+digit.
-    const turnInto = Object.fromEntries(Object.entries(turn).flatMap(([digit, run]) => [[`Mod-Alt-${digit}`, run], [`Ctrl-Shift-${digit}`, run]]));
+    const synced = (run: () => boolean) => () => { syncCaret(editor); return run(); };
+    const turnInto = Object.fromEntries(Object.entries(turn).flatMap(([digit, run]) => [[`Mod-Alt-${digit}`, synced(run)], [`Ctrl-Shift-${digit}`, synced(run)]]));
     const selected = () => editor.state.selection instanceof BlockSelection ? editor.state.selection : null;
     const select = (selection: BlockSelection | null) => { if (selection) editor.view.dispatch(editor.state.tr.setSelection(selection).scrollIntoView()); return !!selection; };
     const step = (direction: -1 | 1) => {
@@ -130,9 +140,12 @@ export const NotionShortcuts = Extension.create({
     };
     return {
       ...turnInto,
+      // Tab nests the block under the one above; inside lists, code and tables their own Tab applies.
+      Tab: () => { syncCaret(editor); if (!handlesTab(editor.state)) return false; const tr = indentBlock(editor.state); if (tr) editor.view.dispatch(tr); return true; },
+      'Shift-Tab': () => { syncCaret(editor); if (!handlesTab(editor.state)) return false; const tr = outdentBlock(editor.state); if (tr) editor.view.dispatch(tr); return true; },
       'Mod-Shift-ArrowUp': () => moveCurrentBlock(editor, -1),
       'Mod-Shift-ArrowDown': () => moveCurrentBlock(editor, 1),
-      'Mod-Enter': () => actOnBlock(editor),
+      'Mod-Enter': synced(() => actOnBlock(editor)),
       'Mod-Alt-t': () => toggleAll(editor),
       // Escape selects the current block; a second Escape returns to editing at its end.
       Escape: () => {

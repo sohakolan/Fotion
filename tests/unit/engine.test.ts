@@ -186,3 +186,36 @@ test('multi-block selection extends, duplicates, moves, deletes and spans nested
   assert.match(editor.state.selection.content().content.lastChild?.type.name || '', /bulletList/);
   editor.destroy();
 });
+
+test('Tab and Shift+Tab nest blocks like Notion and save them as FotionMark indent', () => {
+  const editor = new Editor({ extensions: documentExtensions(), content: 'Parent\n\nEnfant\n\nPetit\n\nSuivant', contentType: 'markdown' });
+  const caretIn = (text: string) => { let at = 0; editor.state.doc.descendants((node, pos) => { if (!at && node.isTextblock && node.textContent === text) at = pos + 1; }); editor.commands.setTextSelection(at); };
+  caretIn('Enfant'); assert.ok(press(editor, 'Tab'));
+  caretIn('Petit'); press(editor, 'Tab'); press(editor, 'Tab');
+  assert.equal(editor.getMarkdown(), 'Parent\n\n::::indent\nEnfant\n\n:::indent\nPetit\n:::\n::::\n\nSuivant');
+  assert.equal(editor.state.selection.$from.parent.textContent, 'Petit', 'The caret stays in the moved block');
+  // Moving a block carries its children; Shift+Tab lifts it and makes what followed its children.
+  caretIn('Suivant'); press(editor, 'Tab');
+  caretIn('Enfant'); press(editor, 'Tab', { shift: true });
+  // A blank line separates a directive from following text (canonical FotionMark); Tiptap keeps a trailing empty paragraph.
+  assert.equal(editor.getMarkdown().trim(), 'Parent\n\nEnfant\n\n::::indent\n:::indent\nPetit\n:::\n\nSuivant\n::::');
+  const saved = editor.getJSON();
+  editor.commands.setContent(editor.getMarkdown(), { contentType: 'markdown' });
+  assert.deepEqual(editor.getJSON(), saved);
+  editor.commands.setContent('Titre\n\n- un\n- deux', { contentType: 'markdown' });
+  caretIn('deux'); press(editor, 'Tab');
+  assert.equal(editor.getMarkdown().trim(), 'Titre\n\n- un\n  - deux', 'Lists keep their own Tab');
+  editor.destroy();
+});
+
+test('Tab under a toggle moves the block into its body', () => {
+  const editor = new Editor({ extensions: documentExtensions(), content: '<details>\n<summary>Plier</summary>\n\nCorps\n\n</details>\n\nDedans', contentType: 'markdown' });
+  let at = 0; editor.state.doc.descendants((node, pos) => { if (node.isTextblock && node.textContent === 'Dedans') at = pos + 1; });
+  editor.commands.setTextSelection(at); press(editor, 'Tab');
+  const filled = () => editor.state.doc.content.content.filter(node => node.textContent);
+  assert.equal(filled().length, 1);
+  assert.deepEqual(editor.state.doc.firstChild!.content.content.map(node => node.textContent), ['Plier', 'Corps', 'Dedans']);
+  press(editor, 'Tab', { shift: true });
+  assert.deepEqual(filled().map(node => node.type.name + ':' + node.textContent), ['toggle:PlierCorps', 'paragraph:Dedans']);
+  editor.destroy();
+});
