@@ -44,7 +44,7 @@ Références : [S01](NOTION_REFERENCE.md#s01), [S05](NOTION_REFERENCE.md#s05).
 - [ ] **FN-025** [PARTIEL] Saisir, modifier et effacer du texte sans perte de sélection ni saut de défilement.
 - [ ] **FN-026** [PARTIEL] Insérer un paragraphe, scinder un bloc avec Entrée et fusionner avec Retour arrière.
 - [ ] **FN-027** Reproduire Entrée et Maj+Entrée dans chaque type de bloc et à ses frontières.
-- [ ] **FN-028** Distinguer sélection de texte, sélection d’un bloc et sélection de plusieurs blocs.
+- [ ] **FN-028** [PARTIEL] Distinguer sélection de texte, sélection d’un bloc et sélection de plusieurs blocs.
 - [ ] **FN-029** Étendre une sélection avec Maj+clic, Maj+flèches et navigation au clavier.
 - [ ] **FN-030** Sélectionner un ensemble de blocs en traçant un rectangle dans la marge.
 - [ ] **FN-031** Couper, copier, coller et dupliquer une sélection multibloc.
@@ -80,8 +80,8 @@ Références : [S01](NOTION_REFERENCE.md#s01), [S03](NOTION_REFERENCE.md#s03), [
 - [ ] **FN-056** [PARTIEL] Transformer un bloc sans perdre son texte ; couvrir tous les couples de conversion compatibles.
 - [ ] **FN-057** Convertir plusieurs blocs à la fois et expliquer les conversions impossibles.
 - [ ] **FN-058** [PARTIEL] Reconnaître les raccourcis Markdown de tous les blocs pris en charge.
-- [ ] **FN-059** Exposer les actions de suppression, duplication, couleur et déplacement dans / quand la référence les propose.
-- [ ] **FN-060** Gérer les raccourcis macOS/Windows/Linux avec des libellés adaptés.
+- [x] **FN-059** Exposer les actions de suppression, duplication, couleur et déplacement dans / quand la référence les propose.
+- [ ] **FN-060** [PARTIEL] Gérer les raccourcis macOS/Windows/Linux avec des libellés adaptés.
 - [ ] **FN-061** [PARTIEL] Afficher un compteur de mots et de caractères pour une sélection et une page.
 
 ## 04. Catalogue des blocs — P0/P1
@@ -620,4 +620,16 @@ Restent : commandes récentes (FN-054), actions de bloc (couleur, suppression, d
 - FN-140 (partiel) : filtre « Titres uniquement ». FN-145 (partiel) : pages récentes groupées par date et message de résultat vide ; recherches récentes et suggestions restent à faire.
 - FN-148 (partiel) : emojis nommés en français (CLDR), aléatoire, récents, suppression ; images importées, URL et icônes monochromes restent à faire.
 - Barre latérale : tri, nombre de pages affichées, ordre des sections, repli et panneau « Plus » ([section](../ui/features/sidebar/components/SidebarSection.tsx)).
+
+## Avancement — commandes et interactions de Notion
+
+Référence : liste officielle des raccourcis de Notion (notion.com/help/keyboard-shortcuts).
+
+- Menu / : alias anglais de Notion (`/plain`, `/num`, `/div`, `/#`…), entrées « En ligne » (mention, emoji) et actions visibles seulement en tapant : `/duplicate`, `/delete`, `/turn …` (« Transformer en … », avec les alias du bloc cible), `/rouge`, `/fond rouge`, `/default`. Les couleurs s’appliquent à tout le bloc. Recherche à plusieurs mots.
+- Saisie : `~texte~` barré, `a.` et `i.` en liste numérotée (en plus de `#`, `-`, `[]`, `>`, `"`, `---`, ```` ``` ````).
+- Clavier : ⌘⌥0 à 8 (Ctrl+Maj sous Windows/Linux) pour transformer le bloc, ⌘⇧↑/↓ pour le déplacer (une tâche seule déplace sa liste), ⌘↵ pour cocher une tâche ou ouvrir une liste dépliante, ⌘⌥T pour ouvrir ou fermer toutes les listes dépliantes, ⌘/ pour le menu du bloc, ⌘D pour dupliquer.
+- Sélection de bloc (FN-028, partiel) : Échap sélectionne le bloc, ↑/↓ change de bloc, Retour arrière le supprime, ⌘D le duplique, Entrée revient à l’édition, Échap à nouveau quitte la sélection. Restent : sélection de plusieurs blocs (Maj+↑/↓, Maj+clic, rectangle).
+- Les commandes de bloc lisent la position du curseur affichée, pour agir sur le bon bloc même juste après un clic.
+
+Preuves : [raccourcis](../engine/document/shortcuts.ts), [catalogue](../engine/operations/slash-commands.ts), [tests du moteur](../tests/unit/engine.test.ts), [scénario navigateur](../tests/e2e/editor.spec.ts).
 

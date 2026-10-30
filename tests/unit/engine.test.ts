@@ -67,7 +67,7 @@ test('slash commands are detected like Notion and ranked by relevance', () => {
   assert.equal(slashQuery('https://exemple.fr/a'), null);
   assert.equal(slashQuery('/ texte'), null);
   const ids = (query: string) => searchSlashCommands(query, slashCommands).map(command => command.id);
-  assert.equal(ids('').length, slashCommands.length);
+  assert.equal(ids('').length, slashCommands.filter(command => !command.hidden).length);
   assert.equal(ids('h1')[0], 'heading1');
   assert.equal(ids('todo')[0], 'taskList');
   assert.equal(ids('bullet')[0], 'bulletList');
@@ -114,4 +114,55 @@ test('FotionMark keeps unknown attributes and isolates an invalid child inside a
   assert.equal(editor.getMarkdown(), source);
   assert.equal(editor.view.dom.querySelector<HTMLElement>('.fm-column')?.style.flex, '0 0 40%');
   editor.destroy();
+});
+
+// `mod` is Cmd on macOS and Ctrl elsewhere, exactly as ProseMirror's keymap resolves `Mod-`.
+const isMac = typeof navigator !== 'undefined' && /Mac|iP(hone|[oa]d)/.test(navigator.platform);
+const press = (editor: Editor, key: string, modifiers: { ctrl?: boolean; mod?: boolean; alt?: boolean; shift?: boolean } = {}) => {
+  const event = new dom.window.KeyboardEvent('keydown', { key, ctrlKey: !!modifiers.ctrl || (!!modifiers.mod && !isMac), metaKey: !!modifiers.mod && isMac, altKey: !!modifiers.alt, shiftKey: !!modifiers.shift, bubbles: true });
+  return editor.view.someProp('handleKeyDown', f => f(editor.view, event as unknown as KeyboardEvent));
+};
+const typeText = (editor: Editor, text: string) => { for (const char of text) { const { from, to } = editor.state.selection; if (!editor.view.someProp('handleTextInput', f => f(editor.view, from, to, char, () => editor.state.tr.insertText(char, from, to)))) editor.view.dispatch(editor.state.tr.insertText(char, from, to)); } };
+
+test('Notion typing shortcuts: single-tilde strike and lettered lists', () => {
+  const editor = new Editor({ extensions: documentExtensions(), content: '', contentType: 'markdown' });
+  editor.commands.setTextSelection(1);
+  typeText(editor, 'Un ~mot~ ');
+  assert.equal(editor.getMarkdown().trim(), 'Un ~~mot~~');
+  editor.commands.setContent('', { contentType: 'markdown' }); editor.commands.setTextSelection(1);
+  typeText(editor, 'a. Premier');
+  assert.equal(editor.state.doc.firstChild?.type.name, 'orderedList');
+  editor.destroy();
+});
+
+test('Notion block keys: turn into, move, Escape block selection, Enter back to text', () => {
+  const editor = new Editor({ extensions: documentExtensions(), content: 'Un\n\nDeux\n\nTrois', contentType: 'markdown' });
+  editor.commands.setTextSelection(6);
+  assert.ok(press(editor, '1', { ctrl: true, shift: true }));
+  assert.equal(editor.state.doc.child(1).type.name, 'heading');
+  assert.ok(press(editor, '0', { ctrl: true, shift: true }));
+  assert.ok(press(editor, '4', { ctrl: true, shift: true }));
+  assert.equal(editor.state.doc.child(1).type.name, 'taskList');
+  assert.ok(press(editor, 'Enter', { mod: true }));
+  assert.equal(editor.state.doc.child(1).firstChild?.attrs.checked, true);
+  assert.ok(press(editor, 'ArrowUp', { mod: true, shift: true }));
+  assert.deepEqual(editor.state.doc.content.content.map(node => node.textContent), ['Deux', 'Un', 'Trois']);
+  editor.commands.setTextSelection(editor.state.doc.content.size - 2);
+  assert.ok(press(editor, 'Escape'));
+  assert.equal(editor.state.selection.constructor.name, 'NodeSelection');
+  assert.ok(press(editor, 'ArrowUp'));
+  assert.equal((editor.state.selection as unknown as { node: { textContent: string } }).node.textContent, 'Un');
+  assert.ok(press(editor, 'Enter'));
+  assert.equal(editor.state.selection.$from.parent.textContent, 'Un');
+  editor.destroy();
+});
+
+test('slash catalogue hides actions and colours until the user types', () => {
+  const ids = (query: string) => searchSlashCommands(query, slashCommands).map(command => command.id);
+  assert.ok(!ids('').includes('duplicate') && !ids('').includes('color-red'));
+  assert.equal(ids('dupl')[0], 'duplicate');
+  assert.ok(ids('rouge').includes('color-red') && ids('rouge').includes('background-red'));
+  assert.equal(ids('turn h1')[0], 'turn-heading1');
+  assert.equal(ids('#')[0], 'heading1');
+  assert.equal(ids('num')[0], 'orderedList');
 });

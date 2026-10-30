@@ -339,7 +339,7 @@ test('slash menu filters, inserts below existing text and stays closed after esc
   await editor.click(); await page.keyboard.press('End');
   await page.keyboard.type(' /');
   const menu = page.locator('.slash-menu');
-  await expect(menu.locator('.slash-group')).toHaveText(['Blocs de base', 'Médias', 'Avancés']);
+  await expect(menu.locator('.slash-group')).toHaveText(['Blocs de base', 'Médias', 'Avancés', 'En ligne']);
   await page.screenshot({ path: test.info().outputPath('slash-menu.png') });
   await page.keyboard.type('h2');
   await expect(menu.getByRole('option').first()).toContainText('Titre 2');
@@ -407,7 +407,8 @@ test('UI-Kit gallery shows tokens and components in both themes', async ({ page 
 });
 
 test('sidebar sections collapse, limit their rows and list every page in the “Plus” panel', async ({ page }) => {
-  for (let i = 1; i <= 6; i++) await page.request.post('/api/pages', { data: { title: `Section ${i}`, icon: '📄', parent: null, favorite: false, cover: '', content: '', trashed: false, order: 9000 + i } });
+  const tag = Date.now().toString(36);
+  for (let i = 1; i <= 6; i++) await page.request.post('/api/pages', { data: { title: `Section ${tag} ${i}`, icon: '📄', parent: null, favorite: false, cover: '', content: '', trashed: false, order: 9000 + i } });
   await page.goto('/');
   const privateSection = page.getByRole('region', { name: 'Privé' });
   await privateSection.getByRole('button', { name: 'Options de la section Privé' }).click();
@@ -417,11 +418,11 @@ test('sidebar sections collapse, limit their rows and list every page in the “
   await privateSection.getByRole('button', { name: 'Plus' }).click();
   const panel = page.getByRole('dialog', { name: 'Toutes les pages : Privé' });
   await expect(panel.getByPlaceholder('Rechercher une page…')).toBeFocused();
-  await panel.getByPlaceholder('Rechercher une page…').fill('Section 6');
-  await expect(panel.locator('.section-panel-list > button')).toHaveText(['📄Section 6']);
+  await panel.getByPlaceholder('Rechercher une page…').fill(`Section ${tag} 6`);
+  await expect(panel.locator('.section-panel-list > button')).toHaveText([`📄Section ${tag} 6`]);
   await page.screenshot({ path: test.info().outputPath('sidebar-more.png') });
-  await panel.getByRole('button', { name: /Section 6/ }).click();
-  await expect(page.getByLabel('Titre de la page', { exact: true })).toHaveValue('Section 6');
+  await panel.getByRole('button', { name: `Section ${tag} 6` }).click();
+  await expect(page.getByLabel('Titre de la page', { exact: true })).toHaveValue(`Section ${tag} 6`);
   await privateSection.getByRole('button', { name: 'Privé', exact: true }).click();
   await expect(privateSection.locator('.page-row')).toHaveCount(0);
   await page.reload();
@@ -429,15 +430,16 @@ test('sidebar sections collapse, limit their rows and list every page in the “
 });
 
 test('search groups pages by date, shows parents and filters titles like Notion', async ({ page }) => {
-  const parent = await (await page.request.post('/api/pages', { data: { title: 'Dossier parent', icon: '📁', parent: null, favorite: false, cover: '', content: '', trashed: false } })).json();
-  const child = await (await page.request.post('/api/pages', { data: { title: 'Fiche enfant', icon: '🧾', parent: parent.id, favorite: false, cover: '', content: 'Le mot zéphyr est ici.', trashed: false } })).json();
+  const tag = Date.now().toString(36);
+  const parent = await (await page.request.post('/api/pages', { data: { title: `Dossier parent ${tag}`, icon: '📁', parent: null, favorite: false, cover: '', content: '', trashed: false } })).json();
+  const child = await (await page.request.post('/api/pages', { data: { title: `Fiche enfant ${tag}`, icon: '🧾', parent: parent.id, favorite: false, cover: '', content: `Le mot zéphyr${tag} est ici.`, trashed: false } })).json();
   await page.goto('/');
   await page.keyboard.press('ControlOrMeta+p');
   const dialog = page.getByRole('dialog', { name: 'Rechercher une page' });
   await expect(dialog.locator('.search-group').first()).toHaveText('Aujourd’hui');
-  await expect(dialog.getByRole('button', { name: /Fiche enfant — Dossier parent/ })).toBeVisible();
+  await expect(dialog.getByRole('button', { name: new RegExp(`Fiche enfant ${tag} — Dossier parent ${tag}`) })).toBeVisible();
   await page.screenshot({ path: test.info().outputPath('search-recent.png') });
-  await dialog.getByLabel('Rechercher').fill('zephyr');
+  await dialog.getByLabel('Rechercher').fill(`zephyr${tag}`);
   await expect(dialog.locator('.search-group')).toHaveText(['Meilleurs résultats']);
   await expect(dialog.locator('.search-results > button')).toHaveCount(1);
   await dialog.getByRole('button', { name: 'Titres uniquement' }).click();
@@ -517,4 +519,35 @@ test('FotionMark columns are created from the slash menu and saved as directives
   expect(content).toContain('::::columns\n:::column\nGauche\n:::\n:::column\nDroite\n:::\n::::');
   await page.reload();
   await expect(page.locator('.prose .fm-column')).toHaveText(['Gauche', 'Droite']);
+});
+
+test('Notion interactions: slash actions and colours, Escape block selection, Cmd+/ and emoji', async ({ page }) => {
+  await createDocument(page, 'Premier\n\nSecond');
+  const lines = page.locator('.prose > p');
+  await lines.first().click(); await page.keyboard.press('ControlOrMeta+ArrowRight'); await page.keyboard.press('End');
+  await page.keyboard.type(' /rouge');
+  await expect(page.locator('.slash-menu').getByRole('option').first()).toContainText('Texte rouge');
+  await page.keyboard.press('Enter');
+  await expect(lines.first().locator('[data-fotion-color=red]')).toHaveText('Premier ');
+  await page.keyboard.type('/dupl'); await page.keyboard.press('Enter');
+  await expect(lines).toHaveCount(3);
+  await page.keyboard.type('/turn h1'); await page.keyboard.press('Enter');
+  await expect(page.locator('.prose > h1')).toHaveCount(1);
+  await lines.last().click();
+  await expect.poll(() => page.evaluate(() => window.getSelection()?.anchorNode?.textContent)).toBe('Second');
+  await page.keyboard.press('Escape');
+  await expect(page.locator('.prose .ProseMirror-selectednode')).toHaveText('Second');
+  await page.keyboard.press('Backspace');
+  await expect(page.locator('.prose', { hasText: 'Second' })).toHaveCount(0);
+  await page.locator('.prose > h1').click();
+  await page.keyboard.press('ControlOrMeta+/');
+  await expect(page.getByRole('menu', { name: 'Options du bloc' })).toBeVisible();
+  await page.keyboard.press('Escape');
+  await page.locator('.prose > p').first().click(); await page.keyboard.press('ControlOrMeta+ArrowRight'); await page.keyboard.press('End');
+  await page.keyboard.type('/emoji'); await page.keyboard.press('Enter');
+  const picker = page.getByRole('dialog', { name: 'Insérer un emoji' });
+  await picker.getByLabel('Filtrer les emojis').fill('fusee');
+  await picker.getByRole('button', { name: 'Icône 🚀', exact: true }).click();
+  await expect(page.locator('.prose > p').first()).toContainText('🚀');
+  await page.screenshot({ path: test.info().outputPath('interactions.png') });
 });

@@ -1,5 +1,5 @@
 import { closeHistory } from '@tiptap/pm/history';
-import { convertToggle, slashCommands, searchSlashCommands, slashQuery, type ToggleTarget } from '../../../../engine';
+import { convertToggle, slashCommands, searchSlashCommands, slashQuery, type ToggleTarget, type SlashCommand } from '../../../../engine';
 import { createSignal, createMemo, createEffect, onMount, onCleanup, Show, For, type JSX } from 'solid-js';
 import { Editor, type ChainedCommands } from '@tiptap/core';
 import Placeholder from '@tiptap/extension-placeholder';
@@ -10,9 +10,9 @@ import { textColors, colorId, type ColorId } from '../../../../engine';
 import { editorExtensions } from '../extensions/editor-extensions';
 import { TextSelection, AllSelection } from '@tiptap/pm/state';
 import BlockControls from './BlockControls';
-import { Menu, MenuItem, MenuDivider, MenuSearch, modKey } from '../../../kit';
-import { blockAt, moveBlockTransaction, isListItem, type Block } from '../../../../engine';
-import { Bold, Italic, Underline, Strikethrough, Code, Link, ChevronDown, ChevronRight, Trash2, Copy, Type, Search, Check, Plus, ImagePlus, X, Repeat2, PaintRoller, Heading1, Heading2, Heading3, List, ListOrdered, SquareCheckBig, ListCollapse, FileText, MessageSquareText, Quote, Table, Minus, Image as ImageIcon, CodeXml, TableOfContents, Columns2, Columns3, Columns4 } from 'lucide-solid';
+import { Menu, MenuItem, MenuDivider, MenuSearch, EmojiPicker, modKey } from '../../../kit';
+import { blockAt, moveBlockTransaction, isListItem, caretPosition, type Block } from '../../../../engine';
+import { Bold, Italic, Underline, Strikethrough, Code, Link, ChevronDown, ChevronRight, Trash2, Copy, Type, Search, Check, Plus, ImagePlus, X, Repeat2, PaintRoller, AtSign, Smile, Heading1, Heading2, Heading3, List, ListOrdered, SquareCheckBig, ListCollapse, FileText, MessageSquareText, Quote, Table, Minus, Image as ImageIcon, CodeXml, TableOfContents, Columns2, Columns3, Columns4 } from 'lucide-solid';
 
 
 const blockActions: Record<string, { icon: () => JSX.Element; action: (chain: ChainedCommands) => ChainedCommands }> = {
@@ -35,7 +35,15 @@ const blockActions: Record<string, { icon: () => JSX.Element; action: (chain: Ch
   ...Object.fromEntries(([[2, Columns2], [3, Columns3], [4, Columns4]] as const).map(([count, Icon]) => [`columns${count}`, { icon: () => <Icon size={18}/>, action: (c: ChainedCommands) => c.insertContent({ type: 'columns', content: Array.from({ length: count }, () => ({ type: 'column', content: [{ type: 'paragraph' }] })) }) }])),
   ...Object.fromEntries([1, 2, 3].map(level => [`toggleHeading${level}`, { icon: () => <span class="toggle-heading-icon"><ChevronRight size={10}/>H{level}</span>, action: (c: ChainedCommands) => c.insertContent({ type: 'toggle', content: [{ type: 'toggleSummary', attrs: { level }, content: [{ type: 'text', text: `Titre dépliant ${level}` }] }, { type: 'paragraph' }] }) }])),
 };
-const blocks = slashCommands.map(command => ({ ...command, ...blockActions[command.id] }));
+// Actions, colours and « Transformer en » entries act on the current block; their icon derives from the target.
+function derivedAction(command: SlashCommand): { icon: () => JSX.Element; action: (chain: ChainedCommands) => ChainedCommands } {
+  if (command.id.startsWith('turn-')) return { icon: blockActions[command.id.slice(5)]?.icon ?? (() => <Repeat2 size={18}/>), action: blockActions[command.id.slice(5)]?.action ?? (c => c) };
+  const color = command.id.match(/^(color|background)-(\w+)$/);
+  if (color) return { icon: () => <span class="slash-color" data-fotion-color={color[1] === 'color' ? color[2] : 'default'} data-fotion-background={color[1] === 'background' ? color[2] : 'default'}>A</span>, action: c => c };
+  const icons: Record<string, () => JSX.Element> = { mention: () => <AtSign size={18}/>, emoji: () => <Smile size={18}/>, duplicate: () => <Copy size={18}/>, delete: () => <Trash2 size={18}/> };
+  return { icon: icons[command.id] ?? (() => <Type size={18}/>), action: c => c };
+}
+const blocks = slashCommands.map(command => ({ ...command, ...(blockActions[command.id] ?? derivedAction(command)) }));
 
 export default function DocumentEditor(props: { content: string; onChange: (content: string) => void; onReady: (editor: Editor | undefined) => void; onCreatePage: () => void; pages: Page[]; onOpenPage: (id: string) => void; editable: boolean }) {
   let element!: HTMLDivElement;
@@ -47,6 +55,7 @@ export default function DocumentEditor(props: { content: string; onChange: (cont
   const [blockQuery, setBlockQuery] = createSignal('');
   const [linkDraft, setLinkDraft] = createSignal<{ value: string; from: number; to: number; x: number; y: number }>();
   const [imageDraft, setImageDraft] = createSignal<string>();
+  const [emojiAt, setEmojiAt] = createSignal<{ x: number; y: number }>();
   const [imageError, setImageError] = createSignal('');
   let imagePosition = 0;
   const linkPages = () => props.pages.filter(page => normalizeSearch(page.title).includes(normalizeSearch(linkDraft()?.value || ''))).slice(0, 20);
@@ -74,6 +83,8 @@ export default function DocumentEditor(props: { content: string; onChange: (cont
     const $from = editor.state.doc.resolve(range.from);
     const typed = range.to - range.from;
     let chain = editor.chain().focus().deleteRange({ from: range.from, to: range.to });
+    // Actions, colours and inline entries work on the current block instead of creating a new one.
+    if (['Actions', 'Couleurs', 'En ligne'].includes(item.group)) { chain.run(); runBlockCommand(item.id); return; }
     if ($from.parent.content.size > typed && item.id !== 'page') {
       const after = $from.after() - typed;
       chain = chain.insertContentAt(after, { type: 'paragraph' }).setTextSelection(after + 1);
@@ -82,6 +93,29 @@ export default function DocumentEditor(props: { content: string; onChange: (cont
     if (item.id === 'page') props.onCreatePage();
     if (item.id === 'image') { imagePosition = editor.state.selection.from; setImageError(''); setImageDraft(''); requestAnimationFrame(() => document.querySelector<HTMLInputElement>('.image-url-input')?.focus()); }
   };
+  /** Commands that act on the block around the cursor, reached from the slash menu or the keyboard. */
+  function runBlockCommand(id: string) {
+    const block = blockAt(editor.state.doc, caretPosition(editor));
+    if (id === 'mention') { editor.chain().focus().insertContent('@').run(); return; }
+    if (id === 'emoji') { const coords = editor.view.coordsAtPos(editor.state.selection.from); setEmojiAt({ x: Math.max(8, Math.min(coords.left, window.innerWidth - 416)), y: Math.max(8, Math.min(coords.bottom + 8, window.innerHeight - 364)) }); return; }
+    if (!block) return;
+    if (id === 'duplicate') { duplicateBlock(block.pos); return; }
+    if (id === 'delete') { editor.chain().focus().deleteRange({ from: block.pos, to: block.pos + block.node.nodeSize }).run(); return; }
+    const color = id.match(/^(color|background)-(\w+)$/);
+    if (color) {
+      // Notion block colours apply to the whole text of the block.
+      const caret = editor.state.selection.from, range = { from: block.pos + 1, to: block.pos + block.node.nodeSize - 1 };
+      const chain = editor.chain().focus().setTextSelection(range);
+      (color[2] === 'default' ? chain.unsetMark('textColor') : chain.setMark('textColor', { [color[1]]: color[2] })).setTextSelection(caret).run();
+      return;
+    }
+    if (id.startsWith('turn-')) {
+      const target = id.slice(5), label = blocks.find(item => item.id === target)?.label;
+      if (!label) return;
+      setBlockMenu({ pos: block.pos, x: 0, y: 0 });
+      transformBlock(label, blockActions[target].action);
+    }
+  }
   function openColors() {
     const { from, to } = TextSelection.between(editor.state.selection.$from, editor.state.selection.$to);
     const coords = editor.view.coordsAtPos(from);
@@ -256,13 +290,18 @@ export default function DocumentEditor(props: { content: string; onChange: (cont
           if ((event.metaKey || event.ctrlKey) && event.shiftKey && event.key.toLowerCase() === 'h' && lastColor) {
             applyColor(lastColor.kind, lastColor.value); event.preventDefault(); return true;
           }
+          if ((event.metaKey || event.ctrlKey) && !event.altKey && event.key === '/') {
+            const block = blockAt(editor.state.doc, caretPosition(editor));
+            if (block) { const coords = editor.view.coordsAtPos(editor.state.selection.from); openBlockMenu(block, coords.left, coords.bottom + 8); }
+            event.preventDefault(); return true;
+          }
           if ((event.metaKey || event.ctrlKey) && !event.shiftKey && !event.altKey && event.key.toLowerCase() === 'd') {
-            const block = blockAt(editor.state.doc, editor.state.selection.from);
+            const block = blockAt(editor.state.doc, caretPosition(editor));
             if (block) duplicateBlock(block.pos);
             event.preventDefault(); return true;
           }
           if (event.altKey && event.shiftKey && ['ArrowUp', 'ArrowDown'].includes(event.key)) {
-            const block = blockAt(editor.state.doc, editor.state.selection.from);
+            const block = blockAt(editor.state.doc, caretPosition(editor));
             if (block) { setBlockMenu({ pos: block.pos, x: 0, y: 0 }); moveBlock(event.key === 'ArrowUp' ? -1 : 1); }
             event.preventDefault(); return true;
           }
@@ -287,7 +326,7 @@ export default function DocumentEditor(props: { content: string; onChange: (cont
     props.onReady(editor);
     const close = (event: MouseEvent) => { if (!(event.target as HTMLElement).closest('.editor, .mention-menu')) setMention(undefined); if (!(event.target as HTMLElement).closest('.block-menu, .block-controls, .block-submenu')) closeBlockMenu(); };
     const scroll = (e: Event) => { if ((e.target as HTMLElement)?.closest?.('.popover')) return; setSelection(undefined); setSlash(undefined); setMention(undefined); setColorMenu(undefined); closeBlockMenu(); };
-    const escape = (e: KeyboardEvent) => { if (e.key === 'Escape') { setMention(undefined); closeBlockMenu(); setLinkDraft(undefined); setImageDraft(undefined); if (colorMenu()) { setColorMenu(undefined); editor.commands.focus(); } } };
+    const escape = (e: KeyboardEvent) => { if (e.key === 'Escape') { setMention(undefined); closeBlockMenu(); if (emojiAt()) { setEmojiAt(undefined); editor.commands.focus(); } setLinkDraft(undefined); setImageDraft(undefined); if (colorMenu()) { setColorMenu(undefined); editor.commands.focus(); } } };
     window.addEventListener('keydown', escape);
     document.addEventListener('pointerdown', close);
     window.addEventListener('scroll', scroll, true);
@@ -319,7 +358,7 @@ export default function DocumentEditor(props: { content: string; onChange: (cont
     <div ref={element} class="editor" />
     <Show when={ready() && props.editable}><BlockControls editor={editor} onMenu={openBlockMenu} onAdd={insertBelow}/></Show>
     <Show when={selection()}>{position => <div class="bubble-menu" role="toolbar" aria-label="Mise en forme" style={{ left: `${position().x}px`, top: `${position().y}px` }} onMouseDown={e => e.preventDefault()}>
-      <button title="Transformer en titre" onClick={() => { const block = blockAt(editor.state.doc, editor.state.selection.from); if (block) { openBlockMenu(block, position().x, position().y + 38); setTransform(true); } }}>{editor?.isActive('heading') ? `Titre ${editor.getAttributes('heading').level}` : 'Texte'} <ChevronDown size={12}/></button><span class="menu-separator"/>
+      <button title="Transformer en titre" onClick={() => { const block = blockAt(editor.state.doc, caretPosition(editor)); if (block) { openBlockMenu(block, position().x, position().y + 38); setTransform(true); } }}>{editor?.isActive('heading') ? `Titre ${editor.getAttributes('heading').level}` : 'Texte'} <ChevronDown size={12}/></button><span class="menu-separator"/>
       <button aria-label="Gras" classList={{ active: active('bold') }} onClick={() => editor.chain().focus().toggleBold().run()}><Bold size={16}/></button>
       <button aria-label="Italique" classList={{ active: active('italic') }} onClick={() => editor.chain().focus().toggleItalic().run()}><Italic size={16}/></button>
       <button aria-label="Souligné" classList={{ active: active('underline') }} onClick={() => editor.chain().focus().toggleUnderline().run()}><Underline size={16}/></button>
@@ -389,6 +428,7 @@ export default function DocumentEditor(props: { content: string; onChange: (cont
       <Show when={pageIdFromHref(draft().value)}><button type="button" onClick={() => { const id = pageIdFromHref(draft().value); if (id) props.onOpenPage(id); setLinkDraft(undefined); }}>Ouvrir la page liée</button></Show>
       <button type="button" onClick={() => { setLinkDraft({ ...draft(), value: '' }); saveLink(); }}>Supprimer le lien</button>
     </form></>}</Show>
+    <Show when={emojiAt()}>{position => <><div class="dismiss-layer" onClick={() => { setEmojiAt(undefined); editor.commands.focus(); }}/><EmojiPicker label="Insérer un emoji" style={{ position: 'fixed', left: `${position().x}px`, top: `${position().y}px` }} onPick={emoji => { setEmojiAt(undefined); editor.chain().focus().insertContent(emoji).run(); }}/></>}</Show>
     <Show when={imageDraft() !== undefined}><div class="modal-backdrop" onMouseDown={e => { if (e.target === e.currentTarget) setImageDraft(undefined); }}><form class="modal image-dialog" role="dialog" aria-modal="true" aria-label="Ajouter une image" onSubmit={e => {
       e.preventDefault(); const src = imageDraft()?.trim() || '';
       if (!/^https?:\/\//i.test(src)) { setImageError('Saisissez une adresse d’image http:// ou https://.'); return; }
