@@ -1,6 +1,7 @@
-import { createSignal, createMemo, onMount, onCleanup, Show, For } from 'solid-js';
+import { createSignal, createMemo, createEffect, onMount, onCleanup, Show, For } from 'solid-js';
 import { Editor, type ChainedCommands } from '@tiptap/core';
 import Placeholder from '@tiptap/extension-placeholder';
+import { mentionQuery } from './page-mention';
 import type { Page } from './types';
 import { normalizeSearch, pageIdFromHref, pageHref } from './page-index';
 import { textColors, colorId, type ColorId } from './colors';
@@ -44,6 +45,9 @@ export default function DocumentEditor(props: { content: string; onChange: (cont
   const linkPages = () => props.pages.filter(page => normalizeSearch(page.title).includes(normalizeSearch(linkDraft()?.value || ''))).slice(0, 20);
   const [linkError, setLinkError] = createSignal('');
   const [slash, setSlash] = createSignal<{ from: number; to: number; query: string; x: number; y: number }>();
+  const [mention, setMention] = createSignal<{ from: number; to: number; query: string; x: number; y: number }>();
+  const [mentionChoice, setMentionChoice] = createSignal(0);
+  const mentionPages = createMemo(() => props.pages.filter(page => !page.trashed && normalizeSearch(page.title || 'Sans titre').includes(normalizeSearch(mention()?.query || ''))).slice(0, 20));
   const [choice, setChoice] = createSignal(0);
   const [selection, setSelection] = createSignal<{ x: number; y: number }>();
   const [revision, setRevision] = createSignal(0);
@@ -75,10 +79,35 @@ export default function DocumentEditor(props: { content: string; onChange: (cont
     try { localStorage.setItem('fotion-last-color', JSON.stringify(lastColor)); } catch { /* Formatting still works when browser storage is unavailable. */ }
     setColorMenu(undefined);
   }
+  function insertMention(page: Page) {
+    const range = mention(); if (!range) return;
+    setMention(undefined);
+    editor.chain().focus().insertContentAt({ from: range.from, to: range.to }, [{ type: 'pageMention', attrs: { id: page.id, label: page.title || 'Sans titre' } }, { type: 'text', text: ' ' }]).run();
+  }
+  createEffect(() => {
+    props.pages;
+    if (ready()) editor.view.dispatch(editor.state.tr.setMeta('pageMentionsChanged', true).setMeta('addToHistory', false));
+  });
+  createEffect(() => {
+    const range = mention(), index = mentionChoice(), count = mentionPages().length;
+    if (!ready()) return;
+    const root = editor.view.dom;
+    if (range) {
+      root.setAttribute('aria-controls', 'page-mention-menu'); root.setAttribute('aria-autocomplete', 'list');
+      if (count) root.setAttribute('aria-activedescendant', `page-mention-option-${Math.min(index, count - 1)}`);
+      else root.removeAttribute('aria-activedescendant');
+    } else { root.removeAttribute('aria-controls'); root.removeAttribute('aria-autocomplete'); root.removeAttribute('aria-activedescendant'); }
+  });
   function updateMenus() {
     setRevision(n => n + 1);
     const { from, to, empty, $from } = editor.state.selection;
     const before = $from.parent.textBetween(0, $from.parentOffset, '\0');
+    const candidate = empty && !$from.parent.type.spec.code && !editor.isActive('code') ? mentionQuery(before) : null;
+    if (candidate) {
+      const coords = editor.view.coordsAtPos(from);
+      if (mention()?.query !== candidate.query) setMentionChoice(0);
+      setMention({ from: from - candidate.length, to: from, query: candidate.query, x: Math.max(8, Math.min(coords.left, window.innerWidth - 320)), y: Math.max(8, Math.min(coords.bottom + 8, window.innerHeight - 300)) });
+    } else setMention(undefined);
     const match = before.match(/^\/([^/]*)$/);
     if (empty && match && $from.parent.type.name === 'paragraph') {
       const coords = editor.view.coordsAtPos(from);
@@ -129,7 +158,7 @@ export default function DocumentEditor(props: { content: string; onChange: (cont
     } catch { /* Ignore invalid preferences without affecting the document. */ }
     editor = new Editor({
       element,
-      extensions: [...editorExtensions(), Placeholder.configure({ placeholder: 'Appuyez sur « / » pour les commandes…' })],
+      extensions: [...editorExtensions(id => props.pages.find(page => page.id === id)), Placeholder.configure({ placeholder: 'Appuyez sur « / » pour les commandes…' })],
       content: props.content,
       contentType: 'markdown',
       editorProps: {
@@ -141,6 +170,19 @@ export default function DocumentEditor(props: { content: string; onChange: (cont
           event.preventDefault(); props.onOpenPage(id); return true;
         } },
         handleKeyDown: (_, event) => {
+          if (event.isComposing) return false;
+          const focusedMention = (event.target as HTMLElement).closest('a[data-page-mention]');
+          if (focusedMention && event.key === 'Enter') { const id = pageIdFromHref(focusedMention.getAttribute('href') || ''); if (id) props.onOpenPage(id); event.preventDefault(); return true; }
+          if (mention()) {
+            if (['ArrowDown', 'ArrowUp'].includes(event.key)) {
+              const count = mentionPages().length;
+              if (count) setMentionChoice(i => (i + (event.key === 'ArrowDown' ? 1 : -1) + count) % count);
+              document.querySelector('.mention-menu .chosen')?.scrollIntoView({ block: 'nearest' });
+              event.preventDefault(); return true;
+            }
+            if (event.key === 'Enter' && mentionPages()[mentionChoice()]) { insertMention(mentionPages()[mentionChoice()]); event.preventDefault(); return true; }
+            if (event.key === 'Escape') { setMention(undefined); event.preventDefault(); return true; }
+          }
           if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') { event.preventDefault(); event.stopPropagation(); link(); return true; }
           if ((event.metaKey || event.ctrlKey) && event.shiftKey && event.key.toLowerCase() === 'h' && lastColor) {
             applyColor(lastColor.kind, lastColor.value); event.preventDefault(); return true;
@@ -164,13 +206,13 @@ export default function DocumentEditor(props: { content: string; onChange: (cont
       onUpdate: () => { props.onChange(editor.getMarkdown()); updateMenus(); },
       onSelectionUpdate: updateMenus,
       onFocus: updateMenus,
-      onBlur: () => { setTimeout(() => { if (!editor.isFocused && !document.activeElement?.closest('.bubble-menu, .link-popover, .color-menu')) setSelection(undefined); }, 180); },
+      onBlur: () => { setTimeout(() => { if (!editor.isFocused && !document.activeElement?.closest('.bubble-menu, .link-popover, .color-menu, .mention-menu')) setSelection(undefined); }, 180); },
     });
     setReady(true);
     props.onReady(editor);
-    const close = (event: MouseEvent) => { if (!(event.target as HTMLElement).closest('.block-menu, .block-controls, .block-submenu')) closeBlockMenu(); };
-    const scroll = (e: Event) => { if ((e.target as HTMLElement)?.closest?.('.popover')) return; setSelection(undefined); setSlash(undefined); setColorMenu(undefined); closeBlockMenu(); };
-    const escape = (e: KeyboardEvent) => { if (e.key === 'Escape') { closeBlockMenu(); setLinkDraft(undefined); setImageDraft(undefined); if (colorMenu()) { setColorMenu(undefined); editor.commands.focus(); } } };
+    const close = (event: MouseEvent) => { if (!(event.target as HTMLElement).closest('.editor, .mention-menu')) setMention(undefined); if (!(event.target as HTMLElement).closest('.block-menu, .block-controls, .block-submenu')) closeBlockMenu(); };
+    const scroll = (e: Event) => { if ((e.target as HTMLElement)?.closest?.('.popover')) return; setSelection(undefined); setSlash(undefined); setMention(undefined); setColorMenu(undefined); closeBlockMenu(); };
+    const escape = (e: KeyboardEvent) => { if (e.key === 'Escape') { setMention(undefined); closeBlockMenu(); setLinkDraft(undefined); setImageDraft(undefined); if (colorMenu()) { setColorMenu(undefined); editor.commands.focus(); } } };
     window.addEventListener('keydown', escape);
     document.addEventListener('pointerdown', close);
     window.addEventListener('scroll', scroll, true);
@@ -229,6 +271,11 @@ export default function DocumentEditor(props: { content: string; onChange: (cont
         </button>}</For>
       </>}</For>
     </div></>}</Show>
+    <Show when={mention()}>{position => <div id="page-mention-menu" class="mention-menu popover" role="listbox" aria-label="Mentionner une page" style={{ left: `${position().x}px`, top: `${position().y}px` }}>
+      <div class="menu-label">Mentionner une page</div>
+      <For each={mentionPages()}>{(page, i) => <button id={`page-mention-option-${i()}`} role="option" aria-selected={mentionChoice() === i()} classList={{ chosen: mentionChoice() === i() }} onMouseDown={e => e.preventDefault()} onMouseEnter={() => setMentionChoice(i())} onClick={() => insertMention(page)}><span>{page.icon || '📄'}</span><span>{page.title || 'Sans titre'}</span></button>}</For>
+      <Show when={!mentionPages().length}><p class="empty-message">Aucune page correspondante.</p></Show>
+    </div>}</Show>
     <Show when={slash()}>{position => <div class="slash-menu popover" role="listbox" aria-label="Types de blocs" style={{ left: `${position().x}px`, top: `${position().y}px` }}>
       <div class="menu-label">Blocs de base</div>
       <For each={options()}>{(item, i) => <button role="option" aria-selected={choice() === i()} classList={{ chosen: choice() === i() }} onMouseDown={e => e.preventDefault()} onMouseEnter={() => setChoice(i())} onClick={() => apply(i())}><span class="block-icon">{item.icon}</span><span><strong>{item.label}</strong><small>{item.hint}</small></span></button>}</For>

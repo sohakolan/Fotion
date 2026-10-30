@@ -173,7 +173,7 @@ Références : [S08](NOTION_REFERENCE.md#s08), [S09](NOTION_REFERENCE.md#s09), [
 - [ ] **FN-129** [PARTIEL] Créer un lien interne avec @, [[ et le menu de lien selon la référence.
 - [ ] **FN-130** Créer une nouvelle page depuis une recherche de lien sans résultat.
 - [ ] **FN-131** [PARTIEL] Afficher les mentions entrantes et les backlinks d’une page.
-- [ ] **FN-132** Mettre à jour les libellés des références après renommage.
+- [ ] **FN-132** [PARTIEL] Mettre à jour les libellés des références après renommage.
 - [ ] **FN-133** Afficher un aperçu de page au survol d’une mention.
 - [ ] **FN-134** Créer une mention de date et interpréter les dates relatives.
 - [ ] **FN-135** Définir une heure, un fuseau et un rappel.
@@ -551,3 +551,9 @@ Recherche accent-insensible sur plusieurs termes, classement titre/contenu/réce
 Preuves : [index et résolution des liens](../src/page-index.ts), [tests de recherche et de backlinks](../tests/page-index.test.ts), [round-trip des liens](../tests/markdown.test.ts), [parcours DOM insertion → navigation → backlink → recherche](../scripts/check-ui.mjs). L’index utilise un parseur isolé, car l’éditeur enregistre ses propres tokenizers Markdown.
 
 Restent notamment les menus @ et [[, les mentions au titre dynamique, les aperçus, les wikiliens, le surlignage des résultats, les filtres, les ancres, un index inversé et les mesures sur grands coffres. Aucun critère de parité UI n’est déclaré validé par ces seuls tests DOM.
+
+## Avancement — mentions de pages
+
+FN-129 et FN-132 : menus @ et [[, filtrage par titre, flèches/Entrée/Échap, mention atomique avec icône et titre actuel, état indisponible et lien Markdown portable marqué par le titre `fotion:page`. Le formulaire de lien conserve des liens ordinaires. Les nouveaux libellés de mentions sont reflétés à l’affichage et lors de la prochaine sauvegarde ; aucun historique d’édition n’est ajouté pour le seul rafraîchissement de l’affichage.
+
+Preuves : [extension de mention](../src/page-mention.ts), [triggers](../tests/page-mention.test.ts), [Markdown/HTML et renommage](../tests/markdown.test.ts), [parcours DOM](../scripts/check-ui.mjs). Restent la création depuis le sélecteur, l’aperçu, les mentions de date/personne, la pagination du sélecteur et la comparaison visuelle réelle.

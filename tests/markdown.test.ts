@@ -108,3 +108,39 @@ test('internal file links remain relative and keep their label through Markdown'
   assert.match(editor.getHTML(), /href="\.\/R%C3%A9union/);
   editor.destroy();
 });
+
+test('page mentions preserve stable targets, escaped labels, ordinary links and HTML clipboard', () => {
+  const label = 'Plan [été] *test* \\ <b> & 😀';
+  const editor = new Editor({ extensions: editorExtensions(), content: { type: 'doc', content: [{ type: 'paragraph', content: [
+    { type: 'text', text: 'Voir ' },
+    { type: 'pageMention', attrs: { id: 'été (1).md', label } },
+    { type: 'text', text: ' ' },
+    { type: 'text', text: 'et un lien', marks: [{ type: 'link', attrs: { href: 'https://example.com' } }] },
+  ] }] } });
+  const before = editor.getJSON(), markdown = editor.getMarkdown(), html = editor.getHTML();
+  assert.match(markdown, /"fotion:page"/);
+  editor.commands.setContent(markdown, { contentType: 'markdown' });
+  assert.deepEqual(editor.getJSON(), before);
+  editor.commands.setContent(html);
+  assert.deepEqual(editor.getJSON(), before);
+  editor.destroy();
+});
+
+test('page mention titles update without modifying document history and remain navigable when unavailable', () => {
+  let target: { title: string; icon: string; trashed: boolean } | undefined = { title: 'Avant', icon: '📄', trashed: false };
+  const editor = new Editor({ extensions: editorExtensions(() => target), content: 'Un début', contentType: 'markdown' });
+  editor.commands.insertContentAt(9, { type: 'pageMention', attrs: { id: 'page.md', label: 'Avant' } });
+  const snapshot = editor.getJSON();
+  assert.match(editor.view.dom.querySelector('.page-mention')!.textContent!, /Avant/);
+  target = { title: 'Après', icon: '💡', trashed: false };
+  editor.view.dispatch(editor.state.tr.setMeta('pageMentionsChanged', true).setMeta('addToHistory', false));
+  assert.match(editor.view.dom.querySelector('.page-mention')!.textContent!, /Après/);
+  assert.match(editor.getMarkdown(), /\[Après\]/);
+  assert.deepEqual(editor.getJSON(), snapshot);
+  target = undefined;
+  editor.view.dispatch(editor.state.tr.setMeta('pageMentionsChanged', true).setMeta('addToHistory', false));
+  assert.ok(editor.view.dom.querySelector('.mention-unavailable'));
+  editor.commands.undo();
+  assert.equal(editor.view.dom.querySelector('.page-mention'), null);
+  editor.destroy();
+});

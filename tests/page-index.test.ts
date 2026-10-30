@@ -32,3 +32,9 @@ test('file links preserve unicode and reserved characters without allowing trave
   assert.equal(pageIdFromHref('page.md#section'), 'page.md');
   for (const value of ['../page.md', './%2E%2E%2Fpage.md', '/page.md', 'https://site/page.md', 'javascript:page.md', 'a%5Cb.md', '%invalid.md', '.hidden.md', 'page.txt']) assert.equal(pageIdFromHref(value), null, value);
 });
+
+test('mention links remain backlinks for the independent Markdown index', () => {
+  const pages = [page('source.md', 'Source', '[Titre actuel](./target.md "fotion:page")')];
+  const index = new PageIndex().update(pages);
+  assert.deepEqual(index.backlinks(pages, 'target.md').map(p => p.id), ['source.md']);
+});

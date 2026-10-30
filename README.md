@@ -74,9 +74,17 @@ Les grammaires sont actuellement chargées avec l’éditeur : le build de cette
 
 `Ctrl/Cmd + P` ouvre la recherche globale ; `Ctrl/Cmd + K` ouvre le formulaire de lien quand l’éditeur a le focus, et la recherche ailleurs. La recherche ignore les différences d’accents et de casse, accepte plusieurs termes et classe les titres avant le contenu, puis les modifications récentes. L’extrait se place autour d’un terme trouvé. L’index en mémoire réanalyse uniquement les pages dont le contenu a changé ; il n’est pas encore un index inversé sur disque.
 
-Dans le formulaire de lien, saisir un titre puis choisir une page. Le lien est enregistré en Markdown sous la forme `[libellé](./identifiant.md)` et reste valide après un changement de titre. Son libellé reste du texte éditable : il ne suit pas encore automatiquement les renommages comme une mention Notion. Cliquer sur le lien ouvre la destination après sauvegarde du brouillon ; une destination manquante ou à la corbeille laisse le document courant ouvert avec un message.
+Dans le formulaire de lien, saisir un titre puis choisir une page. Le lien est enregistré en Markdown sous la forme `[libellé](./identifiant.md)` et reste valide après un changement de titre. Son libellé reste du texte éditable et ne suit pas les renommages. Utiliser une mention pour afficher un titre dynamique. Cliquer sur le lien ouvre la destination après sauvegarde du brouillon ; une destination manquante ou à la corbeille laisse le document courant ouvert avec un message.
 
 Les liens entrants apparaissent au-dessus du titre et permettent de revenir aux pages sources. Ils sont calculés à partir des liens Markdown, y compris les liens par référence et dans les dépliants ; les exemples dans les blocs de code, les images, la page elle-même et les pages à la corbeille sont exclus. Les wikiliens Obsidian, les liens HTML arbitraires et les ancres de blocs ne sont pas encore couverts. Exporter une seule page ne copie pas ses destinations.
+
+## Mentions de pages
+
+Taper `@` ou `[[` au début d’un mot ouvre le sélecteur de pages. Filtrer par titre, choisir avec les flèches et Entrée, ou annuler avec Échap. Les adresses e-mail et les blocs de code ne déclenchent pas ce menu. Une mention affiche l’icône et le titre actuel de sa destination ; les liens Markdown ordinaires gardent leur libellé éditable.
+
+Une mention est sauvegardée comme `[titre](./identifiant.md "fotion:page")`. Le titre sert de repli dans les lecteurs externes ou quand la cible manque ; Fotion affiche le titre actuel du fichier cible et actualise le libellé exporté à la prochaine sauvegarde du document source. Une mention reste un backlink. Les modifications de titre ne réécrivent pas immédiatement tous les fichiers du coffre.
+
+La création d’une page depuis ce sélecteur, les aperçus au survol et les mentions de dates restent à réaliser. Le menu propose jusqu’à 20 correspondances ; préciser le titre pour réduire la liste.
 
 ## Vérifications
 
