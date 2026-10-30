@@ -1,5 +1,8 @@
 # Roadmap de parité Notion
 
+Architecture obligatoire : [organisation des fichiers et règles d’import](ARCHITECTURE.md).
+
+
 Objectif : une implémentation indépendante, open source et légère en TypeScript, SolidJS et Tiptap, avec des documents `.md` locaux. Le travail immédiat porte sur l’éditeur et une interface fidèle à une version identifiée de Notion. **L’IA et la collaboration restent hors périmètre actuel.**
 
 ## Les deux listes

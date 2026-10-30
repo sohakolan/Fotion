@@ -528,7 +528,7 @@ Références : [S49](NOTION_REFERENCE.md#s49), [S50](NOTION_REFERENCE.md#s50).
 
 ## État initial et preuves
 
-Les cases cochées s’appuient sur [le coffre Markdown](../server/vault.ts), [le moteur de déplacement](../src/block-move.ts), [les tests du coffre](../tests/vault.test.ts) et [les tests de déplacement](../tests/moves.test.ts). Elles ne certifient pas la parité avec toutes les variantes de Notion.
+Les cases cochées s’appuient sur [le coffre Markdown](../server/storage/vault.ts), [le moteur de déplacement](../src/features/editor/lib/block-move.ts), [les tests du coffre](../tests/unit/vault.test.ts) et [les tests de déplacement](../tests/unit/moves.test.ts). Elles ne certifient pas la parité avec toutes les variantes de Notion.
 
 À la création : **408 critères**, **10 cochés**, **55 partiels**. Ne pas présenter le ratio comme un pourcentage de parité : les critères ont des tailles et périmètres différents.
 
@@ -536,19 +536,19 @@ Les cases cochées s’appuient sur [le coffre Markdown](../server/vault.ts), [l
 
 Les critères FN-048 à FN-050 disposent désormais d’une palette texte/fond, d’une dernière couleur persistée et de son raccourci Ctrl/Cmd + Maj + H, ainsi que d’une action pour retirer toutes les marques de la sélection. Les couleurs combinées aux autres marques sont conservées en Markdown avec des balises `span` documentées dans le README.
 
-Preuves : [extension couleur](../src/colors.ts), [tests de round-trip](../tests/markdown.test.ts), [scénario DOM clavier et sauvegarde](../scripts/check-ui.mjs). La comparaison visuelle avec la référence, les états de sélection mixtes dans tous les blocs et la couleur de bloc complète restent à terminer ; ces critères restent partiels.
+Preuves : [extension couleur](../src/features/editor/extensions/colors.ts), [tests de round-trip](../tests/unit/markdown.test.ts), [scénario DOM clavier et sauvegarde](../scripts/check-ui.mjs). La comparaison visuelle avec la référence, les états de sélection mixtes dans tous les blocs et la couleur de bloc complète restent à terminer ; ces critères restent partiels.
 
 ## Avancement — blocs de code
 
 FN-072 : langage recherchable, coloration des 37 entrées communes Lowlight, copie avec états de réussite/échec, retour à la ligne et légende sont implémentés. Le langage inconnu importé est conservé. Les extraits contenant leurs propres clôtures Markdown ne tronquent plus la page à la sauvegarde.
 
-Preuves : [extension de code](../src/code-block.ts), [round-trips Markdown et HTML](../tests/markdown.test.ts), [recette DOM des commandes et du presse-papiers](../scripts/check-ui.mjs). Référence : [blocs de code Notion](https://www.notion.com/help/code-blocks). Le catalogue complet des langages de la référence, le chargement des grammaires à la demande, les mesures de performance sur longs extraits et la validation visuelle restent ouverts. FN-072 et UI-156 restent partiels.
+Preuves : [extension de code](../src/features/editor/extensions/code-block.ts), [round-trips Markdown et HTML](../tests/unit/markdown.test.ts), [recette DOM des commandes et du presse-papiers](../scripts/check-ui.mjs). Référence : [blocs de code Notion](https://www.notion.com/help/code-blocks). Le catalogue complet des langages de la référence, le chargement des grammaires à la demande, les mesures de performance sur longs extraits et la validation visuelle restent ouverts. FN-072 et UI-156 restent partiels.
 
 ## Avancement — recherche et liens
 
 Recherche accent-insensible sur plusieurs termes, classement titre/contenu/récence et extraits autour du résultat. Un cache en mémoire évite de réanalyser les documents inchangés. Le formulaire de lien propose les pages du coffre ; les chemins Markdown relatifs utilisent leurs identifiants stables. Navigation avec sauvegarde préalable, message pour une cible absente/à la corbeille et panneau de liens entrants.
 
-Preuves : [index et résolution des liens](../src/page-index.ts), [tests de recherche et de backlinks](../tests/page-index.test.ts), [round-trip des liens](../tests/markdown.test.ts), [parcours DOM insertion → navigation → backlink → recherche](../scripts/check-ui.mjs). L’index utilise un parseur isolé, car l’éditeur enregistre ses propres tokenizers Markdown.
+Preuves : [index et résolution des liens](../src/features/pages/lib/page-index.ts), [tests de recherche et de backlinks](../tests/unit/page-index.test.ts), [round-trip des liens](../tests/unit/markdown.test.ts), [parcours DOM insertion → navigation → backlink → recherche](../scripts/check-ui.mjs). L’index utilise un parseur isolé, car l’éditeur enregistre ses propres tokenizers Markdown.
 
 Restent notamment les menus @ et [[, les mentions au titre dynamique, les aperçus, les wikiliens, le surlignage des résultats, les filtres, les ancres, un index inversé et les mesures sur grands coffres. Aucun critère de parité UI n’est déclaré validé par ces seuls tests DOM.
 
@@ -556,10 +556,10 @@ Restent notamment les menus @ et [[, les mentions au titre dynamique, les aperç
 
 FN-129 et FN-132 : menus @ et [[, filtrage par titre, flèches/Entrée/Échap, mention atomique avec icône et titre actuel, état indisponible et lien Markdown portable marqué par le titre `fotion:page`. Le formulaire de lien conserve des liens ordinaires. Les nouveaux libellés de mentions sont reflétés à l’affichage et lors de la prochaine sauvegarde ; aucun historique d’édition n’est ajouté pour le seul rafraîchissement de l’affichage.
 
-Preuves : [extension de mention](../src/page-mention.ts), [triggers](../tests/page-mention.test.ts), [Markdown/HTML et renommage](../tests/markdown.test.ts), [parcours DOM](../scripts/check-ui.mjs). Restent la création depuis le sélecteur, l’aperçu, les mentions de date/personne, la pagination du sélecteur et la comparaison visuelle réelle.
+Preuves : [extension de mention](../src/features/editor/extensions/page-mention.ts), [triggers](../tests/unit/page-mention.test.ts), [Markdown/HTML et renommage](../tests/unit/markdown.test.ts), [parcours DOM](../scripts/check-ui.mjs). Restent la création depuis le sélecteur, l’aperçu, les mentions de date/personne, la pagination du sélecteur et la comparaison visuelle réelle.
 
 ## Avancement — historique et restauration
 
 Liste des copies locales, aperçu en lecture seule, vue Markdown et restauration explicite. Les conflits avec le fichier courant, les sauvegardes corrompues, les liens symboliques et les versions d’une autre page sont refusés. La version remplacée est conservée ; la restauration reprend contenu/titre/présentation en conservant emplacement/favoris et métadonnées supplémentaires actuelles.
 
-Preuves : [coffre et API](../server/vault.ts), [tests disque et HTTP](../tests/vault.test.ts), [interface d’historique](../src/VersionHistory.tsx), [parcours DOM avec conflit puis restauration](../scripts/check-ui.mjs). Référence : [historique Notion](https://www.notion.com/help/duplicate-delete-and-restore-content). Restent la comparaison des changements, le regroupement, les versions nommées, la pagination/rétention et la recette visuelle 1:1.
+Preuves : [coffre et API](../server/storage/vault.ts), [tests disque et HTTP](../tests/unit/vault.test.ts), [interface d’historique](../src/features/pages/components/VersionHistory.tsx), [parcours DOM avec conflit puis restauration](../scripts/check-ui.mjs). Référence : [historique Notion](https://www.notion.com/help/duplicate-delete-and-restore-content). Restent la comparaison des changements, le regroupement, les versions nommées, la pagination/rétention et la recette visuelle 1:1.

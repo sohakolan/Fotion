@@ -1,5 +1,8 @@
 # Fotion
 
+Architecture obligatoire : [organisation des fichiers et règles d’import](docs/ARCHITECTURE.md).
+
+
 Un espace de notes local, en TypeScript, avec une interface inspirée de Notion et des documents Markdown comme dans Obsidian. SolidJS, Tiptap et Vite. Sans compte, collaboration, IA ni service cloud.
 
 ## Démarrer

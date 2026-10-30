@@ -1,10 +1,11 @@
+import { vaultMiddleware } from '../../server/http/vault-middleware';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { mkdtempSync, rmSync, readFileSync, writeFileSync, readdirSync, symlinkSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { createServer } from 'node:http';
-import { Vault, VaultError, decode, vaultMiddleware } from '../server/vault';
+import { Vault, VaultError, decode } from '../../server/storage/vault';
 const blank = { title: 'Essai', icon: '📝', parent: null, favorite: false, cover: '', content: '# Bonjour\n\n- [ ] Une tâche\n', trashed: false };
 function fixture(t: { after: (fn: () => void) => void }) {
   const root = mkdtempSync(join(tmpdir(), 'fotion-test-'));

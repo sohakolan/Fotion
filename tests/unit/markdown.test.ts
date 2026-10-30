@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createRequire } from 'node:module';
 import { Editor } from '@tiptap/core';
-import { editorExtensions } from '../src/extensions';
+import { editorExtensions } from '../../src/features/editor/extensions/editor-extensions';
 const require = createRequire(import.meta.url);
 const { JSDOM } = require('jsdom');
 const dom = new JSDOM('<!doctype html><html><body></body></html>');

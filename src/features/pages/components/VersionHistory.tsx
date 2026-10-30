@@ -1,7 +1,7 @@
 import { createSignal, onMount, onCleanup, For, Show } from 'solid-js';
 import { Editor } from '@tiptap/core';
-import { editorExtensions } from './extensions';
-import type { PageSnapshot, PageVersion } from './types';
+import { editorExtensions } from '../../editor';
+import type { PageSnapshot, PageVersion } from '../../../../shared/page';
 
 function SnapshotPreview(props: { content: string }) {
   let element!: HTMLDivElement;

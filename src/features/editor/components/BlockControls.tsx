@@ -1,7 +1,7 @@
 import { createSignal, onMount, onCleanup, Show } from 'solid-js';
 import type { Editor } from '@tiptap/core';
 import { GripVertical, Plus } from 'lucide-solid';
-import { blockAt, moveBlockTransaction, type Block } from './block-move';
+import { blockAt, moveBlockTransaction, type Block } from '../lib/block-move';
 
 type PositionedBlock = Block & { element: HTMLElement; left: number; top: number };
 export default function BlockControls(props: { editor: Editor; onMenu: (block: Block, x: number, y: number) => void; onAdd: (block: Block) => void }) {

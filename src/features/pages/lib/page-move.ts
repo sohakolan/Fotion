@@ -1,4 +1,4 @@
-import type { Page } from './types';
+import type { Page } from '../../../../shared/page';
 export type PagePlacement = 'before' | 'after' | 'inside' | 'root';
 export const byOrder = (a: Page, b: Page) => (a.order ?? 0) - (b.order ?? 0);
 

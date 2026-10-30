@@ -455,6 +455,12 @@ Critères propres à Fotion : exigences de fiabilité/recette proposées, pas fo
 
 ## État initial et preuves
 
-La base actuelle est dans [App.tsx](../src/App.tsx), [editor.tsx](../src/editor.tsx), [BlockControls.tsx](../src/BlockControls.tsx) et [style.css](../src/style.css). Le [scénario JSDOM](../scripts/check-ui.mjs) valide des événements et changements de DOM, pas les pixels ou le comportement du matériel réel.
+La base actuelle est dans [App.tsx](../src/app/App.tsx), [editor.tsx](../src/features/editor/components/DocumentEditor.tsx), [BlockControls.tsx](../src/features/editor/components/BlockControls.tsx) et [style.css](../src/app/styles.css). Le [scénario JSDOM](../scripts/check-ui.mjs) valide des événements et changements de DOM, pas les pixels ou le comportement du matériel réel.
 
 À la création : **328 critères**, **0 cochés**, **73 partiels**. Ne pas présenter le ratio comme un pourcentage de parité : les critères ont des tailles et périmètres différents.
+
+## Recette navigateur — 30 octobre 2026
+
+[Scénarios Playwright](../tests/e2e/editor.spec.ts) exécutés dans Chrome avec un coffre temporaire : déplacement réel au pointeur, annulation/rétablissement, sauvegarde puis rechargement ; sélection totale et palette de couleurs aux largeurs 1440 et 320 px ; pages bureau en thèmes clair/sombre et mobile à 390 px sans débordement horizontal. Les trois scénarios passent. La sélection totale de ProseMirror est désormais prise en charge par la barre de formatage.
+
+Les captures sont générées dans `test-results/`. Cette recette valide ces parcours et contraintes de géométrie ; elle ne constitue pas une comparaison pixel à pixel avec Notion et ne couvre pas Safari, Firefox ni le tactile réel. Les cases de parité visuelle restent ouvertes.

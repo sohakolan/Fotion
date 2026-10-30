@@ -1,14 +1,14 @@
 import { createSignal, createMemo, createEffect, onMount, onCleanup, Show, For } from 'solid-js';
 import { Editor, type ChainedCommands } from '@tiptap/core';
 import Placeholder from '@tiptap/extension-placeholder';
-import { mentionQuery } from './page-mention';
-import type { Page } from './types';
-import { normalizeSearch, pageIdFromHref, pageHref } from './page-index';
-import { textColors, colorId, type ColorId } from './colors';
-import { editorExtensions } from './extensions';
-import { TextSelection } from '@tiptap/pm/state';
+import { mentionQuery } from '../extensions/page-mention';
+import type { Page } from '../../../../shared/page';
+import { normalizeSearch, pageIdFromHref, pageHref } from '../../../../shared/page-links';
+import { textColors, colorId, type ColorId } from '../extensions/colors';
+import { editorExtensions } from '../extensions/editor-extensions';
+import { TextSelection, AllSelection } from '@tiptap/pm/state';
 import BlockControls from './BlockControls';
-import { blockAt, moveBlockTransaction, isListItem, type Block } from './block-move';
+import { blockAt, moveBlockTransaction, isListItem, type Block } from '../lib/block-move';
 import { Bold, Italic, Underline, Strikethrough, Code, Link, ChevronDown, ChevronRight, ArrowUp, ArrowDown, Trash2, Copy, Type, Search, Check, Plus, ImagePlus, X } from 'lucide-solid';
 
 
@@ -65,7 +65,7 @@ export default function DocumentEditor(props: { content: string; onChange: (cont
     if (item.label === 'Image') { imagePosition = editor.state.selection.from; setImageError(''); setImageDraft(''); requestAnimationFrame(() => document.querySelector<HTMLInputElement>('.image-url-input')?.focus()); }
   };
   function openColors() {
-    const { from, to } = editor.state.selection;
+    const { from, to } = TextSelection.between(editor.state.selection.$from, editor.state.selection.$to);
     const coords = editor.view.coordsAtPos(from);
     setColorMenu({ from, to, x: Math.max(8, Math.min(coords.left, window.innerWidth - 242)), y: Math.max(8, Math.min(coords.bottom + 8, window.innerHeight - 440)) });
     requestAnimationFrame(() => document.querySelector<HTMLButtonElement>('.color-menu button')?.focus());
@@ -114,7 +114,7 @@ export default function DocumentEditor(props: { content: string; onChange: (cont
       if (slash()?.query !== match[1]) setChoice(0);
       setSlash({ from: from - match[0].length, to: from, query: match[1], x: Math.max(8, Math.min(coords.left, window.innerWidth - 332)), y: Math.max(8, Math.min(coords.bottom + 8, window.innerHeight - 370)) });
     } else setSlash(undefined);
-    if (!empty && editor.state.selection instanceof TextSelection) {
+    if (!empty && (editor.state.selection instanceof TextSelection || editor.state.selection instanceof AllSelection)) {
       const start = editor.view.coordsAtPos(from), end = editor.view.coordsAtPos(to);
       setSelection({ x: Math.max(12, Math.min((start.left + end.left) / 2 - 140, window.innerWidth - 460)), y: Math.max(8, start.top - 45) });
     } else setSelection(undefined);
@@ -219,7 +219,7 @@ export default function DocumentEditor(props: { content: string; onChange: (cont
     onCleanup(() => { window.removeEventListener('keydown', escape); document.removeEventListener('pointerdown', close); window.removeEventListener('scroll', scroll, true); props.onReady(undefined); editor.destroy(); });
   });
   function link() {
-    const range = editor.state.selection;
+    const range = TextSelection.between(editor.state.selection.$from, editor.state.selection.$to);
     const coords = editor.view.coordsAtPos(range.from);
     setLinkError('');
     setLinkDraft({ value: editor.getAttributes('link').href || '', from: range.from, to: range.to, x: Math.max(8, Math.min(coords.left, window.innerWidth - 340)), y: Math.max(8, Math.min(coords.bottom + 10, window.innerHeight - 360)) });

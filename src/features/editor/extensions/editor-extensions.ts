@@ -1,5 +1,5 @@
 import { PageMention } from './page-mention';
-import type { Page } from './types';
+import type { Page } from '../../../../shared/page';
 import { CodeBlock } from './code-block';
 import { TextColor } from './colors';
 import StarterKit from '@tiptap/starter-kit';

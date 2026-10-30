@@ -1,7 +1,7 @@
 import { Node, mergeAttributes } from '@tiptap/core';
 import type { Transaction } from '@tiptap/pm/state';
-import { pageHref, pageIdFromHref } from './page-index';
-import type { Page } from './types';
+import { pageHref, pageIdFromHref } from '../../../../shared/page-links';
+import type { Page } from '../../../../shared/page';
 
 export const PageMention = Node.create<{ getPage: (id: string) => Pick<Page, 'title' | 'icon' | 'trashed'> | undefined }>({
   name: 'pageMention', group: 'inline', inline: true, atom: true, selectable: true,

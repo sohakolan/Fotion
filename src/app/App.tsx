@@ -1,11 +1,11 @@
 import { createSignal, createMemo, createEffect, onMount, onCleanup, For, Show } from 'solid-js';
 import { Search, House, ChevronDown, ChevronRight, ChevronsLeft, PanelLeft, Plus, Settings, Trash2, Star, MoreHorizontal, LockKeyhole, Check, ArrowUpRight, X, Download, Copy, Undo2, Redo2, FolderOpen, Upload, Smile, ImagePlus, RefreshCw, ArrowLeft, ArrowRight, CircleHelp, CheckCheck, SquarePen, Pencil, FileText, CornerUpRight, GripVertical } from 'lucide-solid';
 import type { Editor } from '@tiptap/core';
-import { PageIndex } from './page-index';
-import VersionHistory from './VersionHistory';
-import DocumentEditor from './editor';
-import type { Page, PageEdit } from './types';
-import { byOrder, planPageMove, type PagePlacement } from './page-move';
+import { PageIndex } from '../features/pages';
+import { VersionHistory } from '../features/pages';
+import { DocumentEditor } from '../features/editor';
+import type { Page, PageEdit } from '../../shared/page';
+import { byOrder, planPageMove, type PagePlacement } from '../features/pages';
 
 const emoji = ['🏡', '📄', '📝', '💡', '🗂️', '📚', '🏔️', '🌱', '✨', '🎯', '🧭', '🎨', '☕', '🚀', '🌊', '🪴', '🧠', '💻', '📌', '💛', '👋', '🛠️', '📷', '🎵'];
 const blank: PageEdit = { title: '', icon: '', parent: null, favorite: false, cover: '', content: '', trashed: false };

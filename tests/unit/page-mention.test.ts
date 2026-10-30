@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { mentionQuery } from '../src/page-mention';
+import { mentionQuery } from '../../src/features/editor/extensions/page-mention';
 
 test('page mention triggers respect email addresses, word boundaries and closing brackets', () => {
   assert.deepEqual(mentionQuery('@'), { query: '', length: 1 });

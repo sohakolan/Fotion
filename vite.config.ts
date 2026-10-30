@@ -1,6 +1,7 @@
+import { vaultMiddleware } from './server/http/vault-middleware.ts';
 import { defineConfig } from 'vite';
 import solid from 'vite-plugin-solid';
-import { Vault, vaultMiddleware } from './server/vault.ts';
+import { Vault } from './server/storage/vault.ts';
 const middleware = () => vaultMiddleware(new Vault(process.env.FOTION_VAULT || './vault', !process.env.FOTION_VAULT));
 export default defineConfig({
   plugins: [solid(), { name: 'local-markdown-vault', configureServer(server) { server.middlewares.use(middleware()); }, configurePreviewServer(server) { server.middlewares.use(middleware()); } }],

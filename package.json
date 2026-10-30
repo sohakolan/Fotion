@@ -6,10 +6,12 @@
   "license": "MIT",
   "scripts": {
     "dev": "vite --host 127.0.0.1",
-    "build": "tsc --noEmit && vite build",
+    "build": "npm run check:architecture && tsc --noEmit && vite build",
     "preview": "vite preview --host 127.0.0.1",
-    "test": "tsx --test tests/*.test.ts",
-    "test:ui": "npm run build && node scripts/check-ui.mjs"
+    "test": "tsx --test tests/unit/*.test.ts",
+    "test:ui": "npm run build && node scripts/check-ui.mjs",
+    "test:browser": "playwright test",
+    "check:architecture": "node scripts/check-architecture.mjs"
   },
   "dependencies": {
     "@tiptap/core": "latest",
@@ -29,6 +31,8 @@
     "yaml": "latest"
   },
   "devDependencies": {
+    "@babel/parser": "^7.29.12",
+    "@playwright/test": "^1.64.1",
     "@types/node": "latest",
     "jsdom": "latest",
     "tsx": "latest",

@@ -1,7 +1,8 @@
+import { pageHref, pageIdFromHref } from '../../shared/page-links';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { PageIndex, pageHref, pageIdFromHref } from '../src/page-index';
-import type { Page } from '../src/types';
+import { PageIndex } from '../../src/features/pages/lib/page-index';
+import type { Page } from '../../shared/page';
 const page = (id: string, title: string, content = '', trashed = false): Page => ({ id, title, content, trashed, icon: '', parent: null, favorite: false, cover: '', version: '1', updated: '2026-10-30T00:00:00Z' });
 
 test('search ranks titles, ignores accents, matches multiple terms and shows nearby content', () => {

@@ -1,17 +1,9 @@
+import { normalizeSearch, pageIdFromHref } from '../../../../shared/page-links';
 import { Marked, type Token } from 'marked';
-import type { Page } from './types';
+import type { Page } from '../../../../shared/page';
 
 // Tiptap registers custom tokenizers on the shared marked instance. Keep indexing independent.
 const markdown = new Marked({ gfm: true });
-
-export const normalizeSearch = (text: string) => text.normalize('NFD').replace(/\p{M}/gu, '').toLocaleLowerCase();
-export function pageIdFromHref(href: string): string | null {
-  try {
-    const id = decodeURIComponent(href.split(/[?#]/, 1)[0].replace(/^\.\//, ''));
-    return id.endsWith('.md') && !id.startsWith('.') && !/[/\\:\x00-\x1f]/.test(id) && id.length <= 220 ? id : null;
-  } catch { return null; }
-}
-export const pageHref = (id: string) => `./${encodeURIComponent(id)}`;
 
 type Entry = { content: string; text: string; normalized: string; links: Set<string> };
 export class PageIndex {
