@@ -7,6 +7,9 @@ export { convertToggle, type ToggleTarget } from './operations/toggle-conversion
 export { slashCommands, searchSlashCommands, slashQuery, type SlashCommand, type SlashGroup } from './operations/slash-commands';
 export { documentExtensions } from './document/extensions';
 export { NotionShortcuts } from './document/shortcuts';
+export { Columns, Column } from './document/columns';
+export { DirectiveBlock } from './document/directive-block';
+export * as FotionMark from './fotionmark';
 export { CodeBlock } from './document/code-block';
 export { Callout, calloutIconValue, calloutAppearance } from './document/callout';
 export { PageMention, mentionQuery } from './document/page-mention';

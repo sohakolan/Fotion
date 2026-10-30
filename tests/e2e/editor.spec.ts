@@ -498,3 +498,23 @@ test('backlinks follow the page view setting: popover, expanded or hidden', asyn
   await expect(toggle).toHaveCount(0);
   await expect(page.getByRole('list', { name: 'Lié à cette page' })).toBeVisible();
 });
+
+test('FotionMark columns are created from the slash menu and saved as directives', async ({ page }) => {
+  const created = await createDocument(page, 'Avant');
+  await page.locator('.prose > p').first().click();
+  await page.keyboard.press('ControlOrMeta+ArrowRight'); await page.keyboard.press('End');
+  await page.keyboard.press('Enter'); await page.keyboard.type('/2 col');
+  await expect(page.locator('.slash-menu').getByRole('option').first()).toContainText('2 colonnes');
+  await page.keyboard.press('Enter');
+  const columns = page.locator('.prose .fotion-column');
+  await expect(columns).toHaveCount(2);
+  await columns.nth(0).click(); await page.keyboard.type('Gauche');
+  await columns.nth(1).click(); await page.keyboard.type('Droite');
+  await page.screenshot({ path: test.info().outputPath('columns.png') });
+  await expect(page.locator('.save-status')).toHaveText('Enregistré');
+  const saved = await (await page.request.get('/api/pages')).json();
+  const content = saved.find((p: { id: string }) => p.id === created.id).content as string;
+  expect(content).toContain('::::columns\n:::column\nGauche\n:::\n:::column\nDroite\n:::\n::::');
+  await page.reload();
+  await expect(page.locator('.prose .fotion-column')).toHaveText(['Gauche', 'Droite']);
+});

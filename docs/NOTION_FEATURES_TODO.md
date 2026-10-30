@@ -101,7 +101,7 @@ Références : [S01](NOTION_REFERENCE.md#s01), [S04](NOTION_REFERENCE.md#s04), [
 - [ ] **FN-072** [PARTIEL] Blocs de code : compléter langues, coloration syntaxique, copie et retour à la ligne.
 - [ ] **FN-073** Équations mathématiques en bloc et en ligne avec édition et erreurs lisibles.
 - [ ] **FN-074** [PARTIEL] Tableaux simples : compléter en-têtes, déplacements et sélection des cellules.
-- [ ] **FN-075** Colonnes de contenu avec création par dépôt latéral.
+- [ ] **FN-075** [PARTIEL] Colonnes de contenu avec création par dépôt latéral.
 - [ ] **FN-076** Redimensionnement, réorganisation et suppression des colonnes.
 - [x] **FN-077** Table des matières liée aux titres et mise à jour après renommage.
 - [ ] **FN-078** Lien vers une page sous forme de bloc ; distinct d’une vraie sous-page.
@@ -114,7 +114,7 @@ Références : [S01](NOTION_REFERENCE.md#s01), [S04](NOTION_REFERENCE.md#s04), [
 - [ ] **FN-085** Marque-pages web avec titre, description et aperçu.
 - [ ] **FN-086** Blocs embarqués : vidéo, audio, PDF et contenus externes compatibles.
 - [ ] **FN-087** Bloc de fichier téléchargeable.
-- [ ] **FN-088** Traitement explicite des blocs non reconnus, sans suppression silencieuse.
+- [x] **FN-088** Traitement explicite des blocs non reconnus, sans suppression silencieuse.
 
 ## 05. Glisser-déposer et manipulation — P0
 

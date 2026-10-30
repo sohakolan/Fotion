@@ -12,7 +12,7 @@ import { TextSelection, AllSelection } from '@tiptap/pm/state';
 import BlockControls from './BlockControls';
 import { Menu, MenuItem, MenuDivider, MenuSearch, modKey } from '../../../kit';
 import { blockAt, moveBlockTransaction, isListItem, type Block } from '../../../../engine';
-import { Bold, Italic, Underline, Strikethrough, Code, Link, ChevronDown, ChevronRight, Trash2, Copy, Type, Search, Check, Plus, ImagePlus, X, Repeat2, PaintRoller, Heading1, Heading2, Heading3, List, ListOrdered, SquareCheckBig, ListCollapse, FileText, MessageSquareText, Quote, Table, Minus, Image as ImageIcon, CodeXml, TableOfContents } from 'lucide-solid';
+import { Bold, Italic, Underline, Strikethrough, Code, Link, ChevronDown, ChevronRight, Trash2, Copy, Type, Search, Check, Plus, ImagePlus, X, Repeat2, PaintRoller, Heading1, Heading2, Heading3, List, ListOrdered, SquareCheckBig, ListCollapse, FileText, MessageSquareText, Quote, Table, Minus, Image as ImageIcon, CodeXml, TableOfContents, Columns2, Columns3, Columns4 } from 'lucide-solid';
 
 
 const blockActions: Record<string, { icon: () => JSX.Element; action: (chain: ChainedCommands) => ChainedCommands }> = {
@@ -32,6 +32,7 @@ const blockActions: Record<string, { icon: () => JSX.Element; action: (chain: Ch
   image: { icon: () => <ImageIcon size={18}/>, action: c => c },
   code: { icon: () => <CodeXml size={18}/>, action: c => c.toggleCodeBlock() },
   toc: { icon: () => <TableOfContents size={18}/>, action: c => c.insertContent({ type: 'tableOfContents' }) },
+  ...Object.fromEntries(([[2, Columns2], [3, Columns3], [4, Columns4]] as const).map(([count, Icon]) => [`columns${count}`, { icon: () => <Icon size={18}/>, action: (c: ChainedCommands) => c.insertContent({ type: 'columns', content: Array.from({ length: count }, () => ({ type: 'column', content: [{ type: 'paragraph' }] })) }) }])),
   ...Object.fromEntries([1, 2, 3].map(level => [`toggleHeading${level}`, { icon: () => <span class="toggle-heading-icon"><ChevronRight size={10}/>H{level}</span>, action: (c: ChainedCommands) => c.insertContent({ type: 'toggle', content: [{ type: 'toggleSummary', attrs: { level }, content: [{ type: 'text', text: `Titre dépliant ${level}` }] }, { type: 'paragraph' }] }) }])),
 };
 const blocks = slashCommands.map(command => ({ ...command, ...blockActions[command.id] }));
@@ -369,7 +370,7 @@ export default function DocumentEditor(props: { content: string; onChange: (cont
       <Show when={!transform()} fallback={<>
         <MenuItem icon={<ChevronRight size={14} class="back-chevron"/>} onClick={() => { setTransform(false); setBlockQuery(''); }}>Transformer en</MenuItem>
         <MenuDivider/>
-        <div class="transform-options"><For each={filteredBlocks().filter(b => !['Séparateur', 'Tableau', 'Table des matières', 'Page', 'Image'].includes(b.label))}>{item => <MenuItem icon={item.icon()} disabled={!canTransform(item.label)} title={!canTransform(item.label) ? 'Conversion indisponible pour préserver la structure du bloc.' : undefined} onClick={() => transformBlock(item.label, item.action)}>{item.label}</MenuItem>}</For></div>
+        <div class="transform-options"><For each={filteredBlocks().filter(b => !['Séparateur', 'Tableau', 'Table des matières', 'Page', 'Image'].includes(b.label) && !b.id.startsWith('columns'))}>{item => <MenuItem icon={item.icon()} disabled={!canTransform(item.label)} title={!canTransform(item.label) ? 'Conversion indisponible pour préserver la structure du bloc.' : undefined} onClick={() => transformBlock(item.label, item.action)}>{item.label}</MenuItem>}</For></div>
       </>}>
         <MenuItem icon={<Trash2 size={16}/>} onClick={() => { const node = editor.state.doc.nodeAt(position().pos); if (node) editor.chain().focus().deleteRange({ from: position().pos, to: position().pos + node.nodeSize }).run(); closeBlockMenu(); }}>Supprimer</MenuItem>
         <MenuItem icon={<Copy size={16}/>} shortcut={`${modKey}+D`} onClick={() => { duplicateBlock(position().pos); closeBlockMenu(); }}>Dupliquer</MenuItem>

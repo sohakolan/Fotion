@@ -19,6 +19,7 @@ export const slashCommands: SlashCommand[] = [
   { id: 'image', label: 'Image', description: 'Intégrez une image à partir de son lien.', group: 'Médias', aliases: 'image photo picture img' },
   { id: 'code', label: 'Code', description: 'Capturez un extrait de code.', group: 'Médias', aliases: 'code snippet pre', shortcut: '```' },
   { id: 'toc', label: 'Table des matières', description: 'Naviguez entre les titres de cette page.', group: 'Avancés', aliases: 'toc table of contents sommaire' },
+  ...[2, 3, 4].map(count => ({ id: `columns${count}`, label: `${count} colonnes`, description: `Répartissez le contenu sur ${count} colonnes.`, group: 'Avancés' as const, aliases: `columns colonnes ${count} cols layout` })),
   ...[1, 2, 3].map(level => ({ id: `toggleHeading${level}`, label: `Titre dépliant ${level}`, description: 'Un titre qui masque ou affiche son contenu.', group: 'Avancés' as const, aliases: `toggle heading h${level} titre dépliant` })),
 ];
 

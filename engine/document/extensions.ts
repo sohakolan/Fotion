@@ -13,7 +13,9 @@ import Image from '@tiptap/extension-image';
 import { Toggle, ToggleSummary } from './blocks';
 import { Callout } from './callout';
 import { NotionShortcuts } from './shortcuts';
+import { Columns, Column } from './columns';
+import { DirectiveBlock } from './directive-block';
 
 export function documentExtensions(getPage: (id: string) => Pick<Page, 'title' | 'icon' | 'trashed'> | undefined = () => undefined) {
-  return [StarterKit.configure({ link: { openOnClick: false }, dropcursor: false, codeBlock: false }), Markdown.configure({ markedOptions: { gfm: true } }), TaskList, TaskItem.configure({ nested: true }), TableKit.configure({ table: false }), tableExtension(), Image, TableOfContents, Callout, Toggle, ToggleSummary, TextColor, CodeBlock, PageMention.configure({ getPage }), NotionShortcuts];
+  return [StarterKit.configure({ link: { openOnClick: false }, dropcursor: false, codeBlock: false }), Markdown.configure({ markedOptions: { gfm: true } }), TaskList, TaskItem.configure({ nested: true }), TableKit.configure({ table: false }), tableExtension(), Image, TableOfContents, Callout, Toggle, ToggleSummary, TextColor, CodeBlock, PageMention.configure({ getPage }), NotionShortcuts, Columns, Column, DirectiveBlock];
 }

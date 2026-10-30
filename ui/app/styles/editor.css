@@ -1479,3 +1479,31 @@ h3) {
   border-radius: 4px;
   pointer-events: none;
 }
+
+/* FotionMark : colonnes et blocs conservés. */
+.prose .fotion-columns {
+  display: flex;
+  gap: 46px;
+  margin: 4px 0;
+}
+
+.prose .fotion-column {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.prose .fotion-directive {
+  margin: 6px 0;
+  padding: 10px 12px;
+  border-radius: var(--radius);
+  background: var(--hover);
+  color: var(--muted);
+  font-size: var(--text-ui);
+}
+
+@media (max-width: 760px) {
+  .prose .fotion-columns {
+    flex-direction: column;
+    gap: 0;
+  }
+}

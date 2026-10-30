@@ -90,3 +90,17 @@ test('search can be limited to titles and groups pages by recency', () => {
   assert.equal(recencyGroup('2026-10-05T12:00:00', now), '30 derniers jours');
   assert.equal(recencyGroup('2026-01-01T12:00:00', now), 'Plus ancien');
 });
+
+test('FotionMark columns open in the editor and unknown blocks are saved back unchanged', () => {
+  const source = '::::columns\n:::column{width=60%}\n## Gauche\n\n- [ ] Tâche\n:::\n:::column\nDroite\n:::\n::::\n\n::kanban{src=./Projets view=Statut}\n\n:::column\nIsolée\n:::\n\nFin.';
+  const editor = new Editor({ extensions: documentExtensions(), content: source, contentType: 'markdown' });
+  const types = editor.getJSON().content?.map(node => node.type);
+  assert.deepEqual(types, ['columns', 'directiveBlock', 'directiveBlock', 'paragraph']);
+  assert.equal(editor.state.doc.firstChild?.firstChild?.attrs.width, '60%');
+  const saved = editor.getMarkdown();
+  assert.ok(saved.includes('::kanban{src=./Projets view=Statut}') && saved.includes(':::column\nIsolée\n:::'), saved);
+  const before = editor.getJSON();
+  editor.commands.setContent(saved, { contentType: 'markdown' });
+  assert.deepEqual(editor.getJSON(), before);
+  editor.destroy();
+});
