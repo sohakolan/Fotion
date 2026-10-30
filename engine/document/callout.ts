@@ -4,7 +4,7 @@ import { colorId, textColors } from './colors';
 export const calloutIconValue = (value: unknown) => typeof value === 'string' && value.length <= 32 && !/[\x00-\x1f]/.test(value) ? value : '💡';
 export const calloutAppearance = (attrs: Record<string, unknown>) => {
   const color = colorId(attrs.color), background = colorId(attrs.background);
-  return { 'data-callout': '', 'data-callout-icon': calloutIconValue(attrs.icon), 'data-fotion-color': color, 'data-fotion-background': background, class: 'callout-block', style: `color:${textColors.find(c => c.id === color)!.text};background-color:${background === 'default' ? 'var(--bg-gray)' : textColors.find(c => c.id === background)!.background}` };
+  return { 'data-callout': '', 'data-callout-icon': calloutIconValue(attrs.icon), 'data-fotion-color': color, 'data-fotion-background': background, class: 'callout-block', style: `color:${textColors.find(c => c.id === color)!.text};background-color:${background === 'default' ? 'transparent' : textColors.find(c => c.id === background)!.background}` };
 };
 
 export const Callout = Node.create({

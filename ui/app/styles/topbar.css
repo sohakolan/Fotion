@@ -1,7 +1,7 @@
 /* Barre supérieure : historique, fil d’Ariane et actions. */
 
 .topbar {
-  height: 45px;
+  height: 44px;
   display: flex;
   align-items: center;
   gap: 9px;
@@ -140,7 +140,7 @@
 }
 
 .topbar {
-  height: 45px;
+  height: 44px;
   padding: 0 14px;
   font-size: 14px;
   gap: 7px;

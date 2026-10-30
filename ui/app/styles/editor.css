@@ -620,12 +620,17 @@
 
 .prose .callout-block {
   display: flex;
-  gap: 13px;
+  gap: 8px;
   align-items: flex-start;
-  background: var(--sidebar);
-  border-radius: 4px;
-  padding: 16px;
-  margin: 8px 0;
+  border: 1px solid transparent;
+  border-radius: var(--radius-lg);
+  padding: 16px 16px 16px 12px;
+  margin: 4px 0;
+}
+
+/* Notion's default callout has no fill, only a hairline border; coloured callouts are filled. */
+.prose .callout-block[data-fotion-background=default] {
+  border-color: var(--line);
 }
 
 .callout-icon {
