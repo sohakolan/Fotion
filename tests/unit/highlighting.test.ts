@@ -2,9 +2,9 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { getSchema } from '@tiptap/core';
 import { common } from 'lowlight';
-import { editorExtensions } from '../../src/features/editor/extensions/editor-extensions';
-import { codeLanguages } from '../../src/features/editor/extensions/code-block';
-import { highlightDocument } from '../../src/features/editor/lib/syntax-highlighting';
+import { editorExtensions } from '../../ui/features/editor/extensions/editor-extensions';
+import { codeLanguages } from '../../ui/features/editor/extensions/code-block';
+import { highlightDocument } from '../../ui/features/editor/lib/syntax-highlighting';
 
 test('the language picker matches the deferred grammars and aliases keep correct offsets', () => {
   assert.deepEqual([...codeLanguages].sort(), Object.keys(common).sort());

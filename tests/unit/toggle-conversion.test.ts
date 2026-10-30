@@ -3,8 +3,8 @@ import assert from 'node:assert/strict';
 import { getSchema } from '@tiptap/core';
 import { EditorState } from '@tiptap/pm/state';
 import { history, undo } from '@tiptap/pm/history';
-import { editorExtensions } from '../../src/features/editor/extensions/editor-extensions';
-import { convertToggle } from '../../src/features/editor/lib/toggle-conversion';
+import { documentExtensions as editorExtensions } from '../../engine';
+import { convertToggle } from '../../engine/operations/toggle-conversion';
 const schema = getSchema(editorExtensions());
 const paragraph = (text: string) => schema.nodes.paragraph.create(null, schema.text(text, [schema.marks.bold.create()]));
 

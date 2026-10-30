@@ -1,8 +1,8 @@
 import { createHash, randomUUID } from 'node:crypto';
-import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync, renameSync, lstatSync, statSync } from 'node:fs';
+import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync, renameSync, lstatSync, statSync, unlinkSync } from 'node:fs';
 import { resolve, join } from 'node:path';
 import { parse, stringify } from 'yaml';
-import type { Page, PageEdit, PageVersion, PageSnapshot } from '../../shared/page.ts';
+import type { Page, PageEdit, PageVersion, PageSnapshot } from '../../engine/index.ts';
 import { seeds } from './seed.ts';
 
 export class VaultError extends Error {
@@ -19,7 +19,7 @@ export function decode(raw: string) {
 
 function pageFromRaw(id: string, raw: string, updated: string): Page {
   const { meta, content } = decode(raw);
-  return { id, fullWidth: meta.fullWidth === true, smallText: meta.smallText === true, font: ['serif', 'mono'].includes(meta.font) ? meta.font : 'default', order: typeof meta.order === 'number' && Number.isFinite(meta.order) ? meta.order : 0, title: typeof meta.title === 'string' ? meta.title : id.slice(0, -3), icon: typeof meta.icon === 'string' ? meta.icon : '📄', parent: typeof meta.parent === 'string' ? meta.parent : null, favorite: meta.favorite === true, cover: typeof meta.cover === 'string' ? meta.cover : '', trashed: meta.trashed === true, content, version: digest(raw), updated };
+  return { id, fullWidth: meta.fullWidth === true, smallText: meta.smallText === true, locked: meta.locked === true, backlinks: ['expanded', 'off'].includes(meta.backlinks) ? meta.backlinks : 'popover', font: ['serif', 'mono'].includes(meta.font) ? meta.font : 'default', order: typeof meta.order === 'number' && Number.isFinite(meta.order) ? meta.order : 0, title: typeof meta.title === 'string' ? meta.title : id.slice(0, -3), icon: typeof meta.icon === 'string' ? meta.icon : '📄', parent: typeof meta.parent === 'string' ? meta.parent : null, favorite: meta.favorite === true, cover: typeof meta.cover === 'string' ? meta.cover : '', trashed: meta.trashed === true, content, version: digest(raw), updated };
 }
 
 export class Vault {
@@ -85,7 +85,7 @@ export class Vault {
   validate(value: unknown): asserts value is PageEdit {
     if (!value || typeof value !== 'object') throw new VaultError(400, 'Page invalide.');
     const v = value as PageEdit;
-    if ((v.font !== undefined && !['default', 'serif', 'mono'].includes(v.font)) || (v.fullWidth !== undefined && typeof v.fullWidth !== 'boolean') || (v.smallText !== undefined && typeof v.smallText !== 'boolean')) throw new VaultError(400, 'Présentation de page invalide.');
+    if ((v.font !== undefined && !['default', 'serif', 'mono'].includes(v.font)) || (v.fullWidth !== undefined && typeof v.fullWidth !== 'boolean') || (v.smallText !== undefined && typeof v.smallText !== 'boolean') || (v.locked !== undefined && typeof v.locked !== 'boolean') || (v.backlinks !== undefined && !['expanded', 'popover', 'off'].includes(v.backlinks))) throw new VaultError(400, 'Présentation de page invalide.');
     if (v.order !== undefined && (typeof v.order !== 'number' || !Number.isFinite(v.order))) throw new VaultError(400, 'Ordre de page invalide.');
     if (typeof v.title !== 'string' || v.title.length > 300 || typeof v.content !== 'string' || v.content.length > 2_000_000 || typeof v.icon !== 'string' || v.icon.length > 40 || typeof v.cover !== 'string' || !['', 'landscape', 'sand', 'blue', 'sage', 'rose'].includes(v.cover) || typeof v.favorite !== 'boolean' || typeof v.trashed !== 'boolean' || !(v.parent === null || typeof v.parent === 'string')) throw new VaultError(400, 'Propriétés de page invalides.');
   }
@@ -104,23 +104,36 @@ export class Vault {
       }
     }
     const meta = raw === null ? {} : decode(raw).meta;
-    const { content, title, icon, parent, favorite, cover, trashed, order, fullWidth, smallText, font } = value;
-    const properties = { title, icon, parent, favorite, cover, trashed, ...(order !== undefined ? { order } : {}), ...(fullWidth !== undefined ? { fullWidth } : {}), ...(smallText !== undefined ? { smallText } : {}), ...(font !== undefined ? { font } : {}) };
+    const { content, title, icon, parent, favorite, cover, trashed, order, fullWidth, smallText, font, locked, backlinks } = value;
+    const properties = { title, icon, parent, favorite, cover, trashed, ...(order !== undefined ? { order } : {}), ...(fullWidth !== undefined ? { fullWidth } : {}), ...(smallText !== undefined ? { smallText } : {}), ...(font !== undefined ? { font } : {}), ...(locked !== undefined ? { locked } : {}), ...(backlinks !== undefined ? { backlinks } : {}) };
     const output = `---\n${stringify({ ...meta, ...properties })}---\n\n${content}`;
-    const backup = this.historyRoot();
-    if (raw !== null) {
-      mkdirSync(backup, { recursive: true });
-      if (lstatSync(backup).isSymbolicLink()) throw new VaultError(400, 'Dossier de sauvegarde invalide.');
-      const original = join(backup, `${digest(id).slice(0, 16)}.${version}.md`);
-      if (existsSync(original)) {
-        const info = lstatSync(original);
-        if (!info.isFile() || info.isSymbolicLink() || digest(readFileSync(original, 'utf8')) !== version) throw new VaultError(422, 'La sauvegarde précédente est endommagée. Le fichier actuel n’a pas été remplacé.');
-      } else writeFileSync(original, raw, { flag: 'wx' });
-    }
+    if (raw !== null) this.backup(id, raw, version!);
     const temp = join(this.root, `.${randomUUID()}.tmp`);
     writeFileSync(temp, output, { flag: 'wx' });
     renameSync(temp, path);
     return this.read(id);
+  }
+  /** Keeps the replaced file in the history before it is overwritten or deleted. */
+  private backup(id: string, raw: string, version: string) {
+    const backup = this.historyRoot();
+    mkdirSync(backup, { recursive: true });
+    if (lstatSync(backup).isSymbolicLink()) throw new VaultError(400, 'Dossier de sauvegarde invalide.');
+    const original = join(backup, `${digest(id).slice(0, 16)}.${version}.md`);
+    if (existsSync(original)) {
+      const info = lstatSync(original);
+      if (!info.isFile() || info.isSymbolicLink() || digest(readFileSync(original, 'utf8')) !== version) throw new VaultError(422, 'La sauvegarde précédente est endommagée. Le fichier actuel n’a pas été remplacé.');
+    } else writeFileSync(original, raw, { flag: 'wx' });
+  }
+  /** Permanently deletes a trashed page; its last content stays in the history folder. */
+  remove(id: string, version: unknown) {
+    const path = this.path(id);
+    if (!existsSync(path)) throw new VaultError(404, 'Page introuvable.');
+    const raw = readFileSync(path, 'utf8');
+    if (typeof version !== 'string' || digest(raw) !== version) throw new VaultError(409, 'Ce fichier a changé sur le disque. Rechargez avant de le supprimer.');
+    if (!this.read(id).trashed) throw new VaultError(400, 'Seules les pages de la corbeille peuvent être supprimées définitivement.');
+    this.backup(id, raw, version);
+    unlinkSync(path);
+    return { id };
   }
   create(value: unknown) { return this.write(`${randomUUID()}.md`, value, null); }
   import(name: unknown, raw: unknown) {

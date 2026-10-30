@@ -455,7 +455,7 @@ Critères propres à Fotion : exigences de fiabilité/recette proposées, pas fo
 
 ## État initial et preuves
 
-La base actuelle est dans [App.tsx](../src/app/App.tsx), [editor.tsx](../src/features/editor/components/DocumentEditor.tsx), [BlockControls.tsx](../src/features/editor/components/BlockControls.tsx) et [style.css](../src/app/styles.css). Le [scénario JSDOM](../scripts/check-ui.mjs) valide des événements et changements de DOM, pas les pixels ou le comportement du matériel réel.
+La base actuelle est dans [App.tsx](../ui/app/App.tsx), [editor.tsx](../ui/features/editor/components/DocumentEditor.tsx), [BlockControls.tsx](../ui/features/editor/components/BlockControls.tsx) et [style.css](../ui/app/styles.css). Le [scénario JSDOM](../scripts/check-ui.mjs) valide des événements et changements de DOM, pas les pixels ou le comportement du matériel réel.
 
 À la création : **328 critères**, **0 cochés**, **73 partiels**. Ne pas présenter le ratio comme un pourcentage de parité : les critères ont des tailles et périmètres différents.
 
@@ -467,6 +467,30 @@ Les captures sont générées dans `test-results/`. Cette recette valide ces par
 
 ## Hauteur du titre responsive — 30 octobre 2026
 
-UI-085/UI-086 : correction du titre tronqué après réduction de la fenêtre sans rechargement. Le [composant PageTitle](../src/features/pages/components/PageTitle.tsx) observe la largeur réelle du champ et recalcule sa hauteur après modification du texte, de la police ou du viewport. Les changements de largeur de la barre latérale et du mode pleine largeur sont ainsi pris en compte. Les changements de hauteur ne relancent pas l'observation en boucle.
+UI-085/UI-086 : correction du titre tronqué après réduction de la fenêtre sans rechargement. Le [composant PageTitle](../ui/features/pages/components/PageTitle.tsx) observe la largeur réelle du champ et recalcule sa hauteur après modification du texte, de la police ou du viewport. Les changements de largeur de la barre latérale et du mode pleine largeur sont ainsi pris en compte. Les changements de hauteur ne relancent pas l'observation en boucle.
 
 [Recette Chrome](../tests/e2e/editor.spec.ts) : long titre à 320 px, retour au bureau, police monospace, pleine largeur, barre latérale redimensionnée au clavier, raccourcissement du titre, Entrée vers l'éditeur et sauvegarde/rechargement. Le titre du navigateur suit aussi le renommage. Le rendu a été inspecté sur la capture mobile. La métrique typographique exacte de Notion, le maintien du scroll dans toutes les situations et le clavier virtuel sur appareil physique restent à vérifier.
+
+## Avancement — UI-Kit et menus de bloc/page
+
+Référence : captures officielles du centre d’aide Notion (barre latérale, menu de bloc animé, blocs de base mobiles), téléchargées en octobre 2026 pour comparaison locale et non versionnées.
+
+- UI-Kit `ui/kit/` : jetons de thème clair/sombre (surfaces, texte, palette des 9 couleurs de bloc, typographie, rayons, ombres de menu, plans), composants partagés et galerie `#ui-kit` vérifiée dans les deux thèmes.
+- Menu de bloc : recherche « Rechercher des actions… », Supprimer, Dupliquer (⌘/Ctrl+D, aussi au clavier dans l’éditeur), Transformer en ›, Couleur › pour les encadrés ; bloc ciblé surligné en bleu ; info-bulles « Faire glisser pour déplacer / Cliquer pour ouvrir le menu » et « Cliquer pour ajouter en dessous / ⌥-clic pour ajouter au-dessus » (comportement implémenté).
+- Menu de page : ordre de la référence (police, liens et déplacements, interrupteurs, annulation/historique/import/export), pied avec nombre de mots et dernière modification.
+- Barre latérale : création de page par l’icône crayon à côté de l’espace ; Paramètres dans la navigation principale.
+
+Restent hors de ces lots : commentaires, suggestions, IA, dictée, copier le lien d’un bloc et « Déplacer vers » pour un bloc (pas de boutons factices tant que la fonction n’existe pas), couleur pour tous les types de blocs, comparaison au pixel des autres écrans.
+
+## Avancement — barre latérale, recherche, menu de page, icônes
+
+Références locales : `ref/` (ignoré par Git) contient les captures du centre d’aide Notion par article (`ref/help-articles/<article>/<langue>/`) et les captures de Fotion avant modification (`ref/fotion/`).
+
+- Barre latérale : sections Favoris/Privé repliables d’un clic sur leur nom ; menu « … » Trier (Manuel, Dernière modification), Afficher (5, 10, 15, 20) et Déplacer la section ; ligne « Plus » ouvrant un panneau avec « Rechercher une page… », tri et création. Préférences conservées dans le navigateur.
+- Recherche : « Rechercher dans Espace de Sohane… », filtre « Titres uniquement », pages récentes groupées par date (Aujourd’hui, Hier, 7 et 30 derniers jours, Plus ancien), parent après le titre, date à droite, ↵ sur la ligne active, pied « ↑↓ Sélectionner · ↵ Ouvrir · ⌘↵ Ouvrir dans un nouvel onglet » (fonctionnel).
+- Menu de page : ordre de la capture de référence (Style Ag, Petit texte, Pleine largeur, Verrouiller, Favoris, Copier le lien ⌘L, Dupliquer, Déplacer vers, Annuler, Historique, Pages supprimées, Supprimer, Importer, Exporter, nombre de mots).
+- Barre supérieure : horloge « Historique de la page ».
+- Icône de page : sélecteur Emoji avec Aléatoire, Supprimer, « Filtrer… » sur les noms français CLDR, Récents et catégories ; les emojis que la police du système ne sait pas afficher sont masqués.
+
+Écarts encore visibles : bouton Partager et commentaires (hors périmètre), onglets « Importer une image » et « Lien » du sélecteur d’icône, filtres de recherche Créé par/Espace/Dans la page/Date, présentation « Lié à cette page » des backlinks, statut d’enregistrement local à la place de « Modifiée il y a… ».
+

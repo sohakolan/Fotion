@@ -1,9 +1,9 @@
 import { createRequire } from 'node:module';
-import { pageHref, pageIdFromHref } from '../../shared/page-links';
+import { pageHref, pageIdFromHref } from '../../engine/pages/page-links';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { PageIndex } from '../../src/features/pages/lib/page-index';
-import type { Page } from '../../shared/page';
+import { PageIndex } from '../../engine/pages/page-index';
+import type { Page } from '../../engine/models/page';
 const { JSDOM } = createRequire(import.meta.url)('jsdom');
 globalThis.DOMParser = new JSDOM('').window.DOMParser;
 const page = (id: string, title: string, content = '', trashed = false): Page => ({ id, title, content, trashed, icon: '', parent: null, favorite: false, cover: '', version: '1', updated: '2026-10-30T00:00:00Z' });

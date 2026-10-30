@@ -1,0 +1,76 @@
+/* Fotion UI-Kit — shared components. Selectors are scoped to win over legacy app rules. */
+
+/* Menus */
+.kit-menu { border-radius: var(--radius-lg); box-shadow: var(--shadow-menu); padding: 4px; font-size: var(--text-ui); background: var(--panel); z-index: var(--z-menu); }
+.kit-menu .kit-menu-item { display: flex; align-items: center; gap: 8px; width: 100%; min-height: 28px; padding: 0 8px; border-radius: var(--radius); text-align: left; font-size: var(--text-ui); line-height: 1.2; color: var(--text); }
+.kit-menu .kit-menu-item:hover, .kit-menu .kit-menu-item:focus-visible { background: var(--hover); outline: none; }
+.kit-menu .kit-menu-item:disabled { opacity: .4; background: none; }
+.kit-menu .kit-menu-item.danger:hover { color: var(--danger); }
+.kit-menu-icon { width: 20px; height: 20px; display: grid; place-items: center; flex-shrink: 0; }
+.kit-menu-icon svg { color: var(--text) !important; }
+.kit-menu-label { flex: 1; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.kit-menu-shortcut { margin-left: auto; font-size: var(--text-sm); color: var(--muted); }
+.kit-menu .kit-menu-chevron { margin-left: auto; color: var(--muted) !important; }
+.kit-menu-divider { height: 1px; background: var(--line); margin: 4px -4px; }
+.kit-menu-label-row { font-size: var(--text-sm); font-weight: 500; color: var(--muted); padding: 8px 8px 4px; }
+.kit-menu-footnote { font-size: var(--text-sm); color: var(--muted); line-height: 1.6; padding: 6px 8px 4px; }
+.kit-menu-search { display: flex; align-items: center; gap: 6px; margin: 4px 4px 6px; padding: 4px 8px; border-radius: var(--radius); background: var(--hover); box-shadow: inset 0 0 0 1px var(--line); color: var(--muted); }
+.kit-menu-search:focus-within { box-shadow: inset 0 0 0 1px var(--blue), 0 0 0 2px rgba(35, 131, 226, .25); }
+.kit-menu-search input { flex: 1; min-width: 0; border: 0; outline: 0; background: none; font-size: var(--text-ui); color: var(--text); }
+
+/* Switch */
+.kit-switch-row { justify-content: space-between; }
+.kit-switch { width: 26px; height: 14px; padding: 2px; border-radius: 9px; background: rgba(135, 131, 120, .3); display: flex; align-items: center; flex-shrink: 0; transition: background .2s; }
+.kit-switch::before { content: ''; width: 10px; height: 10px; border-radius: 50%; background: #fff; box-shadow: 0 1px 2px rgba(15, 15, 15, .2); transition: transform .2s; }
+.kit-switch.on { background: var(--blue); }
+.kit-switch.on::before { transform: translateX(12px); }
+
+/* Buttons */
+.kit-button { display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 32px; padding: 0 12px; border-radius: var(--radius); font-size: var(--text-ui); font-weight: 500; white-space: nowrap; }
+.kit-button-primary { background: var(--blue); color: #fff; }
+.kit-button-primary:hover { background: var(--blue-hover); }
+.kit-button-secondary { box-shadow: inset 0 0 0 1px var(--line); color: var(--text); }
+.kit-icon-button { height: 28px; width: 28px; display: inline-flex; align-items: center; justify-content: center; border-radius: var(--radius); color: var(--muted); }
+.kit-kbd { font: var(--text-sm) var(--font-sans); color: var(--muted); }
+
+/* Tooltip: place inside a positioned trigger; it appears below after a short delay. */
+.kit-tooltip { position: absolute; left: 50%; top: calc(100% + 6px); transform: translateX(-50%); background: var(--tooltip-bg); color: var(--tooltip-text); font-size: var(--text-sm); line-height: 1.4; font-weight: 400; padding: 4px 8px; border-radius: 5px; white-space: nowrap; text-align: center; pointer-events: none; opacity: 0; transition: opacity .1s; z-index: 90; }
+.kit-tooltip b { color: #fff; font-weight: 500; }
+:hover > .kit-tooltip, :focus-visible > .kit-tooltip { opacity: 1; transition-delay: .35s; }
+
+/* Gallery (#ui-kit) */
+.kit-gallery { max-width: 960px; margin: 0 auto; padding: 48px 24px 96px; color: var(--text); }
+.kit-gallery header { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 24px; margin-bottom: 32px; }
+.kit-gallery header h1 { font-size: var(--text-title); margin: 0; letter-spacing: -.8px; }
+.kit-gallery header p { flex: 1 1 100%; order: 3; margin: 0; color: var(--muted); }
+.kit-gallery h2 { font-size: var(--text-h3); font-weight: 600; margin: 32px 0 12px; padding-bottom: 8px; border-bottom: 1px solid var(--line); }
+.kit-gallery small { color: var(--muted); font-size: var(--text-sm); font-weight: 400; }
+.kit-swatches { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 16px; }
+.kit-swatches figure { margin: 0; }
+.kit-swatches span { display: block; height: 56px; border-radius: var(--radius); box-shadow: inset 0 0 0 1px var(--line); }
+.kit-swatches figcaption { font: var(--text-sm) var(--font-mono); color: var(--muted); margin-top: 6px; }
+.kit-palette { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 8px; }
+.kit-palette div { padding: 10px 12px; border-radius: var(--radius); display: flex; flex-direction: column; gap: 4px; }
+.kit-row { display: flex; flex-wrap: wrap; align-items: center; gap: 16px; }
+.kit-menus { align-items: flex-start; }
+.kit-menu.kit-static { position: static; width: 260px; }
+.kit-tooltip-demo { position: relative; display: inline-grid; place-items: center; width: 28px; height: 28px; border-radius: var(--radius-sm); color: var(--muted); }
+.kit-tooltip-demo:hover { background: var(--hover); }
+
+/* Emoji picker */
+.kit-emoji-picker { width: 408px; max-width: calc(100vw - 16px); height: 356px; display: flex; flex-direction: column; padding: 0; }
+.kit-emoji-tabs { display: flex; align-items: center; gap: 2px; padding: 0 8px; height: 42px; border-bottom: 1px solid var(--line); flex-shrink: 0; }
+.kit-emoji-tab { font-size: var(--text-ui); font-weight: 500; padding: 11px 6px 9px; box-shadow: inset 0 -2px 0 var(--text); }
+.kit-emoji-spacer { flex: 1; }
+.kit-emoji-tabs button { display: inline-flex; align-items: center; gap: 5px; height: 28px; padding: 0 8px; border-radius: var(--radius); font-size: var(--text-ui); color: var(--muted); }
+.kit-emoji-filter { display: flex; align-items: center; gap: 6px; margin: 8px 12px 4px; padding: 0 8px; height: 28px; border-radius: var(--radius); background: var(--hover); box-shadow: inset 0 0 0 1px var(--line); color: var(--muted); }
+.kit-emoji-filter:focus-within { box-shadow: inset 0 0 0 1px var(--blue), 0 0 0 2px rgba(35, 131, 226, .25); }
+.kit-emoji-filter input { flex: 1; min-width: 0; border: 0; outline: 0; background: none; font-size: var(--text-ui); color: var(--text); }
+.kit-emoji-scroll { overflow-y: auto; padding: 0 8px 8px; flex: 1; scrollbar-width: thin; }
+.kit-emoji-group { font-size: 11px; font-weight: 500; color: var(--muted); text-transform: uppercase; letter-spacing: .4px; padding: 10px 4px 4px; }
+.kit-emoji-grid { display: grid; grid-template-columns: repeat(auto-fill, 32px); justify-content: space-between; }
+.kit-emoji-grid button { width: 32px; height: 32px; border-radius: var(--radius-sm); font-size: 24px; line-height: 1; display: grid; place-items: center; padding: 0; }
+.kit-emoji-grid button:hover { background: var(--hover); }
+.kit-emoji-empty { color: var(--muted); font-size: var(--text-ui); text-align: center; padding: 24px 0; }
+.kit-button-danger { background: var(--danger); color: #fff; }
+.kit-button-danger:hover { background: #c03f3a; }

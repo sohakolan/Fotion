@@ -23,18 +23,18 @@ Références : [S01](NOTION_REFERENCE.md#s01), [S02](NOTION_REFERENCE.md#s02), [
 - [ ] **FN-009** [PARTIEL] Dupliquer une page ; compléter la duplication récursive de ses descendants et médias.
 - [ ] **FN-010** [PARTIEL] Mettre une page en favori et la retirer des favoris.
 - [ ] **FN-011** Réordonner les favoris indépendamment de l’arborescence.
-- [ ] **FN-012** Ouvrir une page à partir d’une URL stable, y compris après rechargement direct.
-- [ ] **FN-013** Copier le lien d’une page ; conserver le contexte de navigation.
+- [x] **FN-012** Ouvrir une page à partir d’une URL stable, y compris après rechargement direct.
+- [ ] **FN-013** [PARTIEL] Copier le lien d’une page ; conserver le contexte de navigation.
 - [ ] **FN-014** Ouvrir plusieurs pages en onglets et ouvrir un lien dans un nouvel onglet.
 - [ ] **FN-015** Ouvrir une page en panneau latéral, aperçu centré ou pleine page.
 - [ ] **FN-016** [PARTIEL] Naviguer dans les ancêtres via le fil d’Ariane.
 - [ ] **FN-017** [PARTIEL] Revenir à la page précédente ou suivante en conservant position et sélection.
 - [ ] **FN-018** Afficher les pages récemment visitées et retrouver une page fermée.
-- [ ] **FN-019** Verrouiller et déverrouiller une page contre les modifications accidentelles.
+- [x] **FN-019** Verrouiller et déverrouiller une page contre les modifications accidentelles.
 - [ ] **FN-020** Déplacer un bloc vers une page existante ou une nouvelle page.
 - [ ] **FN-021** Transformer un bloc en page et réintégrer une page sous forme de blocs.
 - [ ] **FN-022** [PARTIEL] Gérer les liens vers une page supprimée, inaccessible ou déplacée.
-- [ ] **FN-023** Supprimer/restaurer un sous-arbre avec un comportement explicite pour ses descendants.
+- [ ] **FN-023** [PARTIEL] Supprimer/restaurer un sous-arbre avec un comportement explicite pour ses descendants.
 - [ ] **FN-024** Choisir un emplacement lors de la création, duplication, importation ou restauration.
 
 ## 02. Saisie et sélection — P0
@@ -79,10 +79,10 @@ Références : [S01](NOTION_REFERENCE.md#s01), [S03](NOTION_REFERENCE.md#s03), [
 - [ ] **FN-055** [PARTIEL] Ouvrir un sélecteur de blocs avec le bouton + dans la marge.
 - [ ] **FN-056** [PARTIEL] Transformer un bloc sans perdre son texte ; couvrir tous les couples de conversion compatibles.
 - [ ] **FN-057** Convertir plusieurs blocs à la fois et expliquer les conversions impossibles.
-- [ ] **FN-058** Reconnaître les raccourcis Markdown de tous les blocs pris en charge.
+- [ ] **FN-058** [PARTIEL] Reconnaître les raccourcis Markdown de tous les blocs pris en charge.
 - [ ] **FN-059** Exposer les actions de suppression, duplication, couleur et déplacement dans / quand la référence les propose.
 - [ ] **FN-060** Gérer les raccourcis macOS/Windows/Linux avec des libellés adaptés.
-- [ ] **FN-061** Afficher un compteur de mots et de caractères pour une sélection et une page.
+- [ ] **FN-061** [PARTIEL] Afficher un compteur de mots et de caractères pour une sélection et une page.
 
 ## 04. Catalogue des blocs — P0/P1
 
@@ -181,12 +181,12 @@ Références : [S08](NOTION_REFERENCE.md#s08), [S09](NOTION_REFERENCE.md#s09), [
 - [ ] **FN-137** [PARTIEL] Rechercher dans le titre et le contenu des pages.
 - [ ] **FN-138** [PARTIEL] Ouvrir la recherche avec Cmd/Ctrl+P (K hors éditeur) et parcourir les résultats au clavier ; réserver K au lien dans l’éditeur.
 - [ ] **FN-139** [PARTIEL] Trier les résultats par pertinence, récence et critères de la référence.
-- [ ] **FN-140** Filtrer par parent, type, auteur, dates, espace et emplacement disponibles.
+- [ ] **FN-140** [PARTIEL] Filtrer par parent, type, auteur, dates, espace et emplacement disponibles.
 - [ ] **FN-141** [PARTIEL] Surligner les occurrences et afficher des extraits pertinents.
 - [ ] **FN-142** [PARTIEL] Indexer incrémentalement le coffre sans relire toutes les pages à chaque recherche.
 - [ ] **FN-143** Rechercher dans la page courante avec navigation entre occurrences.
 - [ ] **FN-144** [PARTIEL] Respecter la corbeille, les autorisations et les contenus non indexables.
-- [ ] **FN-145** Afficher recherches récentes, suggestions et résultats vides.
+- [ ] **FN-145** [PARTIEL] Afficher recherches récentes, suggestions et résultats vides.
 - [ ] **FN-146** Ouvrir les résultats au bon bloc plutôt qu’en haut de page.
 
 ## 08. Présentation des pages et navigation globale — P0/P1
@@ -194,7 +194,7 @@ Références : [S08](NOTION_REFERENCE.md#s08), [S09](NOTION_REFERENCE.md#s09), [
 Références : [S02](NOTION_REFERENCE.md#s02), [S03](NOTION_REFERENCE.md#s03), [S11](NOTION_REFERENCE.md#s11).
 
 - [ ] **FN-147** [PARTIEL] Ajouter, changer et retirer une icône de page.
-- [ ] **FN-148** Choisir emoji, icône monochrome, couleur, image importée ou URL selon la référence.
+- [ ] **FN-148** [PARTIEL] Choisir emoji, icône monochrome, couleur, image importée ou URL selon la référence.
 - [ ] **FN-149** [PARTIEL] Ajouter, changer et retirer une couverture.
 - [ ] **FN-150** Repositionner la couverture et conserver son cadrage.
 - [ ] **FN-151** Importer une couverture et parcourir une galerie.
@@ -528,7 +528,7 @@ Références : [S49](NOTION_REFERENCE.md#s49), [S50](NOTION_REFERENCE.md#s50).
 
 ## État initial et preuves
 
-Les cases cochées s’appuient sur [le coffre Markdown](../server/storage/vault.ts), [le moteur de déplacement](../src/features/editor/lib/block-move.ts), [les tests du coffre](../tests/unit/vault.test.ts) et [les tests de déplacement](../tests/unit/moves.test.ts). Elles ne certifient pas la parité avec toutes les variantes de Notion.
+Les cases cochées s’appuient sur [le coffre Markdown](../server/storage/vault.ts), [le moteur de déplacement](../engine/operations/block-move.ts), [les tests du coffre](../tests/unit/vault.test.ts) et [les tests de déplacement](../tests/unit/moves.test.ts). Elles ne certifient pas la parité avec toutes les variantes de Notion.
 
 À la création : **408 critères**, **10 cochés**, **55 partiels**. Ne pas présenter le ratio comme un pourcentage de parité : les critères ont des tailles et périmètres différents.
 
@@ -536,19 +536,19 @@ Les cases cochées s’appuient sur [le coffre Markdown](../server/storage/vault
 
 Les critères FN-048 à FN-050 disposent désormais d’une palette texte/fond, d’une dernière couleur persistée et de son raccourci Ctrl/Cmd + Maj + H, ainsi que d’une action pour retirer toutes les marques de la sélection. Les couleurs combinées aux autres marques sont conservées en Markdown avec des balises `span` documentées dans le README.
 
-Preuves : [extension couleur](../src/features/editor/extensions/colors.ts), [tests de round-trip](../tests/unit/markdown.test.ts), [scénario DOM clavier et sauvegarde](../scripts/check-ui.mjs). La comparaison visuelle avec la référence, les états de sélection mixtes dans tous les blocs et la couleur de bloc complète restent à terminer ; ces critères restent partiels.
+Preuves : [extension couleur](../engine/document/colors.ts), [tests de round-trip](../tests/unit/markdown.test.ts), [scénario DOM clavier et sauvegarde](../scripts/check-ui.mjs). La comparaison visuelle avec la référence, les états de sélection mixtes dans tous les blocs et la couleur de bloc complète restent à terminer ; ces critères restent partiels.
 
 ## Avancement — blocs de code
 
 FN-072 : langage recherchable, coloration des 37 entrées communes Lowlight, copie avec états de réussite/échec, retour à la ligne et légende sont implémentés. Le langage inconnu importé est conservé. Les extraits contenant leurs propres clôtures Markdown ne tronquent plus la page à la sauvegarde.
 
-Preuves : [extension de code](../src/features/editor/extensions/code-block.ts), [round-trips Markdown et HTML](../tests/unit/markdown.test.ts), [recette DOM des commandes et du presse-papiers](../scripts/check-ui.mjs). Référence : [blocs de code Notion](https://www.notion.com/help/code-blocks). Le catalogue complet des langages de la référence, le chargement des grammaires à la demande, les mesures de performance sur longs extraits et la validation visuelle restent ouverts. FN-072 et UI-156 restent partiels.
+Preuves : [extension de code](../engine/document/code-block.ts), [round-trips Markdown et HTML](../tests/unit/markdown.test.ts), [recette DOM des commandes et du presse-papiers](../scripts/check-ui.mjs). Référence : [blocs de code Notion](https://www.notion.com/help/code-blocks). Le catalogue complet des langages de la référence, le chargement des grammaires à la demande, les mesures de performance sur longs extraits et la validation visuelle restent ouverts. FN-072 et UI-156 restent partiels.
 
 ## Avancement — recherche et liens
 
 Recherche accent-insensible sur plusieurs termes, classement titre/contenu/récence et extraits autour du résultat. Un cache en mémoire évite de réanalyser les documents inchangés. Le formulaire de lien propose les pages du coffre ; les chemins Markdown relatifs utilisent leurs identifiants stables. Navigation avec sauvegarde préalable, message pour une cible absente/à la corbeille et panneau de liens entrants.
 
-Preuves : [index et résolution des liens](../src/features/pages/lib/page-index.ts), [tests de recherche et de backlinks](../tests/unit/page-index.test.ts), [round-trip des liens](../tests/unit/markdown.test.ts), [parcours DOM insertion → navigation → backlink → recherche](../scripts/check-ui.mjs). L’index utilise un parseur isolé, car l’éditeur enregistre ses propres tokenizers Markdown.
+Preuves : [index et résolution des liens](../engine/pages/page-index.ts), [tests de recherche et de backlinks](../tests/unit/page-index.test.ts), [round-trip des liens](../tests/unit/markdown.test.ts), [parcours DOM insertion → navigation → backlink → recherche](../scripts/check-ui.mjs). L’index utilise un parseur isolé, car l’éditeur enregistre ses propres tokenizers Markdown.
 
 Restent notamment les menus @ et [[, les mentions au titre dynamique, les aperçus, les wikiliens, le surlignage des résultats, les filtres, les ancres, un index inversé et les mesures sur grands coffres. Aucun critère de parité UI n’est déclaré validé par ces seuls tests DOM.
 
@@ -556,37 +556,37 @@ Restent notamment les menus @ et [[, les mentions au titre dynamique, les aperç
 
 FN-129 et FN-132 : menus @ et [[, filtrage par titre, flèches/Entrée/Échap, mention atomique avec icône et titre actuel, état indisponible et lien Markdown portable marqué par le titre `fotion:page`. Le formulaire de lien conserve des liens ordinaires. Les nouveaux libellés de mentions sont reflétés à l’affichage et lors de la prochaine sauvegarde ; aucun historique d’édition n’est ajouté pour le seul rafraîchissement de l’affichage.
 
-Preuves : [extension de mention](../src/features/editor/extensions/page-mention.ts), [triggers](../tests/unit/page-mention.test.ts), [Markdown/HTML et renommage](../tests/unit/markdown.test.ts), [parcours DOM](../scripts/check-ui.mjs). Restent la création depuis le sélecteur, l’aperçu, les mentions de date/personne, la pagination du sélecteur et la comparaison visuelle réelle.
+Preuves : [extension de mention](../engine/document/page-mention.ts), [triggers](../tests/unit/page-mention.test.ts), [Markdown/HTML et renommage](../tests/unit/markdown.test.ts), [parcours DOM](../scripts/check-ui.mjs). Restent la création depuis le sélecteur, l’aperçu, les mentions de date/personne, la pagination du sélecteur et la comparaison visuelle réelle.
 
 ## Avancement — historique et restauration
 
 Liste des copies locales, aperçu en lecture seule, vue Markdown et restauration explicite. Les conflits avec le fichier courant, les sauvegardes corrompues, les liens symboliques et les versions d’une autre page sont refusés. La version remplacée est conservée ; la restauration reprend contenu/titre/présentation en conservant emplacement/favoris et métadonnées supplémentaires actuelles.
 
-Preuves : [coffre et API](../server/storage/vault.ts), [tests disque et HTTP](../tests/unit/vault.test.ts), [interface d’historique](../src/features/pages/components/VersionHistory.tsx), [parcours DOM avec conflit puis restauration](../scripts/check-ui.mjs). Référence : [historique Notion](https://www.notion.com/help/duplicate-delete-and-restore-content). Restent la comparaison des changements, le regroupement, les versions nommées, la pagination/rétention et la recette visuelle 1:1.
+Preuves : [coffre et API](../server/storage/vault.ts), [tests disque et HTTP](../tests/unit/vault.test.ts), [interface d’historique](../ui/features/pages/components/VersionHistory.tsx), [parcours DOM avec conflit puis restauration](../scripts/check-ui.mjs). Référence : [historique Notion](https://www.notion.com/help/duplicate-delete-and-restore-content). Restent la comparaison des changements, le regroupement, les versions nommées, la pagination/rétention et la recette visuelle 1:1.
 
 ### Sommaire dynamique — 30 octobre 2026
 
 FN-077 : bloc insérable depuis `/sommaire`, liste H1/H2/H3 actualisée après modification, ajout ou suppression ; navigation au clic et au clavier, destinations distinctes pour les titres identiques. Le marqueur HTML `<nav data-fotion-toc></nav>` conserve la présence du bloc dans le `.md` sans dupliquer les titres. Il requiert Fotion pour produire la liste dynamique.
 
-Preuves : [extension du sommaire](../src/features/editor/extensions/table-of-contents.ts), [round-trip Markdown/HTML et édition des titres](../tests/unit/markdown.test.ts), [parcours navigateur insertion, navigation, renommage, annulation et rechargement](../tests/e2e/editor.spec.ts). Référence : [sommaire Notion](https://www.notion.com/help/columns-headings-and-dividers). UI-159 reste partiel : ni suivi de section active au défilement ni comparaison visuelle 1:1 validés.
+Preuves : [extension du sommaire](../engine/document/table-of-contents.ts), [round-trip Markdown/HTML et édition des titres](../tests/unit/markdown.test.ts), [parcours navigateur insertion, navigation, renommage, annulation et rechargement](../tests/e2e/editor.spec.ts). Référence : [sommaire Notion](https://www.notion.com/help/columns-headings-and-dividers). UI-159 reste partiel : ni suivi de section active au défilement ni comparaison visuelle 1:1 validés.
 
 ### Titres dépliants — 30 octobre 2026
 
 FN-071 : insertion de H1/H2/H3 dépliants par le menu slash, niveaux et texte riche conservés en Markdown/HTML, corps imbriqué, navigation depuis le sommaire, recherche et backlinks. Le repli du bloc `details` ne déclenche plus sa reconstruction par ProseMirror ; ce correctif bénéficie également aux listes dépliantes. Entrée dans le résumé ouvre le contenu avant d'y placer le curseur.
 
-Preuves : [blocs dépliants](../src/features/editor/extensions/blocks.ts), [round-trips](../tests/unit/markdown.test.ts), [index des liens](../tests/unit/page-index.test.ts), [recette Chrome avec sauvegarde et rechargement](../tests/e2e/editor.spec.ts). Référence : [titres dépliants Notion](https://www.notion.com/help/columns-headings-and-dividers). La conversion de blocs existants, les raccourcis Markdown et la comparaison visuelle 1:1 restent ouverts sous FN-056/FN-058 et la checklist UI.
+Preuves : [blocs dépliants](../engine/document/blocks.ts), [round-trips](../tests/unit/markdown.test.ts), [index des liens](../tests/unit/page-index.test.ts), [recette Chrome avec sauvegarde et rechargement](../tests/e2e/editor.spec.ts). Référence : [titres dépliants Notion](https://www.notion.com/help/columns-headings-and-dividers). La conversion de blocs existants, les raccourcis Markdown et la comparaison visuelle 1:1 restent ouverts sous FN-056/FN-058 et la checklist UI.
 
 ### Conversion des dépliants — 30 octobre 2026
 
 FN-056 progresse : paragraphe/titre vers dépliant, changement de niveau H1/H2/H3 ou liste dépliante, puis retour vers texte/titre. Le contenu riche est conservé et les blocs du corps sont réinsérés après le titre lors de la conversion inverse. Les destinations interdites par le schéma du parent sont refusées ; les conversions non prises en charge depuis un dépliant sont désactivées avec une explication. Les conversions groupées et les autres couples de blocs restent à compléter.
 
-Preuves : [transaction de conversion](../src/features/editor/lib/toggle-conversion.ts), [tests de conservation et annulation](../tests/unit/toggle-conversion.test.ts), [menu réel et réouverture Chrome](../tests/e2e/editor.spec.ts).
+Preuves : [transaction de conversion](../engine/operations/toggle-conversion.ts), [tests de conservation et annulation](../tests/unit/toggle-conversion.test.ts), [menu réel et réouverture Chrome](../tests/e2e/editor.spec.ts).
 
 ### Personnalisation des encadrés — 30 octobre 2026
 
 FN-069 progresse : sélection d'emoji, icône textuelle personnalisée ou suppression, couleurs du texte et du fond via le menu de bloc. Les réglages sont conservés dans un commentaire de métadonnées après `[!NOTE]`. Le Markdown standard reste inchangé pour un encadré par défaut. Le contenu imbriqué et ses marques survivent à la sérialisation Markdown et HTML, sans inclure le texte des commandes ni dupliquer l'icône. Une modification d'icône ou de couleur ouvre une étape d'annulation distincte.
 
-Preuves : [extension dédiée](../src/features/editor/extensions/callout.ts), [round-trips et annulation](../tests/unit/markdown.test.ts), [personnalisation et réouverture Chrome](../tests/e2e/editor.spec.ts). Référence : [personnaliser les encadrés Notion](https://www.notion.com/help/customize-and-style-your-content). FN-069 reste partiel pour les conversions et les variantes d'icônes/images. La galerie proposée est limitée ; elle ne constitue pas le catalogue de Notion ni une validation visuelle 1:1.
+Preuves : [extension dédiée](../engine/document/callout.ts), [round-trips et annulation](../tests/unit/markdown.test.ts), [personnalisation et réouverture Chrome](../tests/e2e/editor.spec.ts). Référence : [personnaliser les encadrés Notion](https://www.notion.com/help/customize-and-style-your-content). FN-069 reste partiel pour les conversions et les variantes d'icônes/images. La galerie proposée est limitée ; elle ne constitue pas le catalogue de Notion ni une validation visuelle 1:1.
 
 ### Coloration différée — 30 octobre 2026
 
@@ -596,4 +596,28 @@ FN-072 : les 37 grammaires communes sont désormais téléchargées au premier b
 
 FN-074 progresse : redimensionnement de colonnes au pointeur, ligne et colonne d'en-tête configurables, sélection de cellules visible. Les tableaux représentables sans perte restent en Markdown GFM ; largeurs, en-têtes particuliers, cellules fusionnées ou contenu riche utilisent un tableau HTML marqué `data-fotion-table` dans le `.md`. Les retours de ligne sont encodés en entités pour éviter la coupure du bloc HTML. Le texte et les liens de ces tableaux sont indexés pour la recherche et les backlinks.
 
-Preuves : [format de tableau](../src/features/editor/extensions/table.ts), [round-trips](../tests/unit/markdown.test.ts), [indexation](../tests/unit/page-index.test.ts), [redimensionnement et réouverture Chrome](../tests/e2e/editor.spec.ts). Restent les menus de lignes/colonnes conformes à la référence, leur réorganisation et la recette complète des sélections multiples. Les rendus HTML des lecteurs externes peuvent différer.
+Preuves : [format de tableau](../engine/document/table.ts), [round-trips](../tests/unit/markdown.test.ts), [indexation](../tests/unit/page-index.test.ts), [redimensionnement et réouverture Chrome](../tests/e2e/editor.spec.ts). Restent les menus de lignes/colonnes conformes à la référence, leur réorganisation et la recette complète des sélections multiples. Les rendus HTML des lecteurs externes peuvent différer.
+
+## Avancement — URL, verrouillage, raccourcis et compteur
+
+FN-012 : chaque page ouverte s’affiche à l’adresse `#<identifiant>` ; un rechargement ou un lien collé rouvre cette page, et un lien vers une page absente ou à la corbeille le signale. FN-013 : « Copier le lien » dans le menu de page et le menu contextuel de la barre latérale ; le contexte de navigation (position, bloc) n’est pas encore conservé.
+
+FN-019 : « Verrouiller la page » enregistre `locked: true` dans l’en-tête YAML, rend le contenu, le titre, l’icône et la couverture non modifiables et masque les poignées de blocs. Le badge « Verrouillée » de la barre supérieure déverrouille la page. Le verrou protège contre les modifications accidentelles dans Fotion, pas contre l’édition du fichier sur le disque.
+
+FN-058 : raccourcis propres à Notion `> ` → liste dépliante (le texte existant devient le résumé) et `" ` → citation. Les autres raccourcis Markdown viennent de Tiptap ; leur inventaire complet face à la référence reste à faire. FN-061 : nombre de mots de la page dans le pied du menu de page, selon la segmentation `Intl` ; le compteur de caractères et le comptage d’une sélection restent à faire.
+
+Preuves : [raccourcis](../engine/document/shortcuts.ts), [tests du moteur](../tests/unit/engine.test.ts), [scénario navigateur URL et verrouillage](../tests/e2e/editor.spec.ts).
+
+## Avancement — menu /
+
+FN-052, FN-053 : le menu / reprend la présentation de Notion : groupes « Blocs de base », « Médias », « Avancés » ; lignes compactes avec icône, libellé et raccourci Markdown à droite ; aperçu du bloc à côté du menu ; pied « Fermer le menu · échap » ; ouverture au-dessus du curseur en bas d’écran. Le catalogue, la détection et le classement vivent dans le moteur ([commandes /](../engine/operations/slash-commands.ts)) : `/` s’ouvre en début de bloc ou après une espace, dans tout bloc de texte hors code ; recherche sans accents sur le libellé et des alias français/anglais (`h1`, `todo`, `bullet`…), avec correspondance approximative ; Échap laisse le texte et garde le menu fermé pendant la saisie ; une requête sans résultat suivie d’une espace ferme le menu. Une commande tapée après du texte crée le bloc en dessous au lieu de convertir la ligne.
+
+Restent : commandes récentes (FN-054), actions de bloc (couleur, suppression, déplacement) dans / (FN-059), illustrations d’aperçu identiques à la référence et blocs absents du catalogue (vidéo, fichier, signet, équation, colonnes, bloc synchronisé…). Preuves : [tests du moteur](../tests/unit/engine.test.ts), [scénario navigateur](../tests/e2e/editor.spec.ts).
+
+## Avancement — corbeille, recherche, icônes, sections
+
+- FN-023 (partiel) : corbeille avec recherche, chemin parent, restauration et suppression définitive confirmée. Le serveur refuse de supprimer une page hors corbeille ou modifiée sur le disque, et garde une copie dans `.history/` ([tests du coffre](../tests/unit/vault.test.ts)). Le comportement des descendants d’une page supprimée reste à définir : ils réapparaissent à la racine.
+- FN-140 (partiel) : filtre « Titres uniquement ». FN-145 (partiel) : pages récentes groupées par date et message de résultat vide ; recherches récentes et suggestions restent à faire.
+- FN-148 (partiel) : emojis nommés en français (CLDR), aléatoire, récents, suppression ; images importées, URL et icônes monochromes restent à faire.
+- Barre latérale : tri, nombre de pages affichées, ordre des sections, repli et panneau « Plus » ([section](../ui/features/sidebar/components/SidebarSection.tsx)).
+

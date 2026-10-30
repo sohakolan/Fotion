@@ -1,0 +1,65 @@
+/* Fotion UI-Kit — design tokens aligned with Notion's light and dark themes.
+   Every component and screen reads these variables; never hard-code a theme colour elsewhere. */
+:root {
+  font-family: var(--font-sans); color: var(--text); background: var(--bg);
+  font-synthesis: none; text-rendering: optimizeLegibility; -webkit-font-smoothing: antialiased;
+
+  /* Typography */
+  --font-sans: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol";
+  --font-serif: Lyon-Text, Georgia, ui-serif, serif;
+  --font-mono: iawriter-mono, Nitti, Menlo, Courier, monospace;
+  --text-xs: 11px; --text-sm: 12px; --text-ui: 14px; --text-body: 16px;
+  --text-h3: 20px; --text-h2: 24px; --text-h1: 30px; --text-title: 40px;
+
+  /* Surfaces and text */
+  --bg: #fff; --sidebar: #f7f7f5; --panel: #fff;
+  --text: #37352f; --muted: #91918e; --placeholder: #c9c8c5;
+  --hover: rgba(55, 53, 47, .055); --selected: rgba(55, 53, 47, .075); --line: #eae9e7;
+  --blue: #2383e2; --blue-hover: #1474cf; --selection: rgba(35, 131, 226, .14); --danger: #d44c47;
+  --tooltip-bg: rgba(15, 15, 15, .9); --tooltip-text: rgba(255, 255, 255, .7);
+
+  /* Shape and depth */
+  --radius-sm: 4px; --radius: 6px; --radius-lg: 10px;
+  --shadow: 0 4px 18px rgba(15, 15, 15, .12), 0 0 0 1px rgba(15, 15, 15, .06);
+  --shadow-menu: 0 14px 28px -6px rgba(0, 0, 0, .1), 0 2px 4px -1px rgba(0, 0, 0, .06), 0 0 0 1px rgba(84, 72, 49, .08);
+  --z-menu: 60; --z-modal: 100; --z-toast: 120;
+
+  /* Block colour palette (gray brown orange yellow green blue purple pink red) */
+  --color-gray: #787774; --bg-gray: #f1f1ef;
+  --color-brown: #9f6b53; --bg-brown: #f4eeee;
+  --color-orange: #d9730d; --bg-orange: #fbecdd;
+  --color-yellow: #cb912f; --bg-yellow: #fbf3db;
+  --color-green: #448361; --bg-green: #edf3ec;
+  --color-blue: #337ea9; --bg-blue: #e7f3f8;
+  --color-purple: #9065b0; --bg-purple: #f4f0f7;
+  --color-pink: #c14c8a; --bg-pink: #f9eef3;
+  --color-red: #d44c47; --bg-red: #fdebec;
+}
+[data-theme=dark] {
+  --bg: #191919; --sidebar: #202020; --panel: #252525;
+  --text: #d4d4d4; --muted: #83837e; --placeholder: #5a5a57;
+  --hover: rgba(255, 255, 255, .055); --selected: rgba(255, 255, 255, .085); --line: #33332f;
+  --selection: rgba(35, 131, 226, .28);
+  --shadow: 0 4px 20px #0006, 0 0 0 1px #ffffff0b;
+  --shadow-menu: 0 14px 28px -6px rgba(0, 0, 0, .4), 0 2px 4px -1px rgba(0, 0, 0, .3), 0 0 0 1px rgba(255, 255, 255, .07);
+  --color-gray: #9b9b9b; --bg-gray: #2f2f2f;
+  --color-brown: #ba856f; --bg-brown: #4a3228;
+  --color-orange: #c77d48; --bg-orange: #5c3b23;
+  --color-yellow: #ca9849; --bg-yellow: #564328;
+  --color-green: #529e72; --bg-green: #243d30;
+  --color-blue: #5e87c9; --bg-blue: #243b53;
+  --color-purple: #9d68d3; --bg-purple: #3c2d49;
+  --color-pink: #d15796; --bg-pink: #4e2c3c;
+  --color-red: #df5452; --bg-red: #522e2a;
+  color: var(--text); background: var(--bg);
+}
+/* Inline palette colours are stored in Markdown for light mode; dark mode swaps them through the tokens. */
+[data-theme=dark] [data-fotion-color=gray]{color:var(--color-gray)!important}[data-theme=dark] [data-fotion-background=gray]{background-color:var(--bg-gray)!important}
+[data-theme=dark] [data-fotion-color=brown]{color:var(--color-brown)!important}[data-theme=dark] [data-fotion-background=brown]{background-color:var(--bg-brown)!important}
+[data-theme=dark] [data-fotion-color=orange]{color:var(--color-orange)!important}[data-theme=dark] [data-fotion-background=orange]{background-color:var(--bg-orange)!important}
+[data-theme=dark] [data-fotion-color=yellow]{color:var(--color-yellow)!important}[data-theme=dark] [data-fotion-background=yellow]{background-color:var(--bg-yellow)!important}
+[data-theme=dark] [data-fotion-color=green]{color:var(--color-green)!important}[data-theme=dark] [data-fotion-background=green]{background-color:var(--bg-green)!important}
+[data-theme=dark] [data-fotion-color=blue]{color:var(--color-blue)!important}[data-theme=dark] [data-fotion-background=blue]{background-color:var(--bg-blue)!important}
+[data-theme=dark] [data-fotion-color=purple]{color:var(--color-purple)!important}[data-theme=dark] [data-fotion-background=purple]{background-color:var(--bg-purple)!important}
+[data-theme=dark] [data-fotion-color=pink]{color:var(--color-pink)!important}[data-theme=dark] [data-fotion-background=pink]{background-color:var(--bg-pink)!important}
+[data-theme=dark] [data-fotion-color=red]{color:var(--color-red)!important}[data-theme=dark] [data-fotion-background=red]{background-color:var(--bg-red)!important}

@@ -25,7 +25,7 @@ L’aperçu du build est disponible sur http://127.0.0.1:4173. Le petit serveur 
 
 ## Les fichiers
 
-Chaque page est un vrai `.md`, avec des propriétés YAML (`title`, `icon`, `parent`, `favorite`, `cover`, `trashed`, `order`, `fullWidth`, `smallText`, `font`). Les identifiants de fichiers restent stables lors d’un changement de titre. Les sous-pages sont reliées par `parent` ; ce premier jet n’organise pas les fichiers en sous-dossiers.
+Chaque page est un vrai `.md`, avec des propriétés YAML (`title`, `icon`, `parent`, `favorite`, `cover`, `trashed`, `order`, `fullWidth`, `smallText`, `font`, `locked`). Les identifiants de fichiers restent stables lors d’un changement de titre. Les sous-pages sont reliées par `parent` ; ce premier jet n’organise pas les fichiers en sous-dossiers.
 
 - Sauvegarde automatique après 550 ms d’inactivité et avant de changer de page.
 - Écriture par remplacement atomique, copies des versions précédentes dans `vault/.history/` et détection des modifications externes. Les fichiers d’historique sont nommés par empreinte du nom et du contenu d’origine.
@@ -140,3 +140,7 @@ La coloration syntaxique est chargée au premier bloc de code avec une langue ex
 ## Tableaux simples
 
 Faire glisser une bordure de colonne pour changer sa largeur. La barre du tableau permet de modifier les en-têtes de ligne et de colonne. Les réglages survivent à la réouverture. Les tableaux simples restent en Markdown GFM ; ceux dont les propriétés ou le contenu ne sont pas représentables sans perte sont enregistrés en HTML dans le `.md`, notamment pour conserver les largeurs, plusieurs paragraphes et les espaces des cellules. Les déplacements de lignes et colonnes et leurs menus dédiés restent à réaliser.
+
+## Moteur, interface et stockage
+
+Le code est séparé en trois dossiers : `engine/` (règles, documents, Markdown et transactions), `ui/` (Solid, vues de blocs et interactions), `server/` (API et fichiers). Le moteur est utilisable sans les vues de Fotion et testé séparément. Les imports inverses et les accès aux modules privés du moteur sont refusés au build. Voir [l'architecture détaillée](docs/ARCHITECTURE.md), notamment la dépendance au DOM pour le HTML riche.

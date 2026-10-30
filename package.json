@@ -24,6 +24,7 @@
     "@tiptap/markdown": "latest",
     "@tiptap/pm": "latest",
     "@tiptap/starter-kit": "latest",
+    "emojibase-data": "^18.0.0",
     "lowlight": "^3.3.0",
     "lucide-solid": "latest",
     "marked": "^17.0.6",

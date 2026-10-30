@@ -147,3 +147,16 @@ test('history rejects modified snapshots and symlinks without replacing the curr
   symlinkSync(vault.root, join(vault.root, '.history'));
   assert.throws(() => vault.history(original.id), VaultError);
 });
+
+test('permanent deletion only removes trashed, unchanged pages and keeps a history copy', t => {
+  const vault = fixture(t);
+  const page = vault.create(blank);
+  assert.throws(() => vault.remove(page.id, page.version), (e: VaultError) => e.status === 400);
+  const trashed = vault.write(page.id, { ...page, trashed: true }, page.version);
+  assert.throws(() => vault.remove(page.id, page.version), (e: VaultError) => e.status === 409);
+  assert.throws(() => vault.remove('../outside.md', trashed.version));
+  vault.remove(page.id, trashed.version);
+  assert.equal(vault.list().some(p => p.id === page.id), false);
+  const copies = readdirSync(join(vault.root, '.history')).map(name => readFileSync(join(vault.root, '.history', name), 'utf8'));
+  assert.ok(copies.some(text => text.includes('trashed: true')), 'The deleted file is recoverable from the history folder');
+});

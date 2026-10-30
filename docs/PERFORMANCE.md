@@ -19,7 +19,7 @@ Les plages colorées sont mises en cache par nœud ProseMirror immuable avec une
 
 ## Preuves reproductibles
 
-- [Chargement différé](../src/features/editor/lib/lazy-highlighting.ts) et [rendu syntaxique](../src/features/editor/lib/syntax-highlighting.ts).
+- [Chargement différé](../ui/features/editor/lib/lazy-highlighting.ts) et [rendu syntaxique](../ui/features/editor/lib/syntax-highlighting.ts).
 - [Tests des alias, positions et catalogue](../tests/unit/highlighting.test.ts) ; [test de conservation du document](../tests/unit/markdown.test.ts).
 - [Chrome sur le build de production](../tests/e2e/editor.spec.ts) : absence de téléchargement sur une page sans code et sur un bloc brut, téléchargement volontairement retardé, absence de sauvegarde supplémentaire à son arrivée, échec réseau, édition puis récupération après rechargement.
 

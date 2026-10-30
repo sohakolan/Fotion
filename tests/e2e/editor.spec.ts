@@ -220,8 +220,8 @@ test('page title grows and shrinks when viewport, page width and font change wit
   await page.setViewportSize({ width: 1200, height: 960 });
   await page.getByRole('button', { name: 'Ouvrir la barre latérale', exact: true }).click();
   await page.getByRole('button', { name: 'Options de la page', exact: true }).click();
-  await page.getByRole('button', { name: 'Aa Mono', exact: true }).click();
-  await page.getByRole('button', { name: 'Pleine largeur', exact: true }).click();
+  await page.getByRole('button', { name: 'Ag Mono', exact: true }).click();
+  await page.getByRole('menuitemcheckbox', { name: 'Pleine largeur', exact: true }).click();
   await expect.poll(fits).toBe(true);
   await page.keyboard.press('Escape');
   const separator = page.getByRole('separator', { name: 'Largeur de la barre latérale' });
@@ -251,7 +251,7 @@ test('syntax grammars load only when needed and never change saved content', asy
   expect(loads).toBe(0);
   const editor = page.getByRole('textbox', { name: 'Contenu de la page' });
   await editor.click(); await page.keyboard.press('ControlOrMeta+a'); await page.keyboard.type('/code');
-  await page.getByRole('option', { name: /Capturez un extrait de code/ }).click();
+  await page.getByRole('option', { name: /^Code/ }).click();
   await expect(editor).toBeFocused(); await page.keyboard.type('const answer = 42;');
   expect(loads).toBe(0);
   await page.getByRole('button', { name: 'Langage du code', exact: true }).click();
@@ -307,4 +307,194 @@ test('table column resizing and header choices survive saving and reopening', as
   await expect(cell).toHaveAttribute('colwidth', width!);
   await expect(table.locator('tr').nth(1)).toContainText('Fotion');
   await page.screenshot({ path: info.outputPath('resized-table.png') });
+});
+
+test('page URL reopens the page, lock blocks edits and survives reloading', async ({ page }) => {
+  const created = await createDocument(page, 'Contenu protégé', 'Page verrouillable');
+  await expect(page).toHaveURL(new RegExp(`#${encodeURIComponent(created.id)}$`));
+  await page.evaluate(() => localStorage.removeItem('fotion-active'));
+  await page.goto(`/#${encodeURIComponent(created.id)}`);
+  await expect(page.getByLabel('Titre de la page', { exact: true })).toHaveValue('Page verrouillable');
+  await page.getByRole('button', { name: 'Options de la page' }).click();
+  await expect(page.locator('.kit-menu-footnote')).toContainText('Nombre de mots : 2');
+  await page.screenshot({ path: test.info().outputPath('page-menu.png') });
+  await page.getByRole('menuitemcheckbox', { name: 'Verrouiller la page' }).click();
+  await page.keyboard.press('Escape');
+  const editor = page.getByRole('textbox', { name: 'Contenu de la page' });
+  await expect(editor).toHaveAttribute('contenteditable', 'false');
+  await expect(page.getByLabel('Titre de la page', { exact: true })).toHaveAttribute('readonly', '');
+  await expect(page.locator('.save-status')).toHaveText('Enregistré');
+  await page.reload();
+  await expect(page.getByRole('button', { name: 'Verrouillée' })).toBeVisible();
+  await expect(editor).toHaveAttribute('contenteditable', 'false');
+  await page.getByRole('button', { name: 'Verrouillée' }).click();
+  await expect(editor).toHaveAttribute('contenteditable', 'true');
+  await editor.click(); await page.keyboard.press('End'); await page.keyboard.type(' modifié');
+  await expect(page.locator('.prose > p')).toHaveText('Contenu protégé modifié');
+});
+
+test('slash menu filters, inserts below existing text and stays closed after escape', async ({ page }) => {
+  await createDocument(page, 'Première ligne');
+  const editor = page.getByRole('textbox', { name: 'Contenu de la page' });
+  await editor.click(); await page.keyboard.press('End');
+  await page.keyboard.type(' /');
+  const menu = page.locator('.slash-menu');
+  await expect(menu.locator('.slash-group')).toHaveText(['Blocs de base', 'Médias', 'Avancés']);
+  await page.screenshot({ path: test.info().outputPath('slash-menu.png') });
+  await page.keyboard.type('h2');
+  await expect(menu.getByRole('option').first()).toContainText('Titre 2');
+  await page.keyboard.press('Enter');
+  await expect(menu).toBeHidden();
+  await page.keyboard.type('Section');
+  await expect(page.locator('.prose > p').first()).toHaveText('Première ligne ');
+  await expect(page.locator('.prose > h2')).toHaveText('Section');
+  await page.keyboard.press('Enter'); await page.keyboard.type('/');
+  await expect(menu).toBeVisible();
+  await page.keyboard.press('Escape'); await page.keyboard.type('abc');
+  await expect(menu).toBeHidden();
+  await page.keyboard.type(' /zzz ');
+  await expect(menu).toBeHidden();
+});
+
+test('block menu follows Notion: actions, highlight, duplicate shortcut and insert above', async ({ page }) => {
+  await createDocument(page, 'Premier\n\nSecond');
+  await page.locator('.prose > p').first().click();
+  await page.keyboard.press('ControlOrMeta+d');
+  await expect(page.locator('.prose > p')).toHaveText(['Premier', 'Premier', 'Second']);
+  await page.locator('.prose > p').nth(2).hover();
+  await page.getByRole('button', { name: 'Déplacer ou modifier le bloc', exact: true }).click();
+  const menu = page.getByRole('menu', { name: 'Options du bloc' });
+  await expect(menu.getByRole('menuitem')).toHaveText([/Supprimer/, /Dupliquer/, /Transformer en/]);
+  await expect(menu.getByPlaceholder('Rechercher des actions…')).toBeFocused();
+  await expect(page.locator('.block-menu-target')).toBeVisible();
+  await page.screenshot({ path: test.info().outputPath('block-menu.png') });
+  await menu.getByRole('menuitem', { name: 'Dupliquer' }).click();
+  await expect(page.locator('.prose > p')).toHaveText(['Premier', 'Premier', 'Second', 'Second']);
+  await expect(page.locator('.block-menu-target')).toHaveCount(0);
+  await page.locator('.prose > p').first().hover();
+  await page.getByRole('button', { name: 'Ajouter un bloc en dessous', exact: true }).click({ modifiers: ['Alt'] });
+  await expect(page.locator('.slash-menu')).toBeVisible(); await expect(page.getByRole('textbox', { name: 'Contenu de la page' })).toBeFocused();
+  await page.keyboard.press('Escape'); await page.keyboard.press('Backspace'); await page.keyboard.type('Avant');
+  await expect(page.locator('.prose > p').first()).toHaveText('Avant');
+});
+
+test('Backspace deletes text natively, including after a slash command', async ({ page }) => {
+  await createDocument(page, 'Premier');
+  await page.locator('.prose > p').first().click();
+  await page.keyboard.press('ControlOrMeta+ArrowRight'); await page.keyboard.press('End');
+  await page.keyboard.type(' ab'); await page.keyboard.press('Backspace');
+  await expect(page.locator('.prose > p').first()).toHaveText('Premier a');
+  await page.keyboard.type(' /'); await expect(page.locator('.slash-menu')).toBeVisible();
+  await page.keyboard.press('Backspace');
+  await expect(page.locator('.slash-menu')).toBeHidden();
+  await expect(page.locator('.prose > p').first()).toHaveText('Premier a ');
+});
+
+test('UI-Kit gallery shows tokens and components in both themes', async ({ page }) => {
+  const errors: string[] = [];
+  page.on('pageerror', error => errors.push(error.message));
+  await page.goto('/#ui-kit');
+  await expect(page.getByRole('heading', { name: 'Fotion UI-Kit' })).toBeVisible();
+  await expect(page.locator('.kit-palette > div')).toHaveCount(9);
+  await page.screenshot({ path: test.info().outputPath('ui-kit-light.png'), fullPage: true });
+  await page.getByRole('button', { name: 'Thème sombre' }).click();
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+  await page.screenshot({ path: test.info().outputPath('ui-kit-dark.png'), fullPage: true });
+  const lock = page.getByRole('menuitemcheckbox', { name: 'Verrouiller la page' });
+  await expect(lock).toHaveAttribute('aria-checked', 'true');
+  await lock.click(); await expect(lock).toHaveAttribute('aria-checked', 'false');
+  expect(errors).toEqual([]);
+});
+
+test('sidebar sections collapse, limit their rows and list every page in the “Plus” panel', async ({ page }) => {
+  for (let i = 1; i <= 6; i++) await page.request.post('/api/pages', { data: { title: `Section ${i}`, icon: '📄', parent: null, favorite: false, cover: '', content: '', trashed: false, order: 9000 + i } });
+  await page.goto('/');
+  const privateSection = page.getByRole('region', { name: 'Privé' });
+  await privateSection.getByRole('button', { name: 'Options de la section Privé' }).click();
+  await page.getByRole('menuitem', { name: /Afficher/ }).click();
+  await page.getByRole('menuitem', { name: '5 éléments', exact: true }).click();
+  await expect(privateSection.locator('.page-row[style*="padding-left: 8px"]')).toHaveCount(5);
+  await privateSection.getByRole('button', { name: 'Plus' }).click();
+  const panel = page.getByRole('dialog', { name: 'Toutes les pages : Privé' });
+  await expect(panel.getByPlaceholder('Rechercher une page…')).toBeFocused();
+  await panel.getByPlaceholder('Rechercher une page…').fill('Section 6');
+  await expect(panel.locator('.section-panel-list > button')).toHaveText(['📄Section 6']);
+  await page.screenshot({ path: test.info().outputPath('sidebar-more.png') });
+  await panel.getByRole('button', { name: /Section 6/ }).click();
+  await expect(page.getByLabel('Titre de la page', { exact: true })).toHaveValue('Section 6');
+  await privateSection.getByRole('button', { name: 'Privé', exact: true }).click();
+  await expect(privateSection.locator('.page-row')).toHaveCount(0);
+  await page.reload();
+  await expect(page.getByRole('region', { name: 'Privé' }).locator('.page-row')).toHaveCount(0);
+});
+
+test('search groups pages by date, shows parents and filters titles like Notion', async ({ page }) => {
+  const parent = await (await page.request.post('/api/pages', { data: { title: 'Dossier parent', icon: '📁', parent: null, favorite: false, cover: '', content: '', trashed: false } })).json();
+  const child = await (await page.request.post('/api/pages', { data: { title: 'Fiche enfant', icon: '🧾', parent: parent.id, favorite: false, cover: '', content: 'Le mot zéphyr est ici.', trashed: false } })).json();
+  await page.goto('/');
+  await page.keyboard.press('ControlOrMeta+p');
+  const dialog = page.getByRole('dialog', { name: 'Rechercher une page' });
+  await expect(dialog.locator('.search-group').first()).toHaveText('Aujourd’hui');
+  await expect(dialog.getByRole('button', { name: /Fiche enfant — Dossier parent/ })).toBeVisible();
+  await page.screenshot({ path: test.info().outputPath('search-recent.png') });
+  await dialog.getByLabel('Rechercher').fill('zephyr');
+  await expect(dialog.locator('.search-group')).toHaveText(['Meilleurs résultats']);
+  await expect(dialog.locator('.search-results > button')).toHaveCount(1);
+  await dialog.getByRole('button', { name: 'Titres uniquement' }).click();
+  await expect(dialog.locator('.search-results > button')).toHaveCount(0);
+  await dialog.getByRole('button', { name: 'Titres uniquement' }).click();
+  const popup = page.waitForEvent('popup');
+  await dialog.getByLabel('Rechercher').press('ControlOrMeta+Enter');
+  expect((await popup).url()).toContain(`#${encodeURIComponent(child.id)}`);
+});
+
+test('page icon picker filters French emoji names, remembers recents and removes the icon', async ({ page }) => {
+  await createDocument(page, 'Contenu');
+  await page.getByRole('button', { name: 'Changer l’icône de la page' }).click();
+  const picker = page.getByRole('dialog', { name: 'Icône de la page' });
+  await expect(picker.locator('.kit-emoji-group').first()).toBeVisible();
+  await page.screenshot({ path: test.info().outputPath('icon-picker.png') });
+  await picker.getByLabel('Filtrer les emojis').fill('fusee');
+  await picker.getByRole('button', { name: 'Icône 🚀', exact: true }).click();
+  await expect(page.getByRole('button', { name: 'Changer l’icône de la page' })).toHaveText('🚀');
+  await page.getByRole('button', { name: 'Changer l’icône de la page' }).click();
+  await expect(picker.locator('.kit-emoji-group').first()).toHaveText('Récents');
+  await picker.getByRole('button', { name: 'Supprimer', exact: true }).click();
+  await expect(page.getByRole('button', { name: 'Changer l’icône de la page' })).toHaveCount(0);
+});
+
+test('trash searches, restores and permanently deletes after confirmation', async ({ page }) => {
+  for (const title of ['Brouillon à restaurer', 'Brouillon à effacer']) await page.request.post('/api/pages', { data: { title, icon: '🗑️', parent: null, favorite: false, cover: '', content: '', trashed: true } });
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Corbeille', exact: true }).click();
+  const trash = page.getByRole('dialog', { name: 'Corbeille' });
+  await trash.getByLabel('Rechercher dans la corbeille').fill('brouillon');
+  await expect(trash.getByRole('listitem')).toHaveCount(2);
+  await page.screenshot({ path: test.info().outputPath('trash.png') });
+  await trash.getByRole('button', { name: 'Restaurer Brouillon à restaurer' }).click();
+  await expect(trash.getByRole('listitem')).toHaveCount(1);
+  await trash.getByRole('button', { name: 'Supprimer définitivement Brouillon à effacer' }).click();
+  await trash.getByRole('button', { name: 'Oui, supprimer cette page' }).click();
+  await expect(trash.getByRole('listitem')).toHaveCount(0);
+  const pages: { title: string; trashed: boolean }[] = await (await page.request.get('/api/pages')).json();
+  expect(pages.find(p => p.title === 'Brouillon à restaurer')?.trashed).toBe(false);
+  expect(pages.some(p => p.title === 'Brouillon à effacer')).toBe(false);
+});
+
+test('backlinks follow the page view setting: popover, expanded or hidden', async ({ page }) => {
+  const target = await createDocument(page, 'Cible', 'Page cible');
+  await page.request.post('/api/pages', { data: { title: 'Page source', icon: '🔗', parent: null, favorite: false, cover: '', content: `Voir [la cible](./${encodeURIComponent(target.id)}).`, trashed: false } });
+  await page.reload();
+  const toggle = page.getByRole('button', { name: '1 lien entrant' });
+  await toggle.click();
+  await expect(page.getByRole('list', { name: 'Lié à cette page' }).getByRole('listitem')).toHaveText([/Page source/]);
+  await page.getByRole('button', { name: 'Options de la page' }).click();
+  await page.getByRole('menuitem', { name: 'Personnaliser la page' }).click();
+  await page.getByLabel('Affichage des liens entrants').selectOption('expanded');
+  await page.screenshot({ path: test.info().outputPath('customize-page.png') });
+  await page.keyboard.press('Escape');
+  await expect(page.locator('.save-status')).toHaveText('Enregistré');
+  await page.reload();
+  await expect(toggle).toHaveCount(0);
+  await expect(page.getByRole('list', { name: 'Lié à cette page' })).toBeVisible();
 });

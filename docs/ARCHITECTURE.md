@@ -1,57 +1,79 @@
-# Architecture des fichiers
+# Trois couches : moteur, interface, stockage
 
-Cette structure est obligatoire pour les prochains développements. `npm run check:architecture` contrôle les emplacements, noms et imports locaux ; `npm run build` l'exécute avant TypeScript. La CI lance aussi les tests unitaires, DOM et navigateur.
+La structure du projet sépare trois responsabilités. `npm run check:architecture`, exécuté par le build et la CI, contrôle les emplacements et le sens des imports.
 
 ```text
-src/
+engine/                        # Règles et formats des documents
+  index.ts                     # API publique du moteur
+  models/page.ts               # Contrats de données communs
+  document/
+    extensions.ts              # Schéma Tiptap indépendant des vues de Fotion
+    blocks.ts                  # Dépliants et titres dépliants
+    callout.ts                 # Modèle et format des encadrés
+    code-block.ts              # Modèle et format du code
+    colors.ts                  # Marques et palette persistante
+    page-mention.ts             # Références stables entre pages
+    table.ts                   # Tables et sérialisation sans perte
+    table-of-contents.ts        # Présence du bloc de sommaire
+  operations/                  # Transactions et commandes : déplacement, conversion, menu /
+  pages/                       # Liens, recherche, backlinks et ordre des pages
+ui/                            # Interface utilisateur
   main.tsx                     # Montage de Solid
-  app/
-    App.tsx                    # Composition, navigation et état de la session
-    styles.css                 # Styles de l'application
+  app/                         # Composition, session, styles et navigation
+  kit/                         # UI-Kit : thème et composants partagés, alignés sur Notion
+    index.ts                   # API publique du kit
+    tokens.css                 # Jetons : couleurs clair/sombre, palette, typographie, rayons, ombres
+    components.css             # Styles des composants du kit et de la galerie
+    components/                # Menu, MenuItem, Switch, Button, IconButton, Kbd, Tooltip, EmojiPicker, galerie
   features/
     editor/
-      index.ts                 # API publique de l'éditeur
-      components/              # DocumentEditor, BlockControls
-      extensions/              # Extensions Tiptap et leur assemblage
-      lib/                     # Transactions de déplacement
+      index.ts                 # API publique de l'éditeur visuel
+      components/              # Éditeur et poignées de blocs
+      extensions/              # Vues interactives adaptées aux schémas du moteur
+      lib/                     # Coloration différée et décorations visuelles
     pages/
-      index.ts                 # API publique des pages
-      components/              # Titre adaptatif et historique des versions
-      lib/                     # Recherche, backlinks, déplacements des pages
-shared/
-  page.ts                      # Contrats de données navigateur / serveur
-  page-links.ts                # Liens locaux et normalisation de recherche
-server/
-  http/vault-middleware.ts     # Routes, origine, taille des requêtes, erreurs HTTP
-  storage/vault.ts             # Markdown, YAML, fichiers atomiques et historique
-  storage/seed.ts              # Pages de démonstration
-scripts/                       # Vérifications et environnement de test
-tests/                        # Voir répartition ci-dessous
+      index.ts
+      components/              # Titre adaptatif, historique et aperçu
+    sidebar/
+      index.ts
+      components/              # Sections repliables, tri, nombre affiché, panneau « Plus »
+server/                        # Accès aux fichiers et frontière HTTP
+  http/vault-middleware.ts      # Routes, contrôle d'origine et erreurs HTTP
+  storage/vault.ts             # Coffre, écritures atomiques, conflits, historique
+  storage/seed.ts              # Documents de démonstration
 ```
 
-`tests/unit/` couvre les fonctions, extensions et opérations sur les fichiers. `tests/e2e/` couvre les interactions dans un navigateur réel sur le build de production. `scripts/check-ui.mjs` conserve le scénario d'intégration JSDOM sur le bundle compilé. Les fichiers de configuration des outils restent à la racine ; les documents et captures de référence vont dans `docs/`, les ressources statiques dans `public/`.
+Les configurations restent à la racine. `public/` contient les ressources statiques, `docs/` la documentation, `tests/` les preuves et `scripts/` l'environnement de vérification. `vault/` contient les documents personnels et reste ignoré par Git.
 
-## Sens des dépendances
+## Responsabilités et dépendances
 
-- `src/main.tsx` monte `app`. `app` compose les fonctionnalités par leurs `index.ts` publics.
-- Une fonctionnalité importe librement ses propres fichiers et les contrats de `shared`.
-- `pages` peut consommer l'API publique de `editor` pour afficher une version en lecture seule. `editor` ne dépend pas de `pages`.
-- Les imports entre fonctionnalités passent exclusivement par leur `index.ts`. Les autres dépendances entre fonctionnalités sont refusées tant que cette règle n'a pas été explicitement révisée.
-- `shared` ne dépend que de `shared` pour les modules locaux. Aucun composant, stockage ou API Node n'y entre.
-- `server/http` utilise `server/storage` et `shared`. `server/storage` ne dépend jamais de HTTP ou de `src`.
-- Aucun fichier de production n'importe un test, un script ou un fichier de configuration.
+- **Moteur** : structures de documents, conversions, transactions, formats Markdown/HTML et index des pages. Il n'importe ni `ui/`, ni `server/`, ni Solid, ni Lucide. Les modèles ne dépendent pas des extensions d'éditeur. Le moteur ne connaît pas les menus, les modales, le stockage du navigateur ou les requêtes HTTP.
+- **Interface** : compose les fonctionnalités avec Solid, gère les interactions, applique les vues Tiptap et appelle les opérations du moteur. Elle importe le moteur uniquement par `engine/index.ts`. Elle n'importe jamais les fichiers du serveur.
+- **Serveur** : accède au disque et expose l'API locale. Il utilise les contrats publics du moteur, sans importer l'interface. La validation des entrées, les protections des chemins et la concurrence des écritures restent à la frontière du stockage.
 
-Les tests peuvent importer les fonctions internes qu'ils vérifient. Les scripts et configurations assemblent les couches nécessaires à l'exécution, sans être importés par le produit.
+Le sens autorisé est `ui → engine` et `server → engine`. L'interface communique avec le serveur par HTTP. Aucune dépendance inverse n'est autorisée.
 
-## Conventions
+Le **UI-Kit** (`ui/kit/`) est la couche de design commune : il n'importe rien d'autre que lui-même, et toute l'interface l'utilise par `ui/kit/index.ts` (seul `ui/main.tsx` charge ses feuilles de style). Les couleurs, tailles, rayons et ombres se lisent dans les variables de `tokens.css` ; ne pas coder une couleur de thème en dur ailleurs. La galerie de référence s'ouvre à l'adresse `#ui-kit`. Le menu de bloc, le menu de page et les info-bulles des poignées utilisent déjà le kit ; les autres écrans de `styles.css` y migrent progressivement.
 
-Composants en `PascalCase.tsx`, fonctions et extensions en `kebab-case.ts`, dossiers de fonctionnalités en `kebab-case`. Les fichiers `index.ts` exposent uniquement les symboles utilisés par les autres couches. Imports locaux relatifs : pas d'alias masquant une dépendance.
+Dans l'interface, `app` compose les fonctionnalités par leurs `index.ts`. `pages` peut utiliser l'API publique de `editor` pour un aperçu de version ; `editor` ne dépend pas de `pages`. Les imports privés entre fonctionnalités sont refusés.
 
-Ajouter une fonctionnalité dans `src/features/<nom>/`, avec les seuls sous-dossiers nécessaires parmi `components`, `lib`, `extensions`. Un besoin nouveau de couche ou de dépendance doit modifier ensemble cette documentation et le contrôle. Ne pas créer de dossiers génériques `utils`, `helpers` ou `common` ; placer la logique près de son propriétaire. `shared` contient uniquement les contrats réellement communs.
+## Schémas et vues Tiptap
 
-`App.tsx` reste le point de composition et porte encore plusieurs panneaux et états de session. Extraire un panneau dans sa fonctionnalité lorsque son comportement évolue, sans mélanger ce travail avec une modification du format Markdown. Les styles sont encore regroupés dans `app/styles.css` ; cette réorganisation ne constitue pas une refonte CSS.
+`documentExtensions()` fournit le schéma et les parseurs/sérialiseurs du moteur, utilisables sans les vues de Fotion. `ui/features/editor/extensions/editor-extensions.ts` reprend cette liste et adapte seulement les extensions nécessitant une vue interactive : boutons d'un encadré, panneau de langage, sommaire cliquable, navigation des mentions ou redimensionnement des tableaux.
 
-## Vérifications et données
+Les méthodes `addNodeView` sont interdites dans `engine/` par le contrôle automatique. Les règles de sérialisation restent dans le moteur ; les vues n'en maintiennent pas une seconde version. Les classes et attributs du HTML sérialisé font partie du format d'échange, sans import de feuilles de style.
+
+Le moteur repose encore sur Tiptap/ProseMirror. **Indépendant de l'interface ne signifie pas indépendant du DOM** : l'import/export HTML riche et l'index des tableaux HTML utilisent des API DOM. Les tests sans application fournissent JSDOM. Les contrats de pages et les transactions pures peuvent être utilisés sans monter Solid. Une distribution npm autonome ou un moteur sans DOM n'est pas encore fournie.
+
+## Conventions et changements
+
+Composants en `PascalCase.tsx`, modules du moteur et fonctions en `kebab-case.ts`. Imports locaux relatifs. Les points d'entrée exposent les symboles nécessaires aux consommateurs ; les tests peuvent importer un module interne pour le vérifier directement.
+
+Un nouveau bloc ajoute son modèle et son format dans `engine/document/`, puis sa vue dans `ui/features/editor/extensions/` si nécessaire. Une nouvelle action sur le document va dans `engine/operations/` ; un menu qui la déclenche reste dans `ui/`. Une nouvelle opération disque reste dans `server/storage/`.
+
+Ne pas créer de dossiers génériques `utils`, `helpers` ou `common`. Réviser ensemble la documentation et le contrôle si une nouvelle couche ou dépendance devient nécessaire. `App.tsx` porte encore plusieurs panneaux et états de session ; les extraire progressivement dans leurs fonctionnalités. Les styles restent regroupés dans `ui/app/styles.css`.
+
+## Vérifications
 
 ```sh
 npm run check:architecture
@@ -61,8 +83,6 @@ npx playwright install chromium
 npm run test:browser
 ```
 
-Sur une machine disposant de Chrome : `PLAYWRIGHT_CHANNEL=chrome npm run test:browser`. Le serveur navigateur utilise un coffre temporaire distinct, supprimé à l'arrêt normal. Les captures et traces restent dans `test-results/`, ignoré par Git. Le coffre personnel `vault/`, son historique et les fichiers `.env` ne doivent jamais être versionnés.
+`tests/unit/engine.test.ts` exerce le moteur sans les vues de l'application. Les autres tests unitaires couvrent stockage, conversions et formats. `test:ui` vérifie les modules de production recomposés en IIFE dans JSDOM. `test:browser` compile et utilise Chrome/Chromium sur `dist/`, avec un coffre temporaire isolé. Pour Chrome installé : `PLAYWRIGHT_CHANNEL=chrome npm run test:browser`.
 
-Le contrôle d'architecture inspecte les imports et exports statiques ainsi que les imports dynamiques à chaîne littérale. Il ne prouve pas l'absence de cycles au sein d'une même fonctionnalité ni les dépendances transitives des paquets externes. Les imports construits à l'exécution sont à éviter et demandent une revue explicite.
-
-Les grammaires de coloration sont isolées dans `features/editor/lib/syntax-highlighting.ts`, chargé dynamiquement par `lazy-highlighting.ts`. Les types seuls peuvent référencer ce module sans provoquer son chargement. Voir [les mesures](PERFORMANCE.md).
+Le contrôle inspecte les imports/exports statiques et les imports dynamiques à chaîne littérale. Il ne prouve pas l'absence de cycles internes ni les dépendances transitives des paquets externes. Les modules chargés à la demande, leurs mesures et limites sont documentés dans [PERFORMANCE.md](PERFORMANCE.md).

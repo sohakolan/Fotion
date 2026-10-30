@@ -17,7 +17,7 @@ export function vaultMiddleware(vault: Vault) {
       }
       const restore = url.pathname.match(/^\/api\/pages\/([^/]+)\/restore$/);
       if (url.pathname === '/api/pages' && req.method === 'GET') { res.end(JSON.stringify(vault.list())); return; }
-      if (!['POST', 'PUT'].includes(req.method || '') || (!/^\/api\/(?:pages(?:\/[^/]+)?|import)$/.test(url.pathname) && !(req.method === 'POST' && restore))) throw new VaultError(404, 'Route introuvable.');
+      if (!['POST', 'PUT', 'DELETE'].includes(req.method || '') || (!/^\/api\/(?:pages(?:\/[^/]+)?|import)$/.test(url.pathname) && !(req.method === 'POST' && restore))) throw new VaultError(404, 'Route introuvable.');
       if (!req.headers['content-type']?.startsWith('application/json')) throw new VaultError(415, 'Un contenu JSON est requis.');
       let body = '';
       for await (const chunk of req) {
@@ -31,6 +31,7 @@ export function vaultMiddleware(vault: Vault) {
       if (req.method === 'POST' && restore) result = vault.restore(decodeURIComponent(restore[1]), data.snapshotVersion, data.version);
       else if (req.method === 'POST' && url.pathname === '/api/import') result = vault.import(data.name, data.raw);
       else if (req.method === 'POST' && url.pathname === '/api/pages') result = vault.create(data);
+      else if (req.method === 'DELETE' && url.pathname.startsWith('/api/pages/')) result = vault.remove(decodeURIComponent(url.pathname.slice('/api/pages/'.length)), data.version);
       else if (req.method === 'PUT' && url.pathname.startsWith('/api/pages/')) result = vault.write(decodeURIComponent(url.pathname.slice('/api/pages/'.length)), data, data.version);
       else throw new VaultError(404, 'Route introuvable.');
       res.end(JSON.stringify(result));
