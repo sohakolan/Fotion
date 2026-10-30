@@ -222,7 +222,7 @@ Références : [S01](NOTION_REFERENCE.md#s01), [S04](NOTION_REFERENCE.md#s04), [
 - [ ] **UI-156** [PARTIEL] Code avec fond, police, sélecteur de langue, copie, légende et traitement des lignes longues : composants présents, fidélité visuelle à valider.
 - [ ] **UI-157** Équations avec aperçu, édition et erreur.
 - [ ] **UI-158** [PARTIEL] Séparateur et espaces de part et d’autre.
-- [ ] **UI-159** Table des matières et état du titre actif.
+- [ ] **UI-159** [PARTIEL] Table des matières et état du titre actif.
 - [ ] **UI-160** [PARTIEL] Sous-pages et liens de page avec survol et icône.
 - [ ] **UI-161** Mentions de page, date et personne sous forme de pastilles appropriées.
 - [ ] **UI-162** Bloc synchronisé : bordure, indication d’origine et menus.

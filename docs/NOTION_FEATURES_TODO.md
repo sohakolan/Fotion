@@ -103,7 +103,7 @@ Références : [S01](NOTION_REFERENCE.md#s01), [S04](NOTION_REFERENCE.md#s04), [
 - [ ] **FN-074** [PARTIEL] Tableaux simples : compléter en-têtes, déplacements et sélection des cellules.
 - [ ] **FN-075** Colonnes de contenu avec création par dépôt latéral.
 - [ ] **FN-076** Redimensionnement, réorganisation et suppression des colonnes.
-- [ ] **FN-077** Table des matières liée aux titres et mise à jour après renommage.
+- [x] **FN-077** Table des matières liée aux titres et mise à jour après renommage.
 - [ ] **FN-078** Lien vers une page sous forme de bloc ; distinct d’une vraie sous-page.
 - [ ] **FN-079** Mentions de pages, dates, personnes et références de base de données.
 - [ ] **FN-080** Fil d’Ariane insérable dans le contenu.
@@ -563,3 +563,9 @@ Preuves : [extension de mention](../src/features/editor/extensions/page-mention.
 Liste des copies locales, aperçu en lecture seule, vue Markdown et restauration explicite. Les conflits avec le fichier courant, les sauvegardes corrompues, les liens symboliques et les versions d’une autre page sont refusés. La version remplacée est conservée ; la restauration reprend contenu/titre/présentation en conservant emplacement/favoris et métadonnées supplémentaires actuelles.
 
 Preuves : [coffre et API](../server/storage/vault.ts), [tests disque et HTTP](../tests/unit/vault.test.ts), [interface d’historique](../src/features/pages/components/VersionHistory.tsx), [parcours DOM avec conflit puis restauration](../scripts/check-ui.mjs). Référence : [historique Notion](https://www.notion.com/help/duplicate-delete-and-restore-content). Restent la comparaison des changements, le regroupement, les versions nommées, la pagination/rétention et la recette visuelle 1:1.
+
+### Sommaire dynamique — 30 octobre 2026
+
+FN-077 : bloc insérable depuis `/sommaire`, liste H1/H2/H3 actualisée après modification, ajout ou suppression ; navigation au clic et au clavier, destinations distinctes pour les titres identiques. Le marqueur HTML `<nav data-fotion-toc></nav>` conserve la présence du bloc dans le `.md` sans dupliquer les titres. Il requiert Fotion pour produire la liste dynamique.
+
+Preuves : [extension du sommaire](../src/features/editor/extensions/table-of-contents.ts), [round-trip Markdown/HTML et édition des titres](../tests/unit/markdown.test.ts), [parcours navigateur insertion, navigation, renommage, annulation et rechargement](../tests/e2e/editor.spec.ts). Référence : [sommaire Notion](https://www.notion.com/help/columns-headings-and-dividers). UI-159 reste partiel : ni suivi de section active au défilement ni comparaison visuelle 1:1 validés.

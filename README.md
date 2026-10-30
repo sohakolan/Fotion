@@ -114,3 +114,9 @@ Voir [la documentation de suivi](docs/README.md), les [408 critères fonctionnel
 ## Licence
 
 MIT. Implémentation indépendante ; non affiliée à Notion ou Obsidian. Les dépendances conservent leurs licences respectives.
+
+## Table des matières
+
+Insérer `/sommaire` ou `/table des matières` pour créer une navigation vers les titres H1, H2 et H3 de la page. Les intitulés et leur ordre se mettent à jour à chaque modification ; les titres identiques restent des destinations distinctes. Les boutons sont accessibles au clavier. Un clic ouvre les éventuels dépliants parents et place le curseur au début du titre dans une page éditable.
+
+Le fichier conserve `<nav data-fotion-toc></nav>`. Fotion reconstruit la liste à partir des titres, sans sauvegarder de copie périmée de leurs textes. Ce marqueur est une extension Fotion : les lecteurs Markdown externes, dont Obsidian sans extension adaptée, ne génèrent pas ce sommaire. Les titres restent du Markdown standard. Le suivi de la section active pendant le défilement et le sommaire latéral automatique restent à réaliser.

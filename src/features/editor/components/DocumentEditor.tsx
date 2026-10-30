@@ -27,6 +27,7 @@ const blocks: { label: string; hint: string; icon: string; keywords: string; act
   { label: 'Citation', hint: 'Mettez un passage en lumière.', icon: '❞', keywords: 'quote citation', action: c => c.toggleBlockquote() },
   { label: 'Séparateur', hint: 'Séparez visuellement vos idées.', icon: '―', keywords: 'divider hr ligne séparateur', action: c => c.setHorizontalRule() },
   { label: 'Code', hint: 'Capturez un extrait de code.', icon: '‹›', keywords: 'code', action: c => c.toggleCodeBlock() },
+  { label: 'Table des matières', hint: 'Naviguez entre les titres de cette page.', icon: '≡', keywords: 'toc sommaire table matières', action: c => c.insertContent({ type: 'tableOfContents' }) },
   { label: 'Tableau', hint: 'Organisez des informations simplement.', icon: '▦', keywords: 'table tableau', action: c => c.insertTable({ rows: 3, cols: 3, withHeaderRow: true }) },
 ];
 
@@ -286,7 +287,7 @@ export default function DocumentEditor(props: { content: string; onChange: (cont
       <Show when={!transform()} fallback={<>
         <button onClick={() => { setTransform(false); setBlockQuery(''); }}><ChevronRight size={14} class="back-chevron"/>Transformer en</button>
         <div class="popover-divider"/>
-        <div class="transform-options"><For each={filteredBlocks().filter(b => !['Séparateur', 'Tableau', 'Liste dépliante', 'Page', 'Image'].includes(b.label))}>{item => <button role="menuitem" onClick={() => { selectBlock(position().pos); item.action(editor.chain().focus().clearNodes()).run(); closeBlockMenu(); }}><span class="transform-icon">{item.icon}</span>{item.label}</button>}</For></div>
+        <div class="transform-options"><For each={filteredBlocks().filter(b => !['Séparateur', 'Tableau', 'Table des matières', 'Liste dépliante', 'Page', 'Image'].includes(b.label))}>{item => <button role="menuitem" onClick={() => { selectBlock(position().pos); item.action(editor.chain().focus().clearNodes()).run(); closeBlockMenu(); }}><span class="transform-icon">{item.icon}</span>{item.label}</button>}</For></div>
       </>}>
         <button role="menuitem" onClick={() => setTransform(true)}><Type size={16}/>Transformer en<ChevronRight size={14} class="menu-end"/></button>
         <button role="menuitem" onClick={() => { const node = editor.state.doc.nodeAt(position().pos); if (node) editor.chain().focus().insertContentAt(position().pos + node.nodeSize, node.toJSON()).run(); closeBlockMenu(); }}><Copy size={16}/>Dupliquer</button>

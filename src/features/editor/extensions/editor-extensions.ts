@@ -1,3 +1,4 @@
+import { TableOfContents } from './table-of-contents';
 import { PageMention } from './page-mention';
 import type { Page } from '../../../../shared/page';
 import { CodeBlock } from './code-block';
@@ -11,5 +12,5 @@ import Image from '@tiptap/extension-image';
 import { Callout, Toggle, ToggleSummary } from './blocks';
 
 export function editorExtensions(getPage: (id: string) => Pick<Page, 'title' | 'icon' | 'trashed'> | undefined = () => undefined) {
-  return [StarterKit.configure({ link: { openOnClick: false }, dropcursor: false, codeBlock: false }), Markdown.configure({ markedOptions: { gfm: true } }), TaskList, TaskItem.configure({ nested: true }), TableKit.configure({ table: { resizable: false } }), Image, Callout, Toggle, ToggleSummary, TextColor, CodeBlock, PageMention.configure({ getPage })];
+  return [StarterKit.configure({ link: { openOnClick: false }, dropcursor: false, codeBlock: false }), Markdown.configure({ markedOptions: { gfm: true } }), TaskList, TaskItem.configure({ nested: true }), TableKit.configure({ table: { resizable: false } }), Image, TableOfContents, Callout, Toggle, ToggleSummary, TextColor, CodeBlock, PageMention.configure({ getPage })];
 }

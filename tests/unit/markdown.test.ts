@@ -144,3 +144,33 @@ test('page mention titles update without modifying document history and remain n
   assert.equal(editor.view.dom.querySelector('.page-mention'), null);
   editor.destroy();
 });
+
+test('table of contents survives Markdown and HTML and follows heading edits without document mutations', () => {
+  const editor = new Editor({ extensions: editorExtensions(), content: '<nav data-fotion-toc></nav>\n\n# Introduction\n\n## Suite\n\n# Introduction\n\nFin.', contentType: 'markdown' });
+  const before = editor.getJSON();
+  const toc = () => editor.view.dom.querySelector('nav')!;
+  const labels = () => [...toc().querySelectorAll('button')].map(button => button.textContent);
+  assert.deepEqual(labels(), ['Introduction', 'Suite', 'Introduction']);
+  assert.equal(editor.state.doc.firstChild?.type.name, 'tableOfContents');
+  const markdown = editor.getMarkdown();
+  assert.match(markdown, /<nav data-fotion-toc><\/nav>/);
+  editor.commands.setContent(markdown, { contentType: 'markdown' });
+  assert.deepEqual(editor.getJSON(), before);
+  editor.commands.setContent(editor.getHTML());
+  assert.deepEqual(editor.getJSON(), before);
+  editor.commands.insertContentAt(2, 'Nouvelle ');
+  assert.deepEqual(labels(), ['Nouvelle Introduction', 'Suite', 'Introduction']);
+  editor.commands.undo();
+  assert.deepEqual(editor.getJSON(), before);
+  assert.deepEqual(labels(), ['Introduction', 'Suite', 'Introduction']);
+  editor.commands.insertContentAt(editor.state.doc.content.size, { type: 'heading', attrs: { level: 3 }, content: [{ type: 'text', text: 'Ajout' }] });
+  assert.deepEqual(labels(), ['Introduction', 'Suite', 'Introduction', 'Ajout']);
+  let remove = 0;
+  editor.state.doc.descendants((node, pos) => { if (node.type.name === 'heading' && node.textContent === 'Suite') remove = pos; });
+  editor.commands.deleteRange({ from: remove, to: remove + editor.state.doc.nodeAt(remove)!.nodeSize });
+  assert.deepEqual(labels(), ['Introduction', 'Introduction', 'Ajout']);
+  editor.commands.setContent('<nav data-fotion-toc></nav>', { contentType: 'markdown' });
+  assert.equal(toc().querySelectorAll('button').length, 0);
+  assert.match(toc().textContent || '', /Ajoutez des titres/);
+  editor.destroy();
+});

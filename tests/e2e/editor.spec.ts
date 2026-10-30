@@ -80,3 +80,27 @@ test('desktop and mobile layouts with real page content', async ({ page }, info)
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
   await page.screenshot({ path: info.outputPath('mobile-light.png') });
 });
+
+test('table of contents inserts, navigates and follows renamed headings after reload', async ({ page }) => {
+  await createDocument(page, 'Sommaire\n\n# Introduction\n\n## Détails\n\nFin.');
+  const first = page.locator('.prose > p').first();
+  await first.click(); await page.keyboard.press('Home');
+  for (let i = 0; i < 'Sommaire'.length; i++) await page.keyboard.press('Shift+ArrowRight');
+  await page.keyboard.type('/sommaire');
+  await page.getByRole('option', { name: /Table des matières/ }).click();
+  const toc = page.getByRole('navigation', { name: 'Table des matières' });
+  await expect(toc.getByRole('button')).toHaveText(['Introduction', 'Détails']);
+  await toc.getByRole('button', { name: 'Détails', exact: true }).click();
+  await expect.poll(() => page.evaluate(() => window.getSelection()?.anchorNode?.parentElement?.closest('h2')?.textContent)).toBe('Détails');
+  await page.keyboard.type('Nouveaux ');
+  await expect(toc.getByRole('button')).toHaveText(['Introduction', 'Nouveaux Détails']);
+  await page.keyboard.press('ControlOrMeta+z');
+  await expect(toc.getByRole('button')).toHaveText(['Introduction', 'Détails']);
+  await page.keyboard.press('ControlOrMeta+Shift+z');
+  await expect(page.locator('.save-status')).toHaveText('Enregistré');
+  await page.reload();
+  await expect(toc.getByRole('button')).toHaveText(['Introduction', 'Nouveaux Détails']);
+  await toc.getByRole('button', { name: 'Introduction', exact: true }).focus();
+  await page.keyboard.press('Enter');
+  await expect.poll(() => page.evaluate(() => window.getSelection()?.anchorNode?.parentElement?.closest('h1')?.textContent)).toBe('Introduction');
+});
