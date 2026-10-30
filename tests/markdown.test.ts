@@ -44,3 +44,25 @@ test('callouts, nested toggles and underline retain content through Markdown', (
   assert.deepEqual(editor.getJSON(), before);
   editor.destroy();
 });
+
+test('text and background colors preserve nested marks, literal HTML and undo through Markdown', () => {
+  const editor = new Editor({ extensions: editorExtensions(), content: { type: 'doc', content: [{ type: 'paragraph', content: [
+    { type: 'text', text: 'Important & <tag>', marks: [{ type: 'bold' }, { type: 'underline' }, { type: 'textColor', attrs: { color: 'red', background: 'yellow' } }] },
+    { type: 'text', text: ' puis ' },
+    { type: 'text', text: '</span>', marks: [{ type: 'code' }, { type: 'textColor', attrs: { color: 'blue', background: 'default' } }] },
+  ] }] } });
+  const before = editor.getJSON();
+  const markdown = editor.getMarkdown();
+  assert.match(markdown, /data-fotion-color="red"/);
+  editor.commands.setContent(markdown, { contentType: 'markdown' });
+  assert.deepEqual(editor.getJSON(), before);
+  editor.commands.setTextSelection({ from: 1, to: 10 });
+  editor.commands.setMark('textColor', { color: 'green' });
+  assert.equal(editor.getAttributes('textColor').background, 'yellow');
+  assert.equal(editor.getAttributes('textColor').color, 'green');
+  editor.commands.undo();
+  assert.deepEqual(editor.getJSON(), before);
+  editor.commands.unsetAllMarks();
+  assert.equal(editor.isActive('textColor'), false);
+  editor.destroy();
+});

@@ -33,7 +33,7 @@ Références : [S03](NOTION_REFERENCE.md#s03).
 
 - [ ] **UI-013** [PARTIEL] Palette claire : fonds principaux, barre latérale, panneaux et surfaces surélevées.
 - [ ] **UI-014** [PARTIEL] Palette sombre : texte, surfaces, séparateurs et contrastes.
-- [ ] **UI-015** Palette complète de texte et surlignage des blocs.
+- [ ] **UI-015** [PARTIEL] Palette complète de texte et surlignage des blocs.
 - [ ] **UI-016** Couleurs des états sélection, hover, focus, actif, désactivé, danger et succès.
 - [ ] **UI-017** [PARTIEL] Polices par défaut, serif et monospace avec fallbacks identiques au contexte de référence.
 - [ ] **UI-018** Mesurer corps, titres, graisse, hauteur de ligne et espacement des lettres.
@@ -138,7 +138,7 @@ Références : [S03](NOTION_REFERENCE.md#s03), [S04](NOTION_REFERENCE.md#s04).
 - [ ] **UI-092** Mesurer marges latérales et espaces avant/après le titre.
 - [ ] **UI-093** Mesurer paragraphes, titres, listes, citations, code et séparateurs.
 - [ ] **UI-094** Éviter une couleur ou marge spéciale arbitraire sur le premier paragraphe.
-- [ ] **UI-095** Rendre correctement gras, liens, code, souligné, barré et couleurs.
+- [ ] **UI-095** [PARTIEL] Rendre correctement gras, liens, code, souligné, barré et couleurs.
 - [ ] **UI-096** Aligner cases à cocher, puces et numéros avec la première ligne du texte.
 - [ ] **UI-097** Traiter les blocs multiligne et indentations sans variation de rythme.
 - [ ] **UI-098** Afficher une ligne vide éditable sous le dernier bloc.
@@ -198,7 +198,7 @@ Références : [S01](NOTION_REFERENCE.md#s01), [S03](NOTION_REFERENCE.md#s03).
 - [ ] **UI-137** [PARTIEL] Positionnement de la barre au-dessus de la sélection, avec retour sous la sélection si nécessaire.
 - [ ] **UI-138** Sélections sur plusieurs lignes et près des bords du viewport.
 - [ ] **UI-139** [PARTIEL] Type de bloc, gras, italique, souligné, barré, code et lien.
-- [ ] **UI-140** Couleurs, surlignage, dernière couleur et options de conversion disponibles.
+- [ ] **UI-140** [PARTIEL] Couleurs, surlignage, dernière couleur et options de conversion disponibles.
 - [ ] **UI-141** États actifs et mixtes conformes à la sélection réelle.
 - [ ] **UI-142** [PARTIEL] Cliquer dans la barre conserve la plage de texte sélectionnée.
 - [ ] **UI-143** [PARTIEL] Formulaire de lien ancré avec URL, validation et suppression.

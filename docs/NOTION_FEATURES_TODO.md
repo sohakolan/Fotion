@@ -69,9 +69,9 @@ Références : [S01](NOTION_REFERENCE.md#s01), [S03](NOTION_REFERENCE.md#s03), [
 - [ ] **FN-045** Gérer les combinaisons de marques et les états mixtes dans une sélection.
 - [ ] **FN-046** [PARTIEL] Créer, modifier et supprimer un lien avec un formulaire contextuel.
 - [ ] **FN-047** Ouvrir/copier un lien, afficher sa destination et détecter les liens internes.
-- [ ] **FN-048** Appliquer les couleurs de texte et de fond proposées par la référence.
-- [ ] **FN-049** Mémoriser la dernière couleur et fournir son raccourci.
-- [ ] **FN-050** Supprimer toute la mise en forme d’une sélection.
+- [ ] **FN-048** [PARTIEL] Appliquer les couleurs de texte et de fond proposées par la référence.
+- [ ] **FN-049** [PARTIEL] Mémoriser la dernière couleur et fournir son raccourci.
+- [ ] **FN-050** [PARTIEL] Supprimer toute la mise en forme d’une sélection.
 - [ ] **FN-051** [PARTIEL] Afficher la barre de formatage au-dessus d’une sélection de texte.
 - [ ] **FN-052** [PARTIEL] Ouvrir le menu / et filtrer les commandes par nom et alias.
 - [ ] **FN-053** [PARTIEL] Parcourir le menu / avec les flèches, valider avec Entrée et fermer avec Échap.
@@ -531,3 +531,9 @@ Références : [S49](NOTION_REFERENCE.md#s49), [S50](NOTION_REFERENCE.md#s50).
 Les cases cochées s’appuient sur [le coffre Markdown](../server/vault.ts), [le moteur de déplacement](../src/block-move.ts), [les tests du coffre](../tests/vault.test.ts) et [les tests de déplacement](../tests/moves.test.ts). Elles ne certifient pas la parité avec toutes les variantes de Notion.
 
 À la création : **408 critères**, **10 cochés**, **55 partiels**. Ne pas présenter le ratio comme un pourcentage de parité : les critères ont des tailles et périmètres différents.
+
+## Avancement — palette de texte
+
+Les critères FN-048 à FN-050 disposent désormais d’une palette texte/fond, d’une dernière couleur persistée et de son raccourci Ctrl/Cmd + Maj + H, ainsi que d’une action pour retirer toutes les marques de la sélection. Les couleurs combinées aux autres marques sont conservées en Markdown avec des balises `span` documentées dans le README.
+
+Preuves : [extension couleur](../src/colors.ts), [tests de round-trip](../tests/markdown.test.ts), [scénario DOM clavier et sauvegarde](../scripts/check-ui.mjs). La comparaison visuelle avec la référence, les états de sélection mixtes dans tous les blocs et la couleur de bloc complète restent à terminer ; ces critères restent partiels.

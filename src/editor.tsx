@@ -1,6 +1,7 @@
 import { createSignal, createMemo, onMount, onCleanup, Show, For } from 'solid-js';
 import { Editor, type ChainedCommands } from '@tiptap/core';
 import Placeholder from '@tiptap/extension-placeholder';
+import { textColors, colorId, type ColorId } from './colors';
 import { editorExtensions } from './extensions';
 import { TextSelection } from '@tiptap/pm/state';
 import BlockControls from './BlockControls';
@@ -30,6 +31,8 @@ export default function DocumentEditor(props: { content: string; onChange: (cont
   let element!: HTMLDivElement;
   let editor!: Editor;
   const [ready, setReady] = createSignal(false);
+  const [colorMenu, setColorMenu] = createSignal<{ x: number; y: number; from: number; to: number }>();
+  let lastColor: { kind: 'color' | 'background'; value: ColorId } | undefined;
   const [transform, setTransform] = createSignal(false);
   const [blockQuery, setBlockQuery] = createSignal('');
   const [linkDraft, setLinkDraft] = createSignal<{ value: string; from: number; to: number; x: number; y: number }>();
@@ -54,6 +57,21 @@ export default function DocumentEditor(props: { content: string; onChange: (cont
     if (item.label === 'Page') props.onCreatePage();
     if (item.label === 'Image') { imagePosition = editor.state.selection.from; setImageError(''); setImageDraft(''); requestAnimationFrame(() => document.querySelector<HTMLInputElement>('.image-url-input')?.focus()); }
   };
+  function openColors() {
+    const { from, to } = editor.state.selection;
+    const coords = editor.view.coordsAtPos(from);
+    setColorMenu({ from, to, x: Math.max(8, Math.min(coords.left, window.innerWidth - 242)), y: Math.max(8, Math.min(coords.bottom + 8, window.innerHeight - 440)) });
+    requestAnimationFrame(() => document.querySelector<HTMLButtonElement>('.color-menu button')?.focus());
+  }
+  function applyColor(kind: 'color' | 'background', value: ColorId) {
+    const range = colorMenu();
+    const chain = editor.chain().focus();
+    if (range) chain.setTextSelection({ from: range.from, to: range.to });
+    chain.setMark('textColor', { [kind]: value }).run();
+    lastColor = { kind, value };
+    try { localStorage.setItem('fotion-last-color', JSON.stringify(lastColor)); } catch { /* Formatting still works when browser storage is unavailable. */ }
+    setColorMenu(undefined);
+  }
   function updateMenus() {
     setRevision(n => n + 1);
     const { from, to, empty, $from } = editor.state.selection;
@@ -66,7 +84,7 @@ export default function DocumentEditor(props: { content: string; onChange: (cont
     } else setSlash(undefined);
     if (!empty && editor.state.selection instanceof TextSelection) {
       const start = editor.view.coordsAtPos(from), end = editor.view.coordsAtPos(to);
-      setSelection({ x: Math.max(12, Math.min((start.left + end.left) / 2 - 140, window.innerWidth - 300)), y: Math.max(8, start.top - 45) });
+      setSelection({ x: Math.max(12, Math.min((start.left + end.left) / 2 - 140, window.innerWidth - 460)), y: Math.max(8, start.top - 45) });
     } else setSelection(undefined);
   }
   function closeBlockMenu() { setBlockMenu(undefined); setTransform(false); setBlockQuery(''); }
@@ -102,6 +120,10 @@ export default function DocumentEditor(props: { content: string; onChange: (cont
     editor.commands.focus();
   }
   onMount(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem('fotion-last-color') || 'null');
+      if (saved && ['color', 'background'].includes(saved.kind) && colorId(saved.value) === saved.value) lastColor = saved;
+    } catch { /* Ignore invalid preferences without affecting the document. */ }
     editor = new Editor({
       element,
       extensions: [...editorExtensions(), Placeholder.configure({ placeholder: 'Appuyez sur « / » pour les commandes…' })],
@@ -110,6 +132,9 @@ export default function DocumentEditor(props: { content: string; onChange: (cont
       editorProps: {
         attributes: { class: 'prose', 'aria-label': 'Contenu de la page', role: 'textbox', 'aria-multiline': 'true', spellcheck: 'true' },
         handleKeyDown: (_, event) => {
+          if ((event.metaKey || event.ctrlKey) && event.shiftKey && event.key.toLowerCase() === 'h' && lastColor) {
+            applyColor(lastColor.kind, lastColor.value); event.preventDefault(); return true;
+          }
           if (event.altKey && event.shiftKey && ['ArrowUp', 'ArrowDown'].includes(event.key)) {
             const block = blockAt(editor.state.doc, editor.state.selection.from);
             if (block) { setBlockMenu({ pos: block.pos, x: 0, y: 0 }); moveBlock(event.key === 'ArrowUp' ? -1 : 1); }
@@ -128,13 +153,13 @@ export default function DocumentEditor(props: { content: string; onChange: (cont
       },
       onUpdate: () => { props.onChange(editor.getMarkdown()); updateMenus(); },
       onSelectionUpdate: updateMenus,
-      onBlur: () => { setTimeout(() => { if (!document.activeElement?.closest('.bubble-menu, .link-popover')) setSelection(undefined); }, 180); },
+      onBlur: () => { setTimeout(() => { if (!document.activeElement?.closest('.bubble-menu, .link-popover, .color-menu')) setSelection(undefined); }, 180); },
     });
     setReady(true);
     props.onReady(editor);
     const close = (event: MouseEvent) => { if (!(event.target as HTMLElement).closest('.block-menu, .block-controls, .block-submenu')) closeBlockMenu(); };
-    const scroll = (e: Event) => { if ((e.target as HTMLElement)?.closest?.('.popover')) return; setSelection(undefined); setSlash(undefined); closeBlockMenu(); };
-    const escape = (e: KeyboardEvent) => { if (e.key === 'Escape') { closeBlockMenu(); setLinkDraft(undefined); setImageDraft(undefined); } };
+    const scroll = (e: Event) => { if ((e.target as HTMLElement)?.closest?.('.popover')) return; setSelection(undefined); setSlash(undefined); setColorMenu(undefined); closeBlockMenu(); };
+    const escape = (e: KeyboardEvent) => { if (e.key === 'Escape') { closeBlockMenu(); setLinkDraft(undefined); setImageDraft(undefined); if (colorMenu()) { setColorMenu(undefined); editor.commands.focus(); } } };
     window.addEventListener('keydown', escape);
     document.addEventListener('pointerdown', close);
     window.addEventListener('scroll', scroll, true);
@@ -166,7 +191,26 @@ export default function DocumentEditor(props: { content: string; onChange: (cont
       <button aria-label="Barré" classList={{ active: active('strike') }} onClick={() => editor.chain().focus().toggleStrike().run()}><Strikethrough size={16}/></button>
       <button aria-label="Code en ligne" classList={{ active: active('code') }} onClick={() => editor.chain().focus().toggleCode().run()}><Code size={16}/></button>
       <button aria-label="Ajouter un lien" onClick={link}><Link size={16}/></button>
+      <span class="menu-separator"/>
+      <button aria-label="Couleur du texte et du fond" aria-haspopup="menu" aria-expanded={!!colorMenu()} onClick={openColors}><span class="color-letter">A</span><ChevronDown size={12}/></button>
+      <button aria-label="Effacer la mise en forme" title="Effacer la mise en forme" onClick={() => editor.chain().focus().unsetAllMarks().run()}>Tₓ</button>
     </div>}</Show>
+    <Show when={colorMenu()}>{position => <><div class="dismiss-layer" onClick={() => { setColorMenu(undefined); editor.commands.focus(); }}/><div class="color-menu popover" role="menu" aria-label="Couleurs" style={{ left: `${position().x}px`, top: `${position().y}px` }} onKeyDown={e => {
+      if (!['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(e.key)) return;
+      const buttons = [...e.currentTarget.querySelectorAll<HTMLButtonElement>('button')];
+      const index = buttons.indexOf(document.activeElement as HTMLButtonElement);
+      const next = e.key === 'Home' ? 0 : e.key === 'End' ? buttons.length - 1 : (index + (e.key === 'ArrowDown' ? 1 : -1) + buttons.length) % buttons.length;
+      buttons[next]?.focus(); e.preventDefault();
+    }}>
+      <For each={['color', 'background'] as const}>{kind => <>
+        <div class="menu-label">{kind === 'color' ? 'Couleur du texte' : 'Couleur de fond'}</div>
+        <For each={textColors}>{color => <button role="menuitemradio" aria-label={`${color.label}${kind === 'background' ? ' — fond' : ''}`} aria-checked={(revision(), editor.getAttributes('textColor')[kind] || 'default') === color.id} onClick={() => applyColor(kind, color.id)}>
+          <span aria-hidden="true" class="color-swatch" data-fotion-color={kind === 'color' ? color.id : 'default'} data-fotion-background={kind === 'background' ? color.id : 'default'} style={{ color: kind === 'color' ? color.text : 'inherit', 'background-color': kind === 'background' ? color.background : 'transparent' }}>A</span>
+          {color.label}{kind === 'background' && color.id !== 'default' ? ' — fond' : ''}
+          <Show when={(revision(), editor.getAttributes('textColor')[kind] || 'default') === color.id}><Check size={14} class="menu-end"/></Show>
+        </button>}</For>
+      </>}</For>
+    </div></>}</Show>
     <Show when={slash()}>{position => <div class="slash-menu popover" role="listbox" aria-label="Types de blocs" style={{ left: `${position().x}px`, top: `${position().y}px` }}>
       <div class="menu-label">Blocs de base</div>
       <For each={options()}>{(item, i) => <button role="option" aria-selected={choice() === i()} classList={{ chosen: choice() === i() }} onMouseDown={e => e.preventDefault()} onMouseEnter={() => setChoice(i())} onClick={() => apply(i())}><span class="block-icon">{item.icon}</span><span><strong>{item.label}</strong><small>{item.hint}</small></span></button>}</For>

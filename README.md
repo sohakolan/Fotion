@@ -56,6 +56,12 @@ Ce n’est pas encore la parité fonctionnelle complète de Notion : pas de base
 
 Le Markdown Tiptap est encore annoncé en bêta. Les constructions non prises en charge (HTML complexe, extensions Obsidian, blocs personnalisés) peuvent être normalisées ou perdues dans la version éditée ; le fichier précédent reste dans `.history/`. L’historique n’est pas purgé automatiquement. L’accès à un dossier personnalisé nécessite de relancer le serveur avec `FOTION_VAULT`.
 
+## Palette de texte et de fond
+
+Sélectionner du texte puis ouvrir le bouton **A** de la barre de formatage pour choisir sa couleur ou son fond. Les flèches, Début/Fin, Entrée et Échap permettent d’utiliser la palette au clavier. `Ctrl/Cmd + Maj + H` réapplique le dernier choix ; `Tₓ` retire les marques de la sélection.
+
+Les couleurs sont enregistrées dans des balises HTML `span` portant `data-fotion-color`, `data-fotion-background` et un style de repli. Fotion adapte leur rendu au thème sombre. Les lecteurs Markdown externes doivent accepter le HTML intégré pour afficher les couleurs ; leur rendu peut différer. Modifier les attributs ou supprimer ces balises dans un autre éditeur peut supprimer la couleur.
+
 ## Vérifications
 
 ```sh
