@@ -1481,13 +1481,13 @@ h3) {
 }
 
 /* FotionMark : colonnes et blocs conservés. */
-.prose .fotion-columns {
+.prose .fm-columns {
   display: flex;
   gap: 46px;
   margin: 4px 0;
 }
 
-.prose .fotion-column {
+.prose .fm-column {
   flex: 1 1 0;
   min-width: 0;
 }
@@ -1502,7 +1502,7 @@ h3) {
 }
 
 @media (max-width: 760px) {
-  .prose .fotion-columns {
+  .prose .fm-columns {
     flex-direction: column;
     gap: 0;
   }

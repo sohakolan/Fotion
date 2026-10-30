@@ -1,5 +1,5 @@
 import { Node } from '@tiptap/core';
-import { parseDirective, parseBlocks, validate, schema, directiveStart } from '../fotionmark';
+import { parseDirective, parseBlocks, validateNode, hasErrors, directiveStart } from '../fotionmark';
 
 /** A FotionMark block this version cannot display: shown as a notice and saved back unchanged. */
 export const DirectiveBlock = Node.create({
@@ -12,8 +12,9 @@ export const DirectiveBlock = Node.create({
     tokenize(source) {
       const directive = parseDirective(source);
       if (!directive) return;
-      // Blocks known to the schema and valid get their own editor node; everything else is kept verbatim.
-      if (schema[directive.name] && !validate(parseBlocks(directive.raw)).length) return;
+      // Same decision as the block tokenizers: only blocks FotionMark rejects are kept verbatim here.
+      const [node] = parseBlocks(directive.raw);
+      if (!node || node.type === 'markdown' || !hasErrors(validateNode(node))) return;
       return { type: 'directiveBlock', raw: directive.raw };
     },
   },

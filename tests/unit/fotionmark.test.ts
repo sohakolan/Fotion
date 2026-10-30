@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { parseDirective, parseAttributes, serializeAttributes, serializeContainer, serializeLeaf, directiveStart, parse, stringify, validate } from '../../engine/fotionmark';
+import { parseDirective, parseAttributes, serializeAttributes, serializeContainer, serializeLeaf, directiveStart, parse, stringify, validate, readAttributes, writeAttributes, defineBlock, createRegistry } from '../../engine/fotionmark';
 
 test('attributes accept bare, quoted and escaped values and round-trip', () => {
   const attributes = parseAttributes('{width=50% title="Deux mots" note=\'a "b"\' flag}');
@@ -49,4 +49,20 @@ test('the schema reports unknown and misplaced blocks without changing the tree'
   assert.deepEqual(messages('::::columns\n:::column\nA\n:::\n::::'), ['« columns » demande au moins 2 éléments']);
   assert.deepEqual(messages('::kanban{src=./Projets}'), ['Bloc inconnu « kanban »']);
   assert.deepEqual(messages('::::columns\n:::column{width=150%}\nA\n:::\n:::column\nB\n:::\n::::'), ['Valeur invalide pour width : 150%']);
+});
+
+test('typed attributes read defaults, write only what differs and keep unknown keys', () => {
+  const types = { width: { type: 'percent' }, view: { type: 'enum', values: ['table', 'board'], default: 'table' }, limit: { type: 'number', integer: true, min: 1, default: 10 }, open: { type: 'boolean', default: false }, due: { type: 'date' }, src: { type: 'page' } } as const;
+  assert.deepEqual(readAttributes(types, { width: '35%', view: 'kanban', limit: '0', open: '', due: '2026-10-30', src: '../x.md', autre: '1' }), { width: 35, view: 'table', limit: 10, open: true, due: '2026-10-30', src: undefined });
+  assert.deepEqual(writeAttributes(types, { width: 50, view: 'table', limit: 25, open: false }, { autre: '1', view: 'board' }), { autre: '1', width: '50%', limit: '25' });
+});
+
+test('block declarations and registries reject inconsistent definitions', () => {
+  assert.throws(() => defineBlock({ name: 'Mauvais_Nom', form: 'leaf', version: 1, description: '', attributes: {} }));
+  assert.throws(() => defineBlock({ name: 'feuille', form: 'leaf', version: 1, description: '', attributes: {}, content: { kind: 'markdown' } }));
+  assert.throws(() => defineBlock({ name: 'avec-id', form: 'leaf', version: 1, description: '', attributes: { id: { type: 'string' } } }));
+  const leaf = defineBlock({ name: 'note', form: 'leaf', version: 1, description: '', attributes: {} });
+  assert.throws(() => createRegistry([leaf, leaf]));
+  assert.throws(() => createRegistry([defineBlock({ name: 'enfant', form: 'leaf', version: 1, description: '', attributes: {}, parent: 'absent' })]));
+  assert.deepEqual(validate(parse('::note{id=Mauvais}\n::note{id=bon-1 inconnu=x}').children, createRegistry([leaf])).map(d => [d.severity, d.message]), [['error', 'Identifiant de bloc invalide : Mauvais'], ['warning', 'Attribut inconnu conservé : inconnu']]);
 });

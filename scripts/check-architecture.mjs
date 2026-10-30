@@ -15,7 +15,8 @@ const patterns = [
   /^ui\/features\/[a-z][a-z-]*\/components\/[A-Z][A-Za-z]+\.tsx$/,
   /^ui\/features\/[a-z][a-z-]*\/(?:lib|extensions)\/[a-z][a-z-]*\.ts$/,
   /^engine\/index\.ts$/,
-  /^engine\/(?:document|models|pages|operations|fotionmark)\/[a-z][a-z-]*\.ts$/,
+  /^engine\/(?:document|models|pages|operations)\/[a-z][a-z-]*\.ts$/,
+  /^engine\/fotionmark\/(?:index|(?:syntax|tree|schema|blocks)\/[a-z][a-z-]*)\.ts$/,
   /^server\/(?:http|storage)\/[a-z][a-z-]*\.ts$/,
 ];
 function allowed(from, to) {
@@ -62,7 +63,7 @@ assert(!allowed('ui/features/editor/index.ts', 'server/storage/vault.ts'));
 assert(allowed('ui/features/editor/components/DocumentEditor.tsx', 'ui/kit/index.ts'));
 assert(!allowed('ui/features/editor/components/DocumentEditor.tsx', 'ui/kit/components/Menu.tsx'));
 assert(!allowed('ui/kit/components/Menu.tsx', 'ui/features/editor/index.ts'));
-assert(!allowed('engine/fotionmark/directives.ts', 'engine/document/blocks.ts'));
+assert(!allowed('engine/fotionmark/syntax/directives.ts', 'engine/document/blocks.ts'));
 assert(allowed('engine/document/columns.ts', 'engine/fotionmark/index.ts'));
 assert(!patterns.some(pattern => pattern.test('ui/helpers.ts')));
 

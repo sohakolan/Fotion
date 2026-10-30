@@ -506,7 +506,7 @@ test('FotionMark columns are created from the slash menu and saved as directives
   await page.keyboard.press('Enter'); await page.keyboard.type('/2 col');
   await expect(page.locator('.slash-menu').getByRole('option').first()).toContainText('2 colonnes');
   await page.keyboard.press('Enter');
-  const columns = page.locator('.prose .fotion-column');
+  const columns = page.locator('.prose .fm-column');
   await expect(columns).toHaveCount(2);
   await columns.nth(0).click(); await page.keyboard.type('Gauche');
   await columns.nth(1).click(); await page.keyboard.type('Droite');
@@ -516,5 +516,5 @@ test('FotionMark columns are created from the slash menu and saved as directives
   const content = saved.find((p: { id: string }) => p.id === created.id).content as string;
   expect(content).toContain('::::columns\n:::column\nGauche\n:::\n:::column\nDroite\n:::\n::::');
   await page.reload();
-  await expect(page.locator('.prose .fotion-column')).toHaveText(['Gauche', 'Droite']);
+  await expect(page.locator('.prose .fm-column')).toHaveText(['Gauche', 'Droite']);
 });
