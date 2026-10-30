@@ -12,7 +12,17 @@ const w = dom.window;
 const page = { id: 'test.md', title: 'Page de vérification', icon: '📝', parent: null, favorite: false, cover: '', content: '# Titre\n\nPremier\n\nSecond\n\nTroisième\n\n```typescript\nconst answer = 42;\n```\n\n', version: 'one', updated: new Date().toISOString(), trashed: false };
 const destination = { ...page, id: 'destination.md', title: 'Réunion budget', content: '[Absent](missing.md)' };
 let saves = [];
+let restoreConflict = true;
+const restoreRequests = [];
+const archive = { version: 'a'.repeat(64), savedAt: '2026-10-29T12:00:00Z', bytes: 150 };
+const restoredPage = { ...destination, title: 'Titre historique', content: '# Contenu restauré', version: 'restored' };
 w.fetch = async (_url, options) => {
+  if (_url.endsWith('/restore')) {
+    restoreRequests.push(JSON.parse(options.body));
+    return restoreConflict ? { ok: false, json: async () => ({ error: 'Ce fichier a changé sur le disque.' }) } : { ok: true, json: async () => restoredPage };
+  }
+  if (_url.endsWith('/history')) return { ok: true, json: async () => [archive] };
+  if (_url.includes('/history/')) return { ok: true, json: async () => ({ ...archive, page: restoredPage }) };
   if (options?.method === 'PUT') { const saved = { ...JSON.parse(options.body), version: `saved-${saves.length}` }; saves.push(saved); return { ok: true, json: async () => saved }; }
   return { ok: true, json: async () => [page, destination] };
 };
@@ -193,7 +203,27 @@ bracketRoot.dispatchEvent(new w.KeyboardEvent('keydown', { key: 'Escape', bubble
 assert.equal(w.document.querySelector('.mention-menu'), null);
 assert.equal(bracketParagraph.textContent, '[[Page', 'Escape preserves the typed text');
 assert.equal(bracketRoot.getAttribute('aria-activedescendant'), null);
+w.document.querySelector('[aria-label="Options de la page"]').click();
+[...w.document.querySelectorAll('.page-menu button')].find(button => button.textContent.includes('Historique de la page')).click();
+await settle();
+assert.ok(w.document.querySelector('.history-dialog'), 'Page history opens from the page menu');
+assert.equal(w.document.querySelector('.snapshot-rendered h1')?.textContent, 'Contenu restauré');
+assert.equal(w.document.querySelector('.snapshot-rendered .prose').getAttribute('contenteditable'), 'false');
+[...w.document.querySelectorAll('.version-view-switch button')].find(button => button.textContent === 'Markdown').click();
+assert.equal(w.document.querySelector('.version-preview pre').textContent, '# Contenu restauré');
+const restoreButton = () => w.document.querySelector('.version-history footer button');
+restoreButton().click(); await settle();
+assert.ok(w.document.querySelector('.version-error')?.textContent.includes('changé sur le disque'));
+assert.equal(w.document.querySelector('.page-title').value, 'Réunion budget', 'A restore conflict preserves the current document');
+assert.equal(restoreRequests[0].version, saves.at(-1).version, 'Restore is conditional on the most recently saved version');
+restoreConflict = false; restoreButton().click(); await settle();
+assert.equal(w.document.querySelector('.history-dialog'), null);
+assert.equal(w.document.querySelector('.page-title').value, 'Titre historique');
+assert.equal(w.document.querySelector('.prose h1')?.textContent, 'Contenu restauré');
+const restoredRoot = w.document.querySelector('.prose');
+restoredRoot.focus(); restoredRoot.dispatchEvent(new w.KeyboardEvent('keydown', { key: 'z', ctrlKey: true, bubbles: true, cancelable: true }));
+assert.equal(w.document.querySelector('.prose h1')?.textContent, 'Contenu restauré', 'Restoring clears the old editing undo stack');
 assert.deepEqual(errors, []);
 assert.notDeepEqual(paragraphs(), initial);
-console.log('DOM smoke check passed: rendering, hover handles, pointer drag, insertion line, cancel, click menu, block conversion, text colors, keyboard palette, last-color shortcut, code language, wrapping, caption, clipboard success/failure, internal links, backlinks, ranked search, missing links, mention picker, dynamic mention titles, autosave.');
+console.log('DOM smoke check passed: rendering, hover handles, pointer drag, insertion line, cancel, click menu, block conversion, text colors, keyboard palette, last-color shortcut, code language, wrapping, caption, clipboard success/failure, internal links, backlinks, ranked search, missing links, mention picker, dynamic mention titles, version preview, restore conflict, successful restore, autosave.');
 dom.window.close();

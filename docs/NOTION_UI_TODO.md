@@ -349,8 +349,8 @@ Références : [S15](NOTION_REFERENCE.md#s15), [S31](NOTION_REFERENCE.md#s31), [
 - [ ] **UI-248** Recherche, filtres, emplacement d’origine et date de suppression.
 - [ ] **UI-249** Aperçu d’une page supprimée sans possibilité d’édition involontaire.
 - [ ] **UI-250** Confirmation d’effacement définitif et état vide.
-- [ ] **UI-251** Panneau historique avec liste chronologique des versions.
-- [ ] **UI-252** Comparaison de versions, aperçu et confirmation de restauration.
+- [ ] **UI-251** [PARTIEL] Panneau historique avec liste chronologique des versions.
+- [ ] **UI-252** [PARTIEL] Comparaison de versions, aperçu et confirmation de restauration.
 - [ ] **UI-253** Import : choix du format, fichiers multiples, progression et rapport.
 - [ ] **UI-254** Export : format, sous-pages, médias, options et progression.
 - [ ] **UI-255** Erreur partielle avec possibilité de récupérer les fichiers valides.

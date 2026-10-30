@@ -44,9 +44,10 @@ export const CodeBlock = CodeBlockLowlight.extend({
       const actions = document.createElement('div'); actions.className = 'code-actions';
       const button = (text: string) => { const el = document.createElement('button'); el.type = 'button'; el.textContent = text; actions.append(el); return el; };
       const copy = button('Copier'), wrap = button('Retour à la ligne'), captionButton = button('Légende');
+      language.disabled = !editor.isEditable; wrap.disabled = !editor.isEditable; captionButton.disabled = !editor.isEditable;
       const status = document.createElement('span'); status.className = 'code-status'; status.setAttribute('role', 'status');
       const pre = document.createElement('pre'), code = document.createElement('code'); pre.append(code); pre.spellcheck = false;
-      const caption = document.createElement('input'); caption.className = 'code-caption'; caption.contentEditable = 'false'; caption.placeholder = 'Ajouter une légende…'; caption.setAttribute('aria-label', 'Légende du code');
+      const caption = document.createElement('input'); caption.className = 'code-caption'; caption.contentEditable = 'false'; caption.placeholder = 'Ajouter une légende…'; caption.setAttribute('aria-label', 'Légende du code'); caption.readOnly = !editor.isEditable;
       const picker = document.createElement('div'); picker.className = 'code-language-menu popover'; picker.contentEditable = 'false'; picker.hidden = true; picker.setAttribute('role', 'dialog'); picker.setAttribute('aria-label', 'Choisir le langage');
       const search = document.createElement('input'); search.placeholder = 'Rechercher un langage…'; search.setAttribute('aria-label', 'Rechercher un langage');
       const list = document.createElement('div'); list.className = 'code-language-options'; picker.append(search, list);

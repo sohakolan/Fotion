@@ -86,6 +86,14 @@ Une mention est sauvegardée comme `[titre](./identifiant.md "fotion:page")`. Le
 
 La création d’une page depuis ce sélecteur, les aperçus au survol et les mentions de dates restent à réaliser. Le menu propose jusqu’à 20 correspondances ; préciser le titre pour réduire la liste.
 
+## Historique des pages
+
+Ouvrir **Options de la page → Historique de la page** pour parcourir les sauvegardes locales, consulter leur rendu en lecture seule ou leur Markdown, puis restaurer celle choisie. Le brouillon courant est enregistré avant l’ouverture et avant la restauration. La date affichée est la date d’archivage de la copie, pas un journal de chaque frappe.
+
+La restauration reprend le titre, le contenu, l’icône, la couverture, la police, la taille de texte et la largeur. Elle conserve l’emplacement, l’ordre, les favoris, l’état de corbeille et les propriétés YAML supplémentaires actuelles. Le fichier remplacé reste dans `.history/` et peut être restauré à son tour. L’historique clavier de l’éditeur est réinitialisé après une restauration pour ne pas réappliquer des opérations de l’ancienne version.
+
+Une modification externe concurrente, une empreinte de sauvegarde invalide ou un lien symbolique bloque l’opération. L’aperçu et la liste sont disponibles sans modifier le document. Les copies de contenu identique sont dédupliquées ; il n’y a pas encore de comparaison des différences, de regroupement des versions, de pagination ni de purge automatique.
+
 ## Vérifications
 
 ```sh

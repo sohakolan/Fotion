@@ -2,6 +2,7 @@ import { createSignal, createMemo, createEffect, onMount, onCleanup, For, Show }
 import { Search, House, ChevronDown, ChevronRight, ChevronsLeft, PanelLeft, Plus, Settings, Trash2, Star, MoreHorizontal, LockKeyhole, Check, ArrowUpRight, X, Download, Copy, Undo2, Redo2, FolderOpen, Upload, Smile, ImagePlus, RefreshCw, ArrowLeft, ArrowRight, CircleHelp, CheckCheck, SquarePen, Pencil, FileText, CornerUpRight, GripVertical } from 'lucide-solid';
 import type { Editor } from '@tiptap/core';
 import { PageIndex } from './page-index';
+import VersionHistory from './VersionHistory';
 import DocumentEditor from './editor';
 import type { Page, PageEdit } from './types';
 import { byOrder, planPageMove, type PagePlacement } from './page-move';
@@ -23,7 +24,7 @@ export default function App() {
   const [loading, setLoading] = createSignal(true);
   const [sidebar, setSidebar] = createSignal(window.innerWidth > 760);
   const [expanded, setExpanded] = createSignal(new Set<string>(['projets.md']));
-  const [modal, setModal] = createSignal<'search' | 'settings' | 'trash' | 'files' | 'help' | 'move' | null>(null);
+  const [modal, setModal] = createSignal<'search' | 'settings' | 'trash' | 'files' | 'help' | 'move' | 'versions' | null>(null);
   const [menu, setMenu] = createSignal<'more' | 'icon' | 'cover' | null>(null);
   const [pageContext, setPageContext] = createSignal<{ id: string; x: number; y: number }>();
   const [movingPage, setMovingPage] = createSignal('');
@@ -39,6 +40,9 @@ export default function App() {
   const [editor, setEditor] = createSignal<Editor>();
   const [history, setHistory] = createSignal<string[]>([]);
   const [historyIndex, setHistoryIndex] = createSignal(-1);
+  const [restoringHistory, setRestoringHistory] = createSignal(false);
+  const [editorEpoch, setEditorEpoch] = createSignal(0);
+  const editorKey = createMemo(() => ({ id: activeId(), epoch: editorEpoch() }));
   const [busy, setBusy] = createSignal(false);
   const dirty = new Set<string>();
   let timer: ReturnType<typeof setTimeout>;
@@ -164,6 +168,24 @@ export default function App() {
     if (titleInput) { titleInput.style.height = 'auto'; titleInput.style.height = `${titleInput.scrollHeight}px`; }
     document.title = `${active()?.title || 'Sans titre'} — Fotion`;
   }
+  async function openVersions() {
+    if (!(await flush())) return;
+    setMenu(null); setModal('versions');
+  }
+  async function restoreVersion(snapshotVersion: string) {
+    if (restoringHistory()) return;
+    setRestoringHistory(true);
+    const id = activeId();
+    try {
+      if (!(await flush())) throw new Error('Enregistrez ou exportez le brouillon actuel avant de restaurer.');
+      const current = pages().find(page => page.id === id);
+      if (!current) throw new Error('Page introuvable.');
+      const saved = await api<Page>(`/api/pages/${encodeURIComponent(id)}/restore`, 'POST', { snapshotVersion, version: current.version });
+      setPages(list => list.map(page => page.id === id ? saved : page));
+      setEditorEpoch(n => n + 1); setModal(null); setStatus('saved'); setError('');
+      requestAnimationFrame(resizeTitle); toast('Version restaurée. La version remplacée reste dans l’historique.');
+    } finally { setRestoringHistory(false); }
+  }
   function exportPage() {
     const p = active(); if (!p) return;
     const text = `---\ntitle: ${JSON.stringify(p.title)}\nicon: ${JSON.stringify(p.icon)}\n---\n\n${p.content}`;
@@ -210,6 +232,7 @@ export default function App() {
   onMount(() => {
     applyTheme(theme()); void load();
     const keydown = (e: KeyboardEvent) => {
+      if (restoringHistory()) { if (e.key === 'Escape' || e.metaKey || e.ctrlKey) e.preventDefault(); return; }
       if ((e.metaKey || e.ctrlKey) && ['k', 'p'].includes(e.key.toLowerCase())) { e.preventDefault(); openSearch(); }
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 's') { e.preventDefault(); void flush(); }
       if ((e.metaKey || e.ctrlKey) && e.key === '\\') { e.preventDefault(); setSidebar(!sidebar()); }
@@ -315,7 +338,7 @@ export default function App() {
               <div class="page-customize"><button onClick={e => openAppearance('icon', e.currentTarget)}><Smile size={14}/>{active()?.icon ? 'Changer l’icône' : 'Ajouter une icône'}</button><button onClick={e => openAppearance('cover', e.currentTarget)}><ImagePlus size={14}/>{active()?.cover ? 'Changer la couverture' : 'Ajouter une couverture'}</button></div>
               <Show when={incoming().length}><div class="backlinks"><button class="backlinks-toggle" aria-expanded={backlinksOpen()} onClick={() => setBacklinksOpen(!backlinksOpen())}><ChevronRight size={13} classList={{ rotated: backlinksOpen() }}/>{incoming().length} lien{incoming().length > 1 ? 's' : ''} entrant{incoming().length > 1 ? 's' : ''}</button><Show when={backlinksOpen()}><div class="backlinks-list"><For each={incoming()}>{page => <button onClick={() => void navigate(page.id)}><span>{page.icon || '📄'}</span>{page.title || 'Sans titre'}</button>}</For></div></Show></div></Show>
               <textarea ref={titleInput} class="page-title" aria-label="Titre de la page" rows={1} placeholder="Sans titre" value={active()?.title} onInput={e => { update({ title: e.currentTarget.value.replace(/\n/g, '') }); resizeTitle(); }} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); editor()?.commands.focus('start'); } }}/>
-              <Show when={activeId()} keyed>{id => <DocumentEditor content={pages().find(p => p.id === id)?.content || ''} onChange={content => update({ content }, id)} onReady={setEditor} onCreatePage={() => void create(id)} pages={visible()} onOpenPage={id => void navigate(id)}/>}</Show>
+              <Show when={editorKey().id ? editorKey() : undefined} keyed>{key => <DocumentEditor content={pages().find(p => p.id === key.id)?.content || ''} onChange={content => update({ content }, key.id)} onReady={setEditor} onCreatePage={() => void create(key.id)} pages={visible()} onOpenPage={id => void navigate(id)}/>}</Show>
               <Show when={children(activeId()).length || activeId() === 'bienvenue.md'}><div class="child-pages"><For each={activeId() === 'bienvenue.md' ? visible().filter(p => ['projets.md', 'notes.md', 'lectures.md'].includes(p.id)) : children(activeId())}>{page => <button onClick={() => void navigate(page.id)}><span>{page.icon}</span><span class="child-page-title">{page.title}</span><ArrowUpRight size={15}/></button>}</For></div></Show>
               <button class="new-subpage" onClick={() => void create(activeId())}><Plus size={15}/>Ajouter une sous-page</button>
 
@@ -332,6 +355,7 @@ export default function App() {
       <button class="toggle-row" onClick={() => { update({ fullWidth: !wide() }); }}>Pleine largeur<span class="toggle" classList={{ on: wide() }}/></button>
       <div class="popover-divider"/>
       <button onClick={() => { setMovingPage(activeId()); setQuery(''); setModal('move'); setMenu(null); }}><CornerUpRight size={16}/>Déplacer vers</button>
+      <button onClick={() => void openVersions()}><RefreshCw size={16}/>Historique de la page</button>
       <button onClick={exportPage}><Download size={16}/>Exporter en Markdown</button>
       <button onClick={() => void create(null, true)}><Copy size={16}/>Dupliquer la page</button>
       <button onClick={() => { editor()?.commands.undo(); setMenu(null); }}><Undo2 size={16}/>Annuler<kbd>⌘ Z</kbd></button>
@@ -349,14 +373,15 @@ export default function App() {
       <button onClick={() => { const id = context().id; setPageContext(undefined); void create(null, true, id); }}><Copy size={16}/>Dupliquer</button>
       <div class="popover-divider"/><button class="danger" onClick={() => void trash(context().id)}><Trash2 size={16}/>Déplacer vers la corbeille</button>
     </div></>}</Show>
-    <Show when={modal()}><div class="modal-backdrop" onMouseDown={e => { if (e.target === e.currentTarget) setModal(null); }}><section class="modal" classList={{ 'search-dialog': modal() === 'search' }} role="dialog" aria-modal="true" aria-label={modal() === 'search' ? 'Rechercher une page' : 'Espace Fotion'} onKeyDown={e => { if (e.key === 'Tab') { const elements = [...e.currentTarget.querySelectorAll<HTMLElement>('button:not([disabled]), input, select, [tabindex="0"]')]; const first = elements[0], last = elements[elements.length - 1]; if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last?.focus(); } else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first?.focus(); } } }}>
-      <Show when={modal() === 'search'} fallback={<button class="modal-close icon-button" aria-label="Fermer la fenêtre" onClick={() => setModal(null)}><X size={20}/></button>}>
+    <Show when={modal()}><div class="modal-backdrop" onMouseDown={e => { if (e.target === e.currentTarget && !restoringHistory()) setModal(null); }}><section class="modal" classList={{ 'search-dialog': modal() === 'search', 'history-dialog': modal() === 'versions' }} role="dialog" aria-modal="true" aria-label={modal() === 'search' ? 'Rechercher une page' : 'Espace Fotion'} onKeyDown={e => { if (e.key === 'Tab') { const elements = [...e.currentTarget.querySelectorAll<HTMLElement>('button:not([disabled]), input, select, [tabindex="0"]')]; const first = elements[0], last = elements[elements.length - 1]; if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last?.focus(); } else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first?.focus(); } } }}>
+      <Show when={modal() === 'search'} fallback={<button class="modal-close icon-button" aria-label="Fermer la fenêtre" disabled={restoringHistory()} onClick={() => setModal(null)}><X size={20}/></button>}>
         <div class="search-input"><Search size={22}/><input ref={searchInput} aria-label="Rechercher" placeholder="Rechercher dans votre espace…" value={query()} onInput={e => { setQuery(e.currentTarget.value); setSearchIndex(0); }} onKeyDown={e => { if (e.key === 'Enter' && results()[searchIndex()]) void navigate(results()[searchIndex()].id); if (['ArrowDown', 'ArrowUp'].includes(e.key) && results().length) { e.preventDefault(); setSearchIndex(i => (i + (e.key === 'ArrowDown' ? 1 : -1) + results().length) % results().length); document.querySelector('.search-results .chosen')?.scrollIntoView({ block: 'nearest' }); } }}/><button class="key-button" onClick={() => setModal(null)}>esc</button></div>
         <div class="search-results"><div class="menu-label">{query() ? `${results().length} RÉSULTAT${results().length > 1 ? 'S' : ''}` : 'VOS PAGES'}</div><For each={results()}>{(page, i) => <button classList={{ chosen: searchIndex() === i() }} onMouseEnter={() => setSearchIndex(i())} onClick={() => void navigate(page.id)}><span class="search-emoji">{page.icon}</span><span><strong>{page.title || 'Sans titre'}</strong><small>{searchResults()[i()]?.excerpt || 'Une page pour vos idées'}</small></span><ArrowUpRight size={16}/></button>}</For><Show when={!results().length}><div class="empty-message">Aucune page trouvée. Essayez un autre mot.</div></Show></div><div class="search-footer"><span>Recherchez dans les titres et le contenu</span><span>↵ ouvrir</span></div>
       </Show>
       <Show when={modal() === 'move'}><div class="modal-content"><h2>Déplacer vers</h2><p>Choisissez la page qui contiendra « {pages().find(p => p.id === movingPage())?.title || 'Sans titre'} ».</p><input class="move-search" aria-label="Rechercher une destination" placeholder="Rechercher une page…" value={query()} onInput={e => setQuery(e.currentTarget.value)}/><div class="move-destinations"><button onClick={() => void movePage(movingPage(), null, 'root')}><LockKeyhole size={16}/>Privé <span>À la racine de l’espace</span></button><For each={results().filter(p => planPageMove(pages(), movingPage(), p.id, 'inside').length)}>{page => <button onClick={() => void movePage(movingPage(), page.id, 'inside')}><span>{page.icon || '📄'}</span>{page.title || 'Sans titre'}</button>}</For></div></div></Show>
       <Show when={modal() === 'settings'}><div class="modal-content"><span class="modal-symbol">⚙️</span><h2>Votre espace</h2><p>Un peu plus à votre image.</p><div class="setting-row"><span><strong>Apparence</strong><small>Choisissez votre ambiance de travail.</small></span><select aria-label="Apparence" value={theme()} onChange={e => applyTheme(e.currentTarget.value)}><option value="light">Clair</option><option value="dark">Sombre</option></select></div><div class="setting-row"><span><strong>Stockage</strong><small>Documents Markdown sur cet ordinateur.</small></span><button class="secondary-button" onClick={() => setModal('files')}>Voir les fichiers</button></div><div class="settings-about"><span class="brand-mark">F</span><div><strong>Fotion</strong><small>Version 0.2 · Open source · MIT</small></div></div></div></Show>
       <Show when={modal() === 'files'}><div class="modal-content"><span class="modal-symbol">📂</span><h2>Des fichiers qui vous appartiennent.</h2><p>Chaque page est un document Markdown. Le titre, l’icône et les autres propriétés sont enregistrés dans son en-tête YAML.</p><div class="path-box"><FolderOpen size={18}/><code>Fotion / vault /</code><span>.md</span></div><p>Ouvrez ce dossier dans Obsidian ou votre éditeur préféré. Les anciennes versions sont conservées dans <code>vault/.history/</code>.</p><button class="secondary-button" onClick={async () => { if (await flush()) { await load(); toast('Fichiers actualisés'); } }}><RefreshCw size={15}/>Actualiser depuis le disque</button><button class="secondary-button" onClick={() => importInput.click()}><Upload size={15}/>Importer un fichier .md</button></div></Show>
+      <Show when={modal() === 'versions'}><VersionHistory pageId={activeId()} restoring={restoringHistory()} onRestore={restoreVersion}/></Show>
       <Show when={modal() === 'trash'}><div class="modal-content"><span class="modal-symbol">🗑️</span><h2>Corbeille</h2><p>Les pages restent sur le disque. Vous pouvez les restaurer à tout moment.</p><For each={pages().filter(p => p.trashed)}>{page => <div class="trash-row"><span>{page.icon}</span><strong>{page.title}</strong><button class="secondary-button" onClick={async () => { update({ trashed: false }, page.id); if (await flush()) toast('Page restaurée'); }}><Undo2 size={14}/>Restaurer</button></div>}</For><Show when={!pages().some(p => p.trashed)}><div class="empty-trash"><Trash2 size={32}/><p>La corbeille est vide.</p></div></Show></div></Show>
       <Show when={modal() === 'help'}><div class="modal-content"><span class="modal-symbol">👋</span><h2>Faites place à vos idées.</h2><p>Les gestes essentiels pour vous sentir chez vous.</p><div class="shortcut-row"><span>Retrouver une page</span><kbd>⌘ / Ctrl P</kbd></div><div class="shortcut-row"><span>Insérer un lien dans le texte</span><kbd>⌘ / Ctrl K</kbd></div><div class="shortcut-row"><span>Enregistrer maintenant</span><kbd>⌘ / Ctrl S</kbd></div><div class="shortcut-row"><span>Insérer un bloc</span><kbd>/</kbd></div><div class="shortcut-row"><span>Mettre en gras</span><kbd>⌘ / Ctrl B</kbd></div><div class="shortcut-row"><span>Annuler une modification</span><kbd>⌘ / Ctrl Z</kbd></div><p class="help-tip">Survolez un bloc et utilisez sa poignée ⋮⋮ pour le déplacer. Sélectionnez du texte pour faire apparaître les options de mise en forme.</p><button class="primary-button" onClick={() => { const guide = visible().find(p => p.id === 'guide.md'); if (guide) void navigate(guide.id); else setModal(null); }}>C’est parti <ArrowRight size={15}/></button></div></Show>
     </section></div></Show>

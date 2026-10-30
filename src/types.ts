@@ -15,3 +15,6 @@ export interface Page {
   trashed: boolean;
 }
 export type PageEdit = Pick<Page, 'title' | 'icon' | 'parent' | 'favorite' | 'cover' | 'content' | 'trashed' | 'order' | 'fullWidth' | 'smallText' | 'font'>;
+
+export interface PageVersion { version: string; savedAt: string; bytes: number }
+export interface PageSnapshot extends PageVersion { page: Page }

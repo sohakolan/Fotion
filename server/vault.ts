@@ -3,7 +3,7 @@ import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync, rename
 import { resolve, join } from 'node:path';
 import { parse, stringify } from 'yaml';
 import type { IncomingMessage, ServerResponse } from 'node:http';
-import type { Page, PageEdit } from '../src/types.ts';
+import type { Page, PageEdit, PageVersion, PageSnapshot } from '../src/types.ts';
 import { seeds } from './seed.ts';
 
 export class VaultError extends Error {
@@ -16,6 +16,11 @@ export function decode(raw: string) {
   const meta = match ? parse(match[1]) : {};
   if (meta !== null && (typeof meta !== 'object' || Array.isArray(meta))) throw new VaultError(422, 'Les propriétés Markdown doivent être un objet YAML.');
   return { meta: meta || {}, content: match ? raw.slice(match[0].length).replace(/^\r?\n/, '') : raw };
+}
+
+function pageFromRaw(id: string, raw: string, updated: string): Page {
+  const { meta, content } = decode(raw);
+  return { id, fullWidth: meta.fullWidth === true, smallText: meta.smallText === true, font: ['serif', 'mono'].includes(meta.font) ? meta.font : 'default', order: typeof meta.order === 'number' && Number.isFinite(meta.order) ? meta.order : 0, title: typeof meta.title === 'string' ? meta.title : id.slice(0, -3), icon: typeof meta.icon === 'string' ? meta.icon : '📄', parent: typeof meta.parent === 'string' ? meta.parent : null, favorite: meta.favorite === true, cover: typeof meta.cover === 'string' ? meta.cover : '', trashed: meta.trashed === true, content, version: digest(raw), updated };
 }
 
 export class Vault {
@@ -40,11 +45,43 @@ export class Vault {
     const path = this.path(id);
     if (!existsSync(path)) throw new VaultError(404, 'Page introuvable.');
     const raw = readFileSync(path, 'utf8');
-    const { meta, content } = decode(raw);
-    return { id, fullWidth: meta.fullWidth === true, smallText: meta.smallText === true, font: ['serif', 'mono'].includes(meta.font) ? meta.font : 'default', order: typeof meta.order === 'number' && Number.isFinite(meta.order) ? meta.order : 0, title: typeof meta.title === 'string' ? meta.title : id.slice(0, -3), icon: typeof meta.icon === 'string' ? meta.icon : '📄', parent: typeof meta.parent === 'string' ? meta.parent : null, favorite: meta.favorite === true, cover: typeof meta.cover === 'string' ? meta.cover : '', trashed: meta.trashed === true, content, version: digest(raw), updated: statSync(path).mtime.toISOString() };
+    return pageFromRaw(id, raw, statSync(path).mtime.toISOString());
   }
   list() {
     return readdirSync(this.root, { withFileTypes: true }).filter(f => f.isFile() && !f.name.startsWith('.') && f.name.endsWith('.md')).map(f => this.read(f.name));
+  }
+  private historyRoot() {
+    const root = join(this.root, '.history');
+    if (existsSync(root) && (!lstatSync(root).isDirectory() || lstatSync(root).isSymbolicLink())) throw new VaultError(400, 'Dossier de sauvegarde invalide.');
+    return root;
+  }
+  history(id: string): PageVersion[] {
+    this.read(id);
+    const root = this.historyRoot();
+    if (!existsSync(root)) return [];
+    const prefix = `${digest(id).slice(0, 16)}.`;
+    return readdirSync(root, { withFileTypes: true }).filter(file => file.isFile() && file.name.startsWith(prefix) && /^[a-f0-9]{16}\.[a-f0-9]{64}\.md$/.test(file.name)).map(file => {
+      const info = lstatSync(join(root, file.name));
+      return { version: file.name.slice(prefix.length, -3), savedAt: info.mtime.toISOString(), bytes: info.size };
+    }).sort((a, b) => b.savedAt.localeCompare(a.savedAt) || a.version.localeCompare(b.version));
+  }
+  snapshot(id: string, version: string): PageSnapshot {
+    this.read(id);
+    if (typeof version !== 'string' || !/^[a-f0-9]{64}$/.test(version)) throw new VaultError(400, 'Version invalide.');
+    const path = join(this.historyRoot(), `${digest(id).slice(0, 16)}.${version}.md`);
+    if (!existsSync(path)) throw new VaultError(404, 'Version introuvable.');
+    const info = lstatSync(path);
+    if (!info.isFile() || info.isSymbolicLink()) throw new VaultError(400, 'Fichier de sauvegarde invalide.');
+    const raw = readFileSync(path, 'utf8');
+    if (digest(raw) !== version) throw new VaultError(422, 'Cette sauvegarde a été modifiée ou endommagée.');
+    const savedAt = info.mtime.toISOString();
+    return { version, savedAt, bytes: info.size, page: pageFromRaw(id, raw, savedAt) };
+  }
+  restore(id: string, snapshotVersion: string, currentVersion: string) {
+    const previous = this.snapshot(id, snapshotVersion).page;
+    const current = this.read(id);
+    const { content, title, icon, cover, fullWidth, smallText, font } = previous;
+    return this.write(id, { ...current, content, title, icon, cover, fullWidth, smallText, font }, currentVersion);
   }
   validate(value: unknown): asserts value is PageEdit {
     if (!value || typeof value !== 'object') throw new VaultError(400, 'Page invalide.');
@@ -71,12 +108,15 @@ export class Vault {
     const { content, title, icon, parent, favorite, cover, trashed, order, fullWidth, smallText, font } = value;
     const properties = { title, icon, parent, favorite, cover, trashed, ...(order !== undefined ? { order } : {}), ...(fullWidth !== undefined ? { fullWidth } : {}), ...(smallText !== undefined ? { smallText } : {}), ...(font !== undefined ? { font } : {}) };
     const output = `---\n${stringify({ ...meta, ...properties })}---\n\n${content}`;
-    const backup = join(this.root, '.history');
+    const backup = this.historyRoot();
     if (raw !== null) {
       mkdirSync(backup, { recursive: true });
       if (lstatSync(backup).isSymbolicLink()) throw new VaultError(400, 'Dossier de sauvegarde invalide.');
       const original = join(backup, `${digest(id).slice(0, 16)}.${version}.md`);
-      if (!existsSync(original)) writeFileSync(original, raw, { flag: 'wx' });
+      if (existsSync(original)) {
+        const info = lstatSync(original);
+        if (!info.isFile() || info.isSymbolicLink() || digest(readFileSync(original, 'utf8')) !== version) throw new VaultError(422, 'La sauvegarde précédente est endommagée. Le fichier actuel n’a pas été remplacé.');
+      } else writeFileSync(original, raw, { flag: 'wx' });
     }
     const temp = join(this.root, `.${randomUUID()}.tmp`);
     writeFileSync(temp, output, { flag: 'wx' });
@@ -104,8 +144,14 @@ export function vaultMiddleware(vault: Vault) {
     try {
       const host = req.headers.host || '';
       if (!/^(localhost|127\.0\.0\.1)(:\d+)?$/.test(host) || (req.headers.origin && req.headers.origin !== `http://${host}`)) throw new VaultError(403, 'Accès local uniquement.');
+      const versions = url.pathname.match(/^\/api\/pages\/([^/]+)\/history(?:\/([^/]+))?$/);
+      if (req.method === 'GET' && versions) {
+        const id = decodeURIComponent(versions[1]);
+        res.end(JSON.stringify(versions[2] ? vault.snapshot(id, versions[2]) : vault.history(id))); return;
+      }
+      const restore = url.pathname.match(/^\/api\/pages\/([^/]+)\/restore$/);
       if (url.pathname === '/api/pages' && req.method === 'GET') { res.end(JSON.stringify(vault.list())); return; }
-      if (!['POST', 'PUT'].includes(req.method || '') || !/^\/api\/(?:pages(?:\/[^/]+)?|import)$/.test(url.pathname)) throw new VaultError(404, 'Route introuvable.');
+      if (!['POST', 'PUT'].includes(req.method || '') || (!/^\/api\/(?:pages(?:\/[^/]+)?|import)$/.test(url.pathname) && !(req.method === 'POST' && restore))) throw new VaultError(404, 'Route introuvable.');
       if (!req.headers['content-type']?.startsWith('application/json')) throw new VaultError(415, 'Un contenu JSON est requis.');
       let body = '';
       for await (const chunk of req) {
@@ -116,7 +162,8 @@ export function vaultMiddleware(vault: Vault) {
       try { data = JSON.parse(body); } catch { throw new VaultError(400, 'JSON invalide.'); }
       if (!data || typeof data !== 'object' || Array.isArray(data)) throw new VaultError(400, 'Objet JSON requis.');
       let result;
-      if (req.method === 'POST' && url.pathname === '/api/import') result = vault.import(data.name, data.raw);
+      if (req.method === 'POST' && restore) result = vault.restore(decodeURIComponent(restore[1]), data.snapshotVersion, data.version);
+      else if (req.method === 'POST' && url.pathname === '/api/import') result = vault.import(data.name, data.raw);
       else if (req.method === 'POST' && url.pathname === '/api/pages') result = vault.create(data);
       else if (req.method === 'PUT' && url.pathname.startsWith('/api/pages/')) result = vault.write(decodeURIComponent(url.pathname.slice('/api/pages/'.length)), data, data.version);
       else throw new VaultError(404, 'Route introuvable.');

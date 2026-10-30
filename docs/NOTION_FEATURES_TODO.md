@@ -379,9 +379,9 @@ Références : [S15](NOTION_REFERENCE.md#s15), [S31](NOTION_REFERENCE.md#s31), [
 - [ ] **FN-295** Restaurer à l’emplacement d’origine ou choisir un nouvel emplacement.
 - [ ] **FN-296** Définir la rétention et demander confirmation avant effacement définitif.
 - [ ] **FN-297** [PARTIEL] Conserver les versions précédentes des fichiers.
-- [ ] **FN-298** Parcourir et comparer les versions dans l’interface.
-- [ ] **FN-299** Restaurer une version sans détruire la version courante.
-- [ ] **FN-300** Distinguer historique d’édition, sauvegarde de fichier et historique de synchronisation.
+- [ ] **FN-298** [PARTIEL] Parcourir et comparer les versions dans l’interface.
+- [ ] **FN-299** [PARTIEL] Restaurer une version sans détruire la version courante.
+- [ ] **FN-300** [PARTIEL] Distinguer historique d’édition, sauvegarde de fichier et historique de synchronisation.
 
 ## 16. Contrat Markdown et fiabilité locale — P0, adaptation Fotion
 
@@ -557,3 +557,9 @@ Restent notamment les menus @ et [[, les mentions au titre dynamique, les aperç
 FN-129 et FN-132 : menus @ et [[, filtrage par titre, flèches/Entrée/Échap, mention atomique avec icône et titre actuel, état indisponible et lien Markdown portable marqué par le titre `fotion:page`. Le formulaire de lien conserve des liens ordinaires. Les nouveaux libellés de mentions sont reflétés à l’affichage et lors de la prochaine sauvegarde ; aucun historique d’édition n’est ajouté pour le seul rafraîchissement de l’affichage.
 
 Preuves : [extension de mention](../src/page-mention.ts), [triggers](../tests/page-mention.test.ts), [Markdown/HTML et renommage](../tests/markdown.test.ts), [parcours DOM](../scripts/check-ui.mjs). Restent la création depuis le sélecteur, l’aperçu, les mentions de date/personne, la pagination du sélecteur et la comparaison visuelle réelle.
+
+## Avancement — historique et restauration
+
+Liste des copies locales, aperçu en lecture seule, vue Markdown et restauration explicite. Les conflits avec le fichier courant, les sauvegardes corrompues, les liens symboliques et les versions d’une autre page sont refusés. La version remplacée est conservée ; la restauration reprend contenu/titre/présentation en conservant emplacement/favoris et métadonnées supplémentaires actuelles.
+
+Preuves : [coffre et API](../server/vault.ts), [tests disque et HTTP](../tests/vault.test.ts), [interface d’historique](../src/VersionHistory.tsx), [parcours DOM avec conflit puis restauration](../scripts/check-ui.mjs). Référence : [historique Notion](https://www.notion.com/help/duplicate-delete-and-restore-content). Restent la comparaison des changements, le regroupement, les versions nommées, la pagination/rétention et la recette visuelle 1:1.
