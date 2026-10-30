@@ -21,6 +21,6 @@ export const MenuLabel = (props: { children: JSX.Element }) => <div class="kit-m
 export const MenuFootnote = (props: { children: JSX.Element }) => <div class="kit-menu-footnote">{props.children}</div>;
 
 /** Search field at the top of a menu, as in Notion's block menu. */
-export function MenuSearch(props: { label: string; placeholder: string; value: string; onInput: (value: string) => void }) {
-  return <label class="kit-menu-search"><Search size={14}/><input aria-label={props.label} placeholder={props.placeholder} value={props.value} onInput={e => props.onInput(e.currentTarget.value)}/></label>;
+export function MenuSearch(props: { label: string; placeholder: string; value: string; onInput: (value: string) => void; autofocus?: boolean }) {
+  return <label class="kit-menu-search"><Search size={14}/><input aria-label={props.label} placeholder={props.placeholder} value={props.value} ref={element => { if (props.autofocus) requestAnimationFrame(() => element.focus()); }} onInput={e => props.onInput(e.currentTarget.value)}/></label>;
 }

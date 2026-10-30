@@ -629,3 +629,27 @@ test('date mentions, reminders and new sub-pages from the @-menu', async ({ page
   expect(content).toContain(`<time datetime="${iso(0)}T09:00" data-reminder="true">`);
   expect(pages.find(p => p.title === title)?.parent).toBe(created.id);
 });
+
+test('/link inserts a link-to-page block and /moveto sends a block to another page', async ({ page }) => {
+  const tag = Date.now().toString(36);
+  const target = await (await page.request.post('/api/pages', { data: { title: `Destination ${tag}`, icon: '🎯', parent: null, favorite: false, cover: '', content: 'Déjà là', trashed: false } })).json();
+  const created = await createDocument(page, 'À garder\n\nÀ déplacer');
+  await page.locator('.prose > p').first().click(); await page.keyboard.press('ControlOrMeta+ArrowRight'); await page.keyboard.press('End');
+  await page.keyboard.press('Enter'); await page.keyboard.type('/link'); await page.keyboard.press('Enter');
+  const picker = page.getByRole('menu', { name: 'Lien vers une page' });
+  await page.keyboard.type(`Destination ${tag}`); await page.keyboard.press('Enter');
+  await expect(picker).toBeHidden();
+  await expect(page.locator('.prose .link-to-page')).toHaveText(`🎯Destination ${tag}`);
+  await page.locator('.prose > p', { hasText: 'À déplacer' }).click(); await page.keyboard.press('ControlOrMeta+ArrowRight'); await page.keyboard.press('End');
+  await page.keyboard.type(' /moveto'); await page.keyboard.press('Enter');
+  await page.keyboard.type(`Destination ${tag}`);
+  await page.screenshot({ path: test.info().outputPath('moveto.png') });
+  await page.keyboard.press('Enter');
+  await expect(page.locator('.prose', { hasText: 'À déplacer' })).toHaveCount(0);
+  await expect(page.locator('.save-status')).toHaveText('Enregistré');
+  const pages: { id: string; content: string }[] = await (await page.request.get('/api/pages')).json();
+  expect(pages.find(p => p.id === target.id)!.content).toBe('Déjà là\n\nÀ déplacer');
+  expect(pages.find(p => p.id === created.id)!.content).toContain(`::link-to-page{page=${target.id}}`);
+  await page.locator('.prose .link-to-page').click();
+  await expect(page.getByLabel('Titre de la page', { exact: true })).toHaveValue(`Destination ${tag}`);
+});

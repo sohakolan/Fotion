@@ -13,7 +13,7 @@ import BlockControls from './BlockControls';
 import SelectionRectangle from './SelectionRectangle';
 import { Menu, MenuItem, MenuDivider, MenuSearch, EmojiPicker, Switch, modKey } from '../../../kit';
 import { blockAt, moveBlockTransaction, isListItem, caretPosition, BlockSelection, blockRange, type Block } from '../../../../engine';
-import { Bold, Italic, Underline, Strikethrough, Code, Link, ChevronDown, ChevronRight, Trash2, Copy, Type, Search, Check, Plus, ImagePlus, X, Repeat2, PaintRoller, AtSign, Smile, CalendarDays, AlarmClock, Heading1, Heading2, Heading3, List, ListOrdered, SquareCheckBig, ListCollapse, FileText, MessageSquareText, Quote, Table, Minus, Image as ImageIcon, CodeXml, TableOfContents, Columns2, Columns3, Columns4 } from 'lucide-solid';
+import { Bold, Italic, Underline, Strikethrough, Code, Link, ChevronDown, ChevronRight, Trash2, Copy, Type, Search, Check, Plus, ImagePlus, X, Repeat2, PaintRoller, AtSign, Smile, CalendarDays, AlarmClock, CornerUpRight, ArrowUpRight, Heading1, Heading2, Heading3, List, ListOrdered, SquareCheckBig, ListCollapse, FileText, MessageSquareText, Quote, Table, Minus, Image as ImageIcon, CodeXml, TableOfContents, Columns2, Columns3, Columns4 } from 'lucide-solid';
 
 
 const blockActions: Record<string, { icon: () => JSX.Element; action: (chain: ChainedCommands) => ChainedCommands }> = {
@@ -26,6 +26,7 @@ const blockActions: Record<string, { icon: () => JSX.Element; action: (chain: Ch
   taskList: { icon: () => <SquareCheckBig size={18}/>, action: c => c.toggleTaskList() },
   toggle: { icon: () => <ListCollapse size={18}/>, action: c => c.insertContent({ type: 'toggle', content: [{ type: 'toggleSummary', content: [{ type: 'text', text: 'Liste dépliante' }] }, { type: 'paragraph' }] }) },
   page: { icon: () => <FileText size={18}/>, action: c => c },
+  link: { icon: () => <ArrowUpRight size={18}/>, action: c => c },
   callout: { icon: () => <MessageSquareText size={18}/>, action: c => c.wrapIn('callout') },
   quote: { icon: () => <Quote size={18}/>, action: c => c.toggleBlockquote() },
   table: { icon: () => <Table size={18}/>, action: c => c.insertTable({ rows: 3, cols: 3, withHeaderRow: true }) },
@@ -41,13 +42,13 @@ function derivedAction(command: SlashCommand): { icon: () => JSX.Element; action
   if (command.id.startsWith('turn-')) return { icon: blockActions[command.id.slice(5)]?.icon ?? (() => <Repeat2 size={18}/>), action: blockActions[command.id.slice(5)]?.action ?? (c => c) };
   const color = command.id.match(/^(color|background)-(\w+)$/);
   if (color) return { icon: () => <span class="slash-color" data-fotion-color={color[1] === 'color' ? color[2] : 'default'} data-fotion-background={color[1] === 'background' ? color[2] : 'default'}>A</span>, action: c => c };
-  const icons: Record<string, () => JSX.Element> = { date: () => <CalendarDays size={18}/>, reminder: () => <AlarmClock size={18}/>, mention: () => <AtSign size={18}/>, emoji: () => <Smile size={18}/>, duplicate: () => <Copy size={18}/>, delete: () => <Trash2 size={18}/> };
+  const icons: Record<string, () => JSX.Element> = { moveto: () => <CornerUpRight size={18}/>, date: () => <CalendarDays size={18}/>, reminder: () => <AlarmClock size={18}/>, mention: () => <AtSign size={18}/>, emoji: () => <Smile size={18}/>, duplicate: () => <Copy size={18}/>, delete: () => <Trash2 size={18}/> };
   return { icon: icons[command.id] ?? (() => <Type size={18}/>), action: c => c };
 }
 type MentionOption = { kind: 'date'; date: string } | { kind: 'page'; page: Page } | { kind: 'new'; title: string };
 const blocks = slashCommands.map(command => ({ ...command, ...(blockActions[command.id] ?? derivedAction(command)) }));
 
-export default function DocumentEditor(props: { content: string; onChange: (content: string) => void; onReady: (editor: Editor | undefined) => void; onCreatePage: () => void; onCreateSubpage: (title: string) => Promise<Page | undefined>; pages: Page[]; onOpenPage: (id: string) => void; editable: boolean }) {
+export default function DocumentEditor(props: { content: string; onChange: (content: string) => void; onReady: (editor: Editor | undefined) => void; onCreatePage: () => void; onCreateSubpage: (title: string) => Promise<Page | undefined>; onMoveBlock: (markdown: string, targetId: string) => Promise<boolean>; pageId: string; pages: Page[]; onOpenPage: (id: string) => void; editable: boolean }) {
   let element!: HTMLDivElement;
   let editor!: Editor;
   const [ready, setReady] = createSignal(false);
@@ -59,6 +60,27 @@ export default function DocumentEditor(props: { content: string; onChange: (cont
   const [imageDraft, setImageDraft] = createSignal<string>();
   const [emojiAt, setEmojiAt] = createSignal<{ x: number; y: number }>();
   const [dateEdit, setDateEdit] = createSignal<{ pos: number; x: number; y: number }>();
+  const [pagePicker, setPagePicker] = createSignal<{ purpose: 'link' | 'move'; pos: number; x: number; y: number; query: string }>();
+  const pickerPages = createMemo(() => { const picker = pagePicker(); if (!picker) return []; const q = normalizeSearch(picker.query); return props.pages.filter(page => !page.trashed && (picker.purpose === 'link' || page.id !== props.pageId) && normalizeSearch(page.title || 'Sans titre').includes(q)).slice(0, 30); });
+  function openPagePicker(purpose: 'link' | 'move', pos: number) {
+    const coords = editor.view.coordsAtPos(editor.state.selection.from);
+    setPagePicker({ purpose, pos, query: '', x: Math.max(8, Math.min(coords.left, window.innerWidth - 328)), y: Math.max(8, Math.min(coords.bottom + 8, window.innerHeight - 360)) });
+  }
+  /** /link inserts a link-to-page block in place of an empty line; /moveto sends the block to another page. */
+  async function pickPage(page: Page) {
+    const picker = pagePicker(); if (!picker) return;
+    setPagePicker(undefined);
+    const node = editor.state.doc.nodeAt(picker.pos); if (!node) return;
+    if (picker.purpose === 'link') {
+      const block = { type: 'link-to-page', attrs: { attributes: { page: page.id } } };
+      const empty = node.type.name === 'paragraph' && !node.content.size;
+      editor.chain().focus().insertContentAt(empty ? { from: picker.pos, to: picker.pos + node.nodeSize } : picker.pos + node.nodeSize, block).run();
+      return;
+    }
+    const markdown = editor.markdown?.serialize({ type: 'doc', content: [node.toJSON()] }) ?? '';
+    // The block leaves this page only once the target page has saved it.
+    if (markdown.trim() && await props.onMoveBlock(markdown.trim(), page.id) && editor.state.doc.nodeAt(picker.pos) === node) editor.chain().focus().deleteRange({ from: picker.pos, to: picker.pos + node.nodeSize }).run();
+  }
   const dateNode = () => { revision(); const edit = dateEdit(); const node = edit && editor.state.doc.nodeAt(edit.pos); return node?.type.name === 'dateMention' ? node : undefined; };
   /** Updates the date mention being edited; a reminder always carries a time (9:00 by default, like Notion). */
   function updateDate(patch: { day?: string; time?: string; reminder?: boolean }) {
@@ -107,6 +129,7 @@ export default function DocumentEditor(props: { content: string; onChange: (cont
     }
     item.action(chain).run();
     if (item.id === 'page') props.onCreatePage();
+    if (item.id === 'link') { const block = blockAt(editor.state.doc, editor.state.selection.from); if (block) openPagePicker('link', block.pos); }
     if (item.id === 'image') { imagePosition = editor.state.selection.from; setImageError(''); setImageDraft(''); requestAnimationFrame(() => document.querySelector<HTMLInputElement>('.image-url-input')?.focus()); }
   };
   /** Commands that act on the block around the cursor, reached from the slash menu or the keyboard. */
@@ -117,6 +140,7 @@ export default function DocumentEditor(props: { content: string; onChange: (cont
     if (id === 'emoji') { const coords = editor.view.coordsAtPos(editor.state.selection.from); setEmojiAt({ x: Math.max(8, Math.min(coords.left, window.innerWidth - 416)), y: Math.max(8, Math.min(coords.bottom + 8, window.innerHeight - 364)) }); return; }
     if (!block) return;
     if (id === 'duplicate') { duplicateBlock(block.pos); return; }
+    if (id === 'moveto') { openPagePicker('move', block.pos); return; }
     if (id === 'delete') { editor.chain().focus().deleteRange({ from: block.pos, to: block.pos + block.node.nodeSize }).run(); return; }
     const color = id.match(/^(color|background)-(\w+)$/);
     if (color) {
@@ -371,7 +395,7 @@ export default function DocumentEditor(props: { content: string; onChange: (cont
     props.onReady(editor);
     const close = (event: MouseEvent) => { if (!(event.target as HTMLElement).closest('.editor, .mention-menu')) setMention(undefined); if (!(event.target as HTMLElement).closest('.block-menu, .block-controls, .block-submenu')) closeBlockMenu(); };
     const scroll = (e: Event) => { if ((e.target as HTMLElement)?.closest?.('.popover')) return; setSelection(undefined); setSlash(undefined); setMention(undefined); setColorMenu(undefined); closeBlockMenu(); };
-    const escape = (e: KeyboardEvent) => { if (e.key === 'Escape') { setMention(undefined); closeBlockMenu(); if (emojiAt()) { setEmojiAt(undefined); editor.commands.focus(); } if (dateEdit()) { setDateEdit(undefined); editor.commands.focus(); } setLinkDraft(undefined); setImageDraft(undefined); if (colorMenu()) { setColorMenu(undefined); editor.commands.focus(); } } };
+    const escape = (e: KeyboardEvent) => { if (e.key === 'Escape') { setMention(undefined); closeBlockMenu(); if (emojiAt()) { setEmojiAt(undefined); editor.commands.focus(); } if (dateEdit()) { setDateEdit(undefined); editor.commands.focus(); } if (pagePicker()) { setPagePicker(undefined); editor.commands.focus(); } setLinkDraft(undefined); setImageDraft(undefined); if (colorMenu()) { setColorMenu(undefined); editor.commands.focus(); } } };
     window.addEventListener('keydown', escape);
     document.addEventListener('pointerdown', close);
     window.addEventListener('scroll', scroll, true);
@@ -485,6 +509,11 @@ export default function DocumentEditor(props: { content: string; onChange: (cont
       <Switch checked={!!dateNode()!.attrs.reminder} onChange={reminder => updateDate({ reminder })}>Rappel</Switch>
       <MenuItem icon={<Trash2 size={16}/>} onClick={() => { const edit = dateEdit()!; editor.chain().focus().deleteRange({ from: edit.pos, to: edit.pos + 1 }).run(); setDateEdit(undefined); }}>Supprimer</MenuItem>
     </Menu></Show>
+    <Show when={pagePicker()}>{picker => <><div class="dismiss-layer" onClick={() => { setPagePicker(undefined); editor.commands.focus(); }}/><Menu label={picker().purpose === 'link' ? 'Lien vers une page' : 'Déplacer vers'} class="page-picker" style={{ position: 'fixed', left: `${picker().x}px`, top: `${picker().y}px` }} onKeyDown={e => { if (e.key === 'Enter' && pickerPages()[0]) { e.preventDefault(); void pickPage(pickerPages()[0]); } }}>
+      <MenuSearch autofocus label="Rechercher une page" placeholder={picker().purpose === 'link' ? 'Lien vers une page…' : 'Déplacer le bloc vers…'} value={picker().query} onInput={query => setPagePicker({ ...picker(), query })}/>
+      <For each={pickerPages()}>{page => <MenuItem icon={<span>{page.icon || '📄'}</span>} onClick={() => void pickPage(page)}>{page.title || 'Sans titre'}</MenuItem>}</For>
+      <Show when={!pickerPages().length}><p class="empty-message">Aucune page trouvée.</p></Show>
+    </Menu></>}</Show>
     <Show when={emojiAt()}>{position => <><div class="dismiss-layer" onClick={() => { setEmojiAt(undefined); editor.commands.focus(); }}/><EmojiPicker label="Insérer un emoji" style={{ position: 'fixed', left: `${position().x}px`, top: `${position().y}px` }} onPick={emoji => { setEmojiAt(undefined); editor.chain().focus().insertContent(emoji).run(); }}/></>}</Show>
     <Show when={imageDraft() !== undefined}><div class="modal-backdrop" onMouseDown={e => { if (e.target === e.currentTarget) setImageDraft(undefined); }}><form class="modal image-dialog" role="dialog" aria-modal="true" aria-label="Ajouter une image" onSubmit={e => {
       e.preventDefault(); const src = imageDraft()?.trim() || '';

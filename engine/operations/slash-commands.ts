@@ -18,6 +18,7 @@ const catalogue: SlashCommand[] = [
   { id: 'taskList', label: 'Liste de tâches', description: 'Gardez une trace de vos tâches.', group: 'Blocs de base', aliases: 'todo to-do task checkbox case à cocher', shortcut: '[]' },
   { id: 'toggle', label: 'Liste dépliante', description: 'Masquez ou affichez du contenu.', group: 'Blocs de base', aliases: 'toggle list déroulante bascule', shortcut: '>' },
   { id: 'page', label: 'Page', description: 'Créez une sous-page dans cette page.', group: 'Blocs de base', aliases: 'page sous-page subpage' },
+  { id: 'link', label: 'Lien vers une page', description: 'Ajoutez un bloc qui mène à une autre page.', group: 'Blocs de base', aliases: 'link lien page link to page' },
   { id: 'callout', label: 'Encadré', description: 'Mettez une idée importante en avant.', group: 'Blocs de base', aliases: 'callout note info encadré' },
   { id: 'quote', label: 'Citation', description: 'Mettez un passage en lumière.', group: 'Blocs de base', aliases: 'quote blockquote citation', shortcut: '"' },
   { id: 'table', label: 'Tableau', description: 'Organisez des informations en lignes et colonnes.', group: 'Blocs de base', aliases: 'table tableau grid' },
@@ -32,6 +33,7 @@ const catalogue: SlashCommand[] = [
   { id: 'reminder', label: 'Rappel', description: 'Insérez un rappel pour aujourd’hui à 9 h.', group: 'En ligne', aliases: 'reminder rappel alarme' },
   { id: 'emoji', label: 'Emoji', description: 'Recherchez et insérez un emoji.', group: 'En ligne', aliases: 'emoji émoticône smiley' },
   { id: 'duplicate', label: 'Dupliquer', description: 'Créez une copie du bloc actuel.', group: 'Actions', aliases: 'duplicate dupliquer copier copy', shortcut: '⌘D', hidden: true },
+  { id: 'moveto', label: 'Déplacer vers', description: 'Déplacez ce bloc vers une autre page.', group: 'Actions', aliases: 'moveto move to déplacer vers page', hidden: true },
   { id: 'delete', label: 'Supprimer', description: 'Supprimez le bloc actuel.', group: 'Actions', aliases: 'delete supprimer effacer remove', hidden: true },
   { id: 'color-default', label: 'Couleur par défaut', description: 'Retirez la couleur du bloc.', group: 'Couleurs', aliases: 'default défaut couleur color reset', hidden: true },
   ...textColors.filter(color => color.id !== 'default').flatMap(color => [

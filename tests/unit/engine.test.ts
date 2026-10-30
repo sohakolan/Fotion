@@ -240,3 +240,11 @@ test('date mentions and reminders round-trip as standard <time> HTML', () => {
   assert.match(editor.view.dom.textContent || '', /@2 novembre 2026|@Aujourd|@Demain|@Hier/);
   editor.destroy();
 });
+
+test('link-to-page blocks round-trip as FotionMark and invalid targets are preserved', () => {
+  const source = 'Avant\n\n::link-to-page{page=projets.md}\n\n::link-to-page{page=../hors.md}\n\nAprès';
+  const editor = new Editor({ extensions: documentExtensions(), content: source, contentType: 'markdown' });
+  assert.deepEqual(editor.state.doc.content.content.map(node => node.type.name), ['paragraph', 'link-to-page', 'directiveBlock', 'paragraph']);
+  assert.equal(editor.getMarkdown(), source);
+  editor.destroy();
+});
