@@ -39,3 +39,10 @@ test('mention links remain backlinks for the independent Markdown index', () => 
   const index = new PageIndex().update(pages);
   assert.deepEqual(index.backlinks(pages, 'target.md').map(p => p.id), ['source.md']);
 });
+
+test('toggle heading titles remain searchable and their links become backlinks', () => {
+  const pages = [page('source.md', 'Source', '<details>\n<summary><h2>Une **réunion** [budget](./target.md)</h2></summary>\n\nContenu\n\n</details>')];
+  const index = new PageIndex().update(pages);
+  assert.deepEqual(index.search(pages, 'réunion budget').map(result => result.page.id), ['source.md']);
+  assert.deepEqual(index.backlinks(pages, 'target.md').map(page => page.id), ['source.md']);
+});

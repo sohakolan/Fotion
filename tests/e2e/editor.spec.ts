@@ -104,3 +104,29 @@ test('table of contents inserts, navigates and follows renamed headings after re
   await page.keyboard.press('Enter');
   await expect.poll(() => page.evaluate(() => window.getSelection()?.anchorNode?.parentElement?.closest('h1')?.textContent)).toBe('Introduction');
 });
+
+test('toggle headings insert, collapse, reopen from the contents and retain their body', async ({ page }, info) => {
+  await createDocument(page, '/titre dépliant 2\n\n<nav data-fotion-toc></nav>\n\nFin.');
+  await page.locator('.prose > p').first().click();
+  await page.getByRole('option', { name: /Titre dépliant 2/ }).click();
+  const details = page.locator('.prose details').first();
+  const summary = details.locator('summary');
+  await expect(summary.locator('h2')).toHaveText('Titre dépliant 2');
+  await details.locator('p').first().click(); await page.keyboard.type('Un contenu à conserver');
+  await expect(page.locator('.save-status')).toHaveText('Enregistré');
+  await summary.click({ position: { x: 8, y: 15 } });
+  await expect(details).not.toHaveAttribute('open');
+  await expect(details.locator('p').first()).not.toBeVisible();
+  await page.getByRole('navigation', { name: 'Table des matières' }).getByRole('button', { name: 'Titre dépliant 2', exact: true }).click();
+  await expect(details).toHaveAttribute('open');
+  await expect.poll(() => page.evaluate(() => window.getSelection()?.anchorNode?.parentElement?.closest('summary')?.textContent)).toBe('Titre dépliant 2');
+  await expect(details.locator('p').first()).toHaveText('Un contenu à conserver');
+  await page.keyboard.press('Enter');
+  await page.keyboard.type('Préface. ');
+  await expect(details.locator('p').first()).toHaveText('Préface. Un contenu à conserver');
+  await expect(page.locator('.save-status')).toHaveText('Enregistré');
+  await page.reload();
+  await expect(summary.locator('h2')).toHaveText('Titre dépliant 2');
+  await expect(details.locator('p').first()).toHaveText('Préface. Un contenu à conserver');
+  await page.screenshot({ path: info.outputPath('toggle-heading.png') });
+});

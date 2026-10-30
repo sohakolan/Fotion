@@ -22,7 +22,7 @@ export const TableOfContents = Node.create({
       const refresh = () => {
         const headings: { pos: number; level: number; title: string }[] = [];
         editor.state.doc.descendants((node, pos) => {
-          if (node.type.name === 'heading') headings.push({ pos, level: node.attrs.level, title: node.textContent || 'Titre sans nom' });
+          if (node.type.name === 'heading' || (node.type.name === 'toggleSummary' && node.attrs.level > 0)) headings.push({ pos, level: node.attrs.level, title: node.textContent || 'Titre sans nom' });
         });
         const next = JSON.stringify(headings);
         if (signature === next) return;

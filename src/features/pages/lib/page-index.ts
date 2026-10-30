@@ -18,7 +18,7 @@ export class PageIndex {
         if (token.type === 'link') { const id = pageIdFromHref(token.href); if (id) links.add(id); }
         if (['code', 'codespan', 'image'].includes(token.type) || (token.type === 'text' && !token.tokens?.length)) parts.push('text' in token ? token.text : '');
         if (token.type === 'html') {
-          if (/^\s*<details[\s>]/.test(token.text)) markdown.walkTokens(markdown.lexer(token.text.replace(/<\/?(?:details|summary)\b[^>]*>/g, '\n')), visit);
+          if (/^\s*<details[\s>]/.test(token.text)) markdown.walkTokens(markdown.lexer(token.text.replace(/<summary><h([123])>([\s\S]*?)<\/h\1><\/summary>/g, '<summary>$2</summary>').replace(/<\/?(?:details|summary)\b[^>]*>/g, '\n')), visit);
           else parts.push(token.text.replace(/<[^>]*>/g, ' '));
         }
       };

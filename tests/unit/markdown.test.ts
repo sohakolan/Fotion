@@ -174,3 +174,22 @@ test('table of contents survives Markdown and HTML and follows heading edits wit
   assert.match(toc().textContent || '', /Ajoutez des titres/);
   editor.destroy();
 });
+
+test('toggle headings keep levels, rich titles and nested contents through Markdown and HTML', () => {
+  const content = [1, 2, 3].map(level => ({ type: 'toggle', content: [
+    { type: 'toggleSummary', attrs: { level }, content: [{ type: 'text', text: `Section ${level} & <exemple>`, marks: [{ type: 'bold' }] }] },
+    { type: 'paragraph', content: [{ type: 'text', text: 'Contenu conservé' }] },
+    { type: 'toggle', content: [{ type: 'toggleSummary', content: [{ type: 'text', text: 'Détails' }] }, { type: 'paragraph' }] },
+  ] }));
+  const editor = new Editor({ extensions: editorExtensions(), content: { type: 'doc', content: [{ type: 'tableOfContents' }, ...content, { type: 'paragraph' }] } });
+  const before = editor.getJSON();
+  const markdown = editor.getMarkdown();
+  assert.match(markdown, /<summary><h2>/);
+  editor.commands.setContent(markdown, { contentType: 'markdown' });
+  assert.deepEqual(editor.getJSON(), before);
+  editor.commands.setContent(editor.getHTML());
+  assert.deepEqual(editor.getJSON(), before);
+  assert.deepEqual([...editor.view.dom.querySelectorAll('nav button')].map(button => button.textContent), [1, 2, 3].map(level => `Section ${level} & <exemple>`));
+  assert.equal(editor.view.dom.querySelectorAll('summary > h1,summary > h2,summary > h3').length, 3);
+  editor.destroy();
+});

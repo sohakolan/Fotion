@@ -120,3 +120,9 @@ MIT. Implémentation indépendante ; non affiliée à Notion ou Obsidian. Les d�
 Insérer `/sommaire` ou `/table des matières` pour créer une navigation vers les titres H1, H2 et H3 de la page. Les intitulés et leur ordre se mettent à jour à chaque modification ; les titres identiques restent des destinations distinctes. Les boutons sont accessibles au clavier. Un clic ouvre les éventuels dépliants parents et place le curseur au début du titre dans une page éditable.
 
 Le fichier conserve `<nav data-fotion-toc></nav>`. Fotion reconstruit la liste à partir des titres, sans sauvegarder de copie périmée de leurs textes. Ce marqueur est une extension Fotion : les lecteurs Markdown externes, dont Obsidian sans extension adaptée, ne génèrent pas ce sommaire. Les titres restent du Markdown standard. Le suivi de la section active pendant le défilement et le sommaire latéral automatique restent à réaliser.
+
+## Titres dépliants
+
+Les commandes `/titre dépliant 1`, `/titre dépliant 2` et `/titre dépliant 3` insèrent un titre avec son contenu repliable. Cliquer sur la flèche replie le contenu ; cliquer sur le titre permet de l'éditer. Entrée depuis le titre ouvre le dépliant et place le curseur dans son contenu. Les titres dépliants apparaissent dans le sommaire, dont les liens rouvrent les sections masquées.
+
+Le Markdown utilise `<details>` avec `<summary><h1>…</h1></summary>` (ou `h2`/`h3`). Fotion conserve les marques du titre et les blocs imbriqués. Le rendu de Markdown à l'intérieur de HTML dépend du lecteur externe. L'état ouvert/fermé est local à l'affichage et n'est pas enregistré. La conversion d'un titre existant en titre dépliant reste à réaliser.

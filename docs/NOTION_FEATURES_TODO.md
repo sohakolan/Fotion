@@ -97,7 +97,7 @@ Références : [S01](NOTION_REFERENCE.md#s01), [S04](NOTION_REFERENCE.md#s04), [
 - [ ] **FN-068** [PARTIEL] Séparateur horizontal.
 - [ ] **FN-069** [PARTIEL] Encadrés : terminer icône personnalisable, couleur et conversions.
 - [ ] **FN-070** [PARTIEL] Listes dépliantes : terminer sélection, édition du résumé et interactions imbriquées.
-- [ ] **FN-071** Titres dépliants H1/H2/H3.
+- [x] **FN-071** Titres dépliants H1/H2/H3.
 - [ ] **FN-072** [PARTIEL] Blocs de code : compléter langues, coloration syntaxique, copie et retour à la ligne.
 - [ ] **FN-073** Équations mathématiques en bloc et en ligne avec édition et erreurs lisibles.
 - [ ] **FN-074** [PARTIEL] Tableaux simples : compléter en-têtes, déplacements et sélection des cellules.
@@ -569,3 +569,9 @@ Preuves : [coffre et API](../server/storage/vault.ts), [tests disque et HTTP](..
 FN-077 : bloc insérable depuis `/sommaire`, liste H1/H2/H3 actualisée après modification, ajout ou suppression ; navigation au clic et au clavier, destinations distinctes pour les titres identiques. Le marqueur HTML `<nav data-fotion-toc></nav>` conserve la présence du bloc dans le `.md` sans dupliquer les titres. Il requiert Fotion pour produire la liste dynamique.
 
 Preuves : [extension du sommaire](../src/features/editor/extensions/table-of-contents.ts), [round-trip Markdown/HTML et édition des titres](../tests/unit/markdown.test.ts), [parcours navigateur insertion, navigation, renommage, annulation et rechargement](../tests/e2e/editor.spec.ts). Référence : [sommaire Notion](https://www.notion.com/help/columns-headings-and-dividers). UI-159 reste partiel : ni suivi de section active au défilement ni comparaison visuelle 1:1 validés.
+
+### Titres dépliants — 30 octobre 2026
+
+FN-071 : insertion de H1/H2/H3 dépliants par le menu slash, niveaux et texte riche conservés en Markdown/HTML, corps imbriqué, navigation depuis le sommaire, recherche et backlinks. Le repli du bloc `details` ne déclenche plus sa reconstruction par ProseMirror ; ce correctif bénéficie également aux listes dépliantes. Entrée dans le résumé ouvre le contenu avant d'y placer le curseur.
+
+Preuves : [blocs dépliants](../src/features/editor/extensions/blocks.ts), [round-trips](../tests/unit/markdown.test.ts), [index des liens](../tests/unit/page-index.test.ts), [recette Chrome avec sauvegarde et rechargement](../tests/e2e/editor.spec.ts). Référence : [titres dépliants Notion](https://www.notion.com/help/columns-headings-and-dividers). La conversion de blocs existants, les raccourcis Markdown et la comparaison visuelle 1:1 restent ouverts sous FN-056/FN-058 et la checklist UI.

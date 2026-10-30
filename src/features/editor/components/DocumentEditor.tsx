@@ -24,6 +24,7 @@ const blocks: { label: string; hint: string; icon: string; keywords: string; act
   { label: 'Liste de tâches', hint: 'Gardez une trace de vos tâches.', icon: '☑', keywords: 'todo task tâches checkbox', action: c => c.toggleTaskList() },
   { label: 'Encadré', hint: 'Mettez une idée importante en avant.', icon: '💡', keywords: 'callout encadré note', action: c => c.wrapIn('callout') },
   { label: 'Liste dépliante', hint: 'Masquez ou affichez des blocs de contenu.', icon: '▸', keywords: 'toggle liste dépliante', action: c => c.insertContent({ type: 'toggle', content: [{ type: 'toggleSummary', content: [{ type: 'text', text: 'Liste dépliante' }] }, { type: 'paragraph' }] }) },
+  ...[1, 2, 3].map(level => ({ label: `Titre dépliant ${level}`, hint: 'Un titre avec des blocs à masquer ou afficher.', icon: `▸H${level}`, keywords: `toggle heading titre dépliant h${level}`, action: (c: ChainedCommands) => c.insertContent({ type: 'toggle', content: [{ type: 'toggleSummary', attrs: { level }, content: [{ type: 'text', text: `Titre dépliant ${level}` }] }, { type: 'paragraph' }] }) })),
   { label: 'Citation', hint: 'Mettez un passage en lumière.', icon: '❞', keywords: 'quote citation', action: c => c.toggleBlockquote() },
   { label: 'Séparateur', hint: 'Séparez visuellement vos idées.', icon: '―', keywords: 'divider hr ligne séparateur', action: c => c.setHorizontalRule() },
   { label: 'Code', hint: 'Capturez un extrait de code.', icon: '‹›', keywords: 'code', action: c => c.toggleCodeBlock() },
@@ -287,7 +288,7 @@ export default function DocumentEditor(props: { content: string; onChange: (cont
       <Show when={!transform()} fallback={<>
         <button onClick={() => { setTransform(false); setBlockQuery(''); }}><ChevronRight size={14} class="back-chevron"/>Transformer en</button>
         <div class="popover-divider"/>
-        <div class="transform-options"><For each={filteredBlocks().filter(b => !['Séparateur', 'Tableau', 'Table des matières', 'Liste dépliante', 'Page', 'Image'].includes(b.label))}>{item => <button role="menuitem" onClick={() => { selectBlock(position().pos); item.action(editor.chain().focus().clearNodes()).run(); closeBlockMenu(); }}><span class="transform-icon">{item.icon}</span>{item.label}</button>}</For></div>
+        <div class="transform-options"><For each={filteredBlocks().filter(b => !b.label.startsWith('Titre dépliant') && !['Séparateur', 'Tableau', 'Table des matières', 'Liste dépliante', 'Page', 'Image'].includes(b.label))}>{item => <button role="menuitem" onClick={() => { selectBlock(position().pos); item.action(editor.chain().focus().clearNodes()).run(); closeBlockMenu(); }}><span class="transform-icon">{item.icon}</span>{item.label}</button>}</For></div>
       </>}>
         <button role="menuitem" onClick={() => setTransform(true)}><Type size={16}/>Transformer en<ChevronRight size={14} class="menu-end"/></button>
         <button role="menuitem" onClick={() => { const node = editor.state.doc.nodeAt(position().pos); if (node) editor.chain().focus().insertContentAt(position().pos + node.nodeSize, node.toJSON()).run(); closeBlockMenu(); }}><Copy size={16}/>Dupliquer</button>
