@@ -575,3 +575,9 @@ Preuves : [extension du sommaire](../src/features/editor/extensions/table-of-con
 FN-071 : insertion de H1/H2/H3 dépliants par le menu slash, niveaux et texte riche conservés en Markdown/HTML, corps imbriqué, navigation depuis le sommaire, recherche et backlinks. Le repli du bloc `details` ne déclenche plus sa reconstruction par ProseMirror ; ce correctif bénéficie également aux listes dépliantes. Entrée dans le résumé ouvre le contenu avant d'y placer le curseur.
 
 Preuves : [blocs dépliants](../src/features/editor/extensions/blocks.ts), [round-trips](../tests/unit/markdown.test.ts), [index des liens](../tests/unit/page-index.test.ts), [recette Chrome avec sauvegarde et rechargement](../tests/e2e/editor.spec.ts). Référence : [titres dépliants Notion](https://www.notion.com/help/columns-headings-and-dividers). La conversion de blocs existants, les raccourcis Markdown et la comparaison visuelle 1:1 restent ouverts sous FN-056/FN-058 et la checklist UI.
+
+### Conversion des dépliants — 30 octobre 2026
+
+FN-056 progresse : paragraphe/titre vers dépliant, changement de niveau H1/H2/H3 ou liste dépliante, puis retour vers texte/titre. Le contenu riche est conservé et les blocs du corps sont réinsérés après le titre lors de la conversion inverse. Les destinations interdites par le schéma du parent sont refusées ; les conversions non prises en charge depuis un dépliant sont désactivées avec une explication. Les conversions groupées et les autres couples de blocs restent à compléter.
+
+Preuves : [transaction de conversion](../src/features/editor/lib/toggle-conversion.ts), [tests de conservation et annulation](../tests/unit/toggle-conversion.test.ts), [menu réel et réouverture Chrome](../tests/e2e/editor.spec.ts).

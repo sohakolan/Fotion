@@ -130,3 +130,28 @@ test('toggle headings insert, collapse, reopen from the contents and retain thei
   await expect(details.locator('p').first()).toHaveText('Préface. Un contenu à conserver');
   await page.screenshot({ path: info.outputPath('toggle-heading.png') });
 });
+
+test('block menu converts a heading to a toggle and back without losing its content', async ({ page }) => {
+  await createDocument(page, '## Un **titre**\n\nAprès.');
+  async function convert(source: string, target: string) {
+    await page.locator(source).hover();
+    await page.getByRole('button', { name: 'Déplacer ou modifier le bloc', exact: true }).click();
+    await page.getByRole('menuitem', { name: 'Transformer en', exact: true }).click();
+    await page.getByRole('menuitem', { name: target, exact: true }).click();
+  }
+  await convert('.prose > h2', 'Titre dépliant 3');
+  await expect(page.locator('.prose summary h3 strong')).toHaveText('titre');
+  await page.locator('.prose details p').first().click();
+  await page.keyboard.type('Contenu conservé');
+  await convert('.prose summary', 'Titre 1');
+  await expect(page.locator('.prose > h1 strong')).toHaveText('titre');
+  await expect(page.locator('.prose > p')).toHaveText(['Contenu conservé', 'Après.']);
+  await page.getByRole('textbox', { name: 'Contenu de la page' }).focus();
+  await page.keyboard.press('ControlOrMeta+z');
+  await expect(page.locator('.prose details p').first()).toHaveText('Contenu conservé');
+  await page.keyboard.press('ControlOrMeta+Shift+z');
+  await expect(page.locator('.save-status')).toHaveText('Enregistré');
+  await page.reload();
+  await expect(page.locator('.prose > h1 strong')).toHaveText('titre');
+  await expect(page.locator('.prose > p')).toHaveText(['Contenu conservé', 'Après.']);
+});

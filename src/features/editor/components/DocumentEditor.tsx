@@ -1,3 +1,4 @@
+import { convertToggle, type ToggleTarget } from '../lib/toggle-conversion';
 import { createSignal, createMemo, createEffect, onMount, onCleanup, Show, For } from 'solid-js';
 import { Editor, type ChainedCommands } from '@tiptap/core';
 import Placeholder from '@tiptap/extension-placeholder';
@@ -120,6 +121,30 @@ export default function DocumentEditor(props: { content: string; onChange: (cont
       const start = editor.view.coordsAtPos(from), end = editor.view.coordsAtPos(to);
       setSelection({ x: Math.max(12, Math.min((start.left + end.left) / 2 - 140, window.innerWidth - 460)), y: Math.max(8, start.top - 45) });
     } else setSelection(undefined);
+  }
+  function conversionTarget(label: string): ToggleTarget | undefined {
+    if (label === 'Liste dépliante') return { toggle: true, level: 0 };
+    const match = label.match(/^Titre dépliant ([123])$/);
+    if (match) return { toggle: true, level: Number(match[1]) };
+    if (editor.state.doc.nodeAt(blockMenu()?.pos ?? 0)?.type.name !== 'toggle') return;
+    if (label === 'Texte') return { toggle: false, level: 0 };
+    const heading = label.match(/^Titre ([123])$/);
+    if (heading) return { toggle: false, level: Number(heading[1]) };
+  }
+  function canTransform(label: string) {
+    const pos = blockMenu()?.pos; if (pos === undefined) return false;
+    const target = conversionTarget(label);
+    return target ? !!convertToggle(editor.state, pos, target) : editor.state.doc.nodeAt(pos)?.type.name !== 'toggle';
+  }
+  function transformBlock(label: string, action: (chain: ChainedCommands) => ChainedCommands) {
+    const pos = blockMenu()?.pos; if (pos === undefined) return;
+    const target = conversionTarget(label);
+    if (target) {
+      const tr = convertToggle(editor.state, pos, target);
+      if (!tr) return;
+      editor.view.dispatch(tr); editor.commands.focus();
+    } else { selectBlock(pos); action(editor.chain().focus().clearNodes()).run(); }
+    closeBlockMenu();
   }
   function closeBlockMenu() { setBlockMenu(undefined); setTransform(false); setBlockQuery(''); }
   function selectBlock(pos: number) {
@@ -288,7 +313,7 @@ export default function DocumentEditor(props: { content: string; onChange: (cont
       <Show when={!transform()} fallback={<>
         <button onClick={() => { setTransform(false); setBlockQuery(''); }}><ChevronRight size={14} class="back-chevron"/>Transformer en</button>
         <div class="popover-divider"/>
-        <div class="transform-options"><For each={filteredBlocks().filter(b => !b.label.startsWith('Titre dépliant') && !['Séparateur', 'Tableau', 'Table des matières', 'Liste dépliante', 'Page', 'Image'].includes(b.label))}>{item => <button role="menuitem" onClick={() => { selectBlock(position().pos); item.action(editor.chain().focus().clearNodes()).run(); closeBlockMenu(); }}><span class="transform-icon">{item.icon}</span>{item.label}</button>}</For></div>
+        <div class="transform-options"><For each={filteredBlocks().filter(b => !['Séparateur', 'Tableau', 'Table des matières', 'Page', 'Image'].includes(b.label))}>{item => <button role="menuitem" disabled={!canTransform(item.label)} title={!canTransform(item.label) ? 'Conversion indisponible pour préserver la structure du bloc.' : undefined} onClick={() => transformBlock(item.label, item.action)}><span class="transform-icon" aria-hidden="true">{item.icon}</span>{item.label}</button>}</For></div>
       </>}>
         <button role="menuitem" onClick={() => setTransform(true)}><Type size={16}/>Transformer en<ChevronRight size={14} class="menu-end"/></button>
         <button role="menuitem" onClick={() => { const node = editor.state.doc.nodeAt(position().pos); if (node) editor.chain().focus().insertContentAt(position().pos + node.nodeSize, node.toJSON()).run(); closeBlockMenu(); }}><Copy size={16}/>Dupliquer</button>
