@@ -591,3 +591,9 @@ Preuves : [extension dédiée](../src/features/editor/extensions/callout.ts), [r
 ### Coloration différée — 30 octobre 2026
 
 FN-072 : les 37 grammaires communes sont désormais téléchargées au premier besoin, sans transaction de document. Le texte reste éditable en cas d'échec du téléchargement. Les nœuds inchangés réutilisent leurs plages colorées. Voir [mesures et preuves](PERFORMANCE.md). Le catalogue élargi, le chargement par langage et les budgets de latence sur gros documents restent ouverts.
+
+### Tableaux simples — 30 octobre 2026
+
+FN-074 progresse : redimensionnement de colonnes au pointeur, ligne et colonne d'en-tête configurables, sélection de cellules visible. Les tableaux représentables sans perte restent en Markdown GFM ; largeurs, en-têtes particuliers, cellules fusionnées ou contenu riche utilisent un tableau HTML marqué `data-fotion-table` dans le `.md`. Les retours de ligne sont encodés en entités pour éviter la coupure du bloc HTML. Le texte et les liens de ces tableaux sont indexés pour la recherche et les backlinks.
+
+Preuves : [format de tableau](../src/features/editor/extensions/table.ts), [round-trips](../tests/unit/markdown.test.ts), [indexation](../tests/unit/page-index.test.ts), [redimensionnement et réouverture Chrome](../tests/e2e/editor.spec.ts). Restent les menus de lignes/colonnes conformes à la référence, leur réorganisation et la recette complète des sélections multiples. Les rendus HTML des lecteurs externes peuvent différer.

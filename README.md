@@ -136,3 +136,7 @@ Un encadré standard conserve `> [!NOTE]`. Les réglages personnalisés sont enr
 ## Poids du chargement
 
 La coloration syntaxique est chargée au premier bloc de code avec une langue explicite. Une page sans code ne télécharge pas ses grammaires. Le build mesuré passe de 815,54 à 632,51 ko de JavaScript initial minifié ; voir [mesures, tests et limites](docs/PERFORMANCE.md). Le mode texte et la sauvegarde restent disponibles si le téléchargement de la coloration échoue.
+
+## Tableaux simples
+
+Faire glisser une bordure de colonne pour changer sa largeur. La barre du tableau permet de modifier les en-têtes de ligne et de colonne. Les réglages survivent à la réouverture. Les tableaux simples restent en Markdown GFM ; ceux dont les propriétés ou le contenu ne sont pas représentables sans perte sont enregistrés en HTML dans le `.md`, notamment pour conserver les largeurs, plusieurs paragraphes et les espaces des cellules. Les déplacements de lignes et colonnes et leurs menus dédiés restent à réaliser.

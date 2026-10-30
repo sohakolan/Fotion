@@ -351,7 +351,8 @@ export default function DocumentEditor(props: { content: string; onChange: (cont
     <Show when={ready() && (revision(), editor?.isActive('table'))}><div class="table-tools" role="toolbar" aria-label="Modifier le tableau">
       <button onMouseDown={e => e.preventDefault()} onClick={() => editor.chain().focus().addRowAfter().run()}><Plus size={13}/>Ligne</button>
       <button onMouseDown={e => e.preventDefault()} onClick={() => editor.chain().focus().addColumnAfter().run()}><Plus size={13}/>Colonne</button>
-      <button onMouseDown={e => e.preventDefault()} onClick={() => editor.chain().focus().toggleHeaderRow().run()}>En-tête</button>
+      <button onMouseDown={e => e.preventDefault()} onClick={() => editor.chain().focus().toggleHeaderRow().run()}>Ligne d’en-tête</button>
+      <button onMouseDown={e => e.preventDefault()} onClick={() => editor.chain().focus().toggleHeaderColumn().run()}>Colonne d’en-tête</button>
       <button onMouseDown={e => e.preventDefault()} onClick={() => editor.chain().focus().deleteRow().run()}>Supprimer la ligne</button>
       <button onMouseDown={e => e.preventDefault()} onClick={() => editor.chain().focus().deleteColumn().run()}>Supprimer la colonne</button>
     </div></Show>

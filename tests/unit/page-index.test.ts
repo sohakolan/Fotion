@@ -1,8 +1,11 @@
+import { createRequire } from 'node:module';
 import { pageHref, pageIdFromHref } from '../../shared/page-links';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { PageIndex } from '../../src/features/pages/lib/page-index';
 import type { Page } from '../../shared/page';
+const { JSDOM } = createRequire(import.meta.url)('jsdom');
+globalThis.DOMParser = new JSDOM('').window.DOMParser;
 const page = (id: string, title: string, content = '', trashed = false): Page => ({ id, title, content, trashed, icon: '', parent: null, favorite: false, cover: '', version: '1', updated: '2026-10-30T00:00:00Z' });
 
 test('search ranks titles, ignores accents, matches multiple terms and shows nearby content', () => {
@@ -45,4 +48,12 @@ test('toggle heading titles remain searchable and their links become backlinks',
   const index = new PageIndex().update(pages);
   assert.deepEqual(index.search(pages, 'réunion budget').map(result => result.page.id), ['source.md']);
   assert.deepEqual(index.backlinks(pages, 'target.md').map(page => page.id), ['source.md']);
+});
+
+test('HTML tables retain search text and backlinks while code samples remain excluded', () => {
+  const pages = [page('table.md', 'Source', '<table><tbody><tr><th>Budget &amp; prévisions</th><td><a href="./target.md">Projet</a><pre><code>&lt;a href="false.md"&gt;exemple&lt;/a&gt;</code></pre></td></tr></tbody></table>')];
+  const index = new PageIndex().update(pages);
+  assert.deepEqual(index.search(pages, 'budget prévisions').map(result => result.page.id), ['table.md']);
+  assert.deepEqual(index.backlinks(pages, 'target.md').map(page => page.id), ['table.md']);
+  assert.deepEqual(index.backlinks(pages, 'false.md'), []);
 });

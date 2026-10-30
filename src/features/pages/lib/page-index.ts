@@ -19,6 +19,16 @@ export class PageIndex {
         if (['code', 'codespan', 'image'].includes(token.type) || (token.type === 'text' && !token.tokens?.length)) parts.push('text' in token ? token.text : '');
         if (token.type === 'html') {
           if (/^\s*<details[\s>]/.test(token.text)) markdown.walkTokens(markdown.lexer(token.text.replace(/<summary><h([123])>([\s\S]*?)<\/h\1><\/summary>/g, '<summary>$2</summary>').replace(/<\/?(?:details|summary)\b[^>]*>/g, '\n')), visit);
+          else if (/^\s*<table[\s>]/.test(token.text)) {
+            const table = new DOMParser().parseFromString(token.text, 'text/html');
+            table.querySelectorAll('script,style').forEach(element => element.remove());
+            for (const link of table.querySelectorAll('a[href]')) {
+              if (link.closest('pre,code')) continue;
+              const id = pageIdFromHref(link.getAttribute('href') || '');
+              if (id) links.add(id);
+            }
+            for (const cell of table.querySelectorAll('td,th')) parts.push(cell.textContent || '');
+          }
           else parts.push(token.text.replace(/<[^>]*>/g, ' '));
         }
       };

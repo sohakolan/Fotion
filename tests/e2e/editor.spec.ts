@@ -283,3 +283,28 @@ test('failed syntax download keeps code editable and recoverable after reload', 
   await expect(page.locator('.hljs-keyword')).toHaveText('const');
   await expect(page.locator('.prose pre code')).toContainText('// conservé');
 });
+
+test('table column resizing and header choices survive saving and reopening', async ({ page }, info) => {
+  await createDocument(page, '| Nom | Statut |\n| --- | --- |\n| Fotion | En cours |\n\nFin.');
+  const table = page.locator('.prose table');
+  await table.locator('th').first().click();
+  await page.getByRole('button', { name: 'Ligne d’en-tête', exact: true }).click();
+  await expect(table.locator('th')).toHaveCount(0);
+  await page.getByRole('button', { name: 'Colonne d’en-tête', exact: true }).click();
+  await expect(table.locator('th')).toHaveCount(2);
+  const cell = table.locator('tr').first().locator('th').first();
+  const before = (await cell.boundingBox())!;
+  await page.mouse.move(before.x + before.width - 1, before.y + before.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(before.x + before.width + 80, before.y + before.height / 2, { steps: 12 });
+  await page.mouse.up();
+  await expect.poll(async () => Number(await cell.getAttribute('colwidth'))).toBeGreaterThan(0);
+  const width = await cell.getAttribute('colwidth');
+  await expect(page.locator('.save-status')).toHaveText('Enregistré');
+  await page.reload();
+  await expect(table.locator('tr').first().locator('th')).toHaveCount(1);
+  await expect(table.locator('tr').nth(1).locator('th')).toHaveCount(1);
+  await expect(cell).toHaveAttribute('colwidth', width!);
+  await expect(table.locator('tr').nth(1)).toContainText('Fotion');
+  await page.screenshot({ path: info.outputPath('resized-table.png') });
+});

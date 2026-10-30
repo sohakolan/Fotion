@@ -222,3 +222,25 @@ test('custom callouts keep icons, colors and rich nested contents through Markdo
   assert.equal(editor.state.doc.firstChild!.textContent, 'Texte conservé');
   editor.destroy();
 });
+
+test('table headers, widths, spans and rich cells survive Markdown without a synthetic header', () => {
+  const p = (text: string) => ({ type: 'paragraph', content: [{ type: 'text', text }] });
+  const editor = new Editor({ extensions: editorExtensions(), content: { type: 'doc', content: [
+    { type: 'table', content: [
+      { type: 'tableRow', content: [
+        { type: 'tableCell', attrs: { colwidth: [180] }, content: [p('Sans en-tête'), p('Second paragraphe')] },
+        { type: 'tableHeader', attrs: { colwidth: [220] }, content: [{ type: 'codeBlock', attrs: { language: 'text' }, content: [{ type: 'text', text: '<table>\n\ncode & texte\n</table>' }] }] },
+      ] },
+      { type: 'tableRow', content: [
+        { type: 'tableCell', attrs: { colspan: 2, colwidth: [180, 220] }, content: [p(' Cellule  avec espaces ')] },
+      ] },
+    ] }, { type: 'paragraph' },
+  ] } });
+  const before = editor.getJSON();
+  const markdown = editor.getMarkdown();
+  assert.match(markdown, /^<table/);
+  assert.match(markdown, /&#10;/);
+  editor.commands.setContent(markdown, { contentType: 'markdown' });
+  assert.deepEqual(editor.getJSON(), before);
+  editor.destroy();
+});
