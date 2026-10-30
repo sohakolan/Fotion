@@ -7,50 +7,83 @@
   /* Typography */
   --font-sans: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol";
   --font-serif: Lyon-Text, Georgia, ui-serif, serif;
-  --font-mono: iawriter-mono, Nitti, Menlo, Courier, monospace;
+  --font-mono: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace;
   --text-xs: 11px; --text-sm: 12px; --text-ui: 14px; --text-body: 16px;
   --text-h3: 20px; --text-h2: 24px; --text-h1: 30px; --text-title: 40px;
 
-  /* Surfaces and text */
-  --bg: #fff; --sidebar: #f7f7f5; --panel: #fff;
-  --text: #37352f; --muted: #91918e; --placeholder: #c9c8c5;
-  --hover: rgba(55, 53, 47, .055); --selected: rgba(55, 53, 47, .075); --line: #eae9e7;
+  /* Surfaces and text — Notion design tokens (--c-*) read from the public app stylesheet, 2026-10 */
+  --bg: #fff; --sidebar: #f9f8f7; --panel: #fff;
+  --text: #2c2c2b; --muted: #7d7a75; --placeholder: #a19e99; --disabled: #bcbab6;
+  --icon: #8e8b86; --icon-strong: #383836; --section-label: #91918e;
+  --hover: rgba(44, 44, 43, .05); --selected: #f0efed; --line: #e6e5e3; --line-strong: #d4d3cf;
+  --code-bg: #f7f6f3;
   --blue: #2383e2; --blue-hover: #1474cf; --selection: rgba(35, 131, 226, .14); --danger: #d44c47;
   --tooltip-bg: rgba(15, 15, 15, .9); --tooltip-text: rgba(255, 255, 255, .7);
+  --divider: rgba(55, 53, 47, .16); --inline-code: #eb5757; --inline-code-bg: rgba(135, 131, 120, .15);
 
   /* Shape and depth */
   --radius-sm: 4px; --radius: 6px; --radius-lg: 10px;
-  --shadow: 0 4px 18px rgba(15, 15, 15, .12), 0 0 0 1px rgba(15, 15, 15, .06);
-  --shadow-menu: 0 14px 28px -6px rgba(0, 0, 0, .1), 0 2px 4px -1px rgba(0, 0, 0, .06), 0 0 0 1px rgba(84, 72, 49, .08);
+  --shadow: 0px 8px 12px 0px #19191907, 0px 2px 6px 0px #19191907, 0px 0px 0px 1px #2a1c0012;
+  --shadow-menu: 0px 20px 24px 0px #1919190d, 0px 5px 8px 0px #19191907, 0px 0px 0px 1px #2a1c0012;
+  --shadow-sm: 0px 2px 4px 0px #0000000a, 0px 0px 0px 1px #2a1c0012;
+  --focus-ring: #2383e291 0px 0px 0px 1px inset, #2383e259 0px 0px 0px 2px;
+  --button-shadow: inset 0 0 0 1px #0f0f0f1a, 0 1px 2px #0f0f0f1a;
   --z-menu: 60; --z-modal: 100; --z-toast: 120;
 
-  /* Block colour palette (gray brown orange yellow green blue purple pink red) */
-  --color-gray: #787774; --bg-gray: #f1f1ef;
-  --color-brown: #9f6b53; --bg-brown: #f4eeee;
-  --color-orange: #d9730d; --bg-orange: #fbecdd;
-  --color-yellow: #cb912f; --bg-yellow: #fbf3db;
-  --color-green: #448361; --bg-green: #edf3ec;
-  --color-blue: #337ea9; --bg-blue: #e7f3f8;
-  --color-purple: #9065b0; --bg-purple: #f4f0f7;
-  --color-pink: #c14c8a; --bg-pink: #f9eef3;
-  --color-red: #d44c47; --bg-red: #fdebec;
+  /* Tags (database select options) */
+  --tag-gray-bg: #f0efed; --tag-gray-text: #494846;
+  --tag-brown-bg: #f5ede9; --tag-brown-text: #584437;
+  --tag-orange-bg: #fbebde; --tag-orange-text: #6a4222;
+  --tag-yellow-bg: #f9f3dc; --tag-yellow-text: #655121;
+  --tag-green-bg: #e8f1ec; --tag-green-text: #2a533c;
+  --tag-blue-bg: #e5f2fc; --tag-blue-text: #264a72;
+  --tag-purple-bg: #f3ebf9; --tag-purple-text: #553b69;
+  --tag-pink-bg: #fae9f1; --tag-pink-text: #68354e;
+  --tag-red-bg: #fce9e7; --tag-red-text: #6d3531;
+
+  /* Block colour palette — current Notion values (matthiasfrank.de/en/notion-colors, verified 2026-10) (gray brown orange yellow green blue purple pink red) */
+  --color-gray: #787774; --bg-gray: #f1f1ef; --icon-gray: #a6a299;
+  --color-brown: #976d57; --bg-brown: #f3eeee; --icon-brown: #9f6b53;
+  --color-orange: #cc782f; --bg-orange: #f8ecdf; --icon-orange: #d87620;
+  --color-yellow: #c29343; --bg-yellow: #faf3dd; --icon-yellow: #cb912f;
+  --color-green: #548164; --bg-green: #eef3ed; --icon-green: #448361;
+  --color-blue: #487ca5; --bg-blue: #e9f3f7; --icon-blue: #337ea9;
+  --color-purple: #8a67ab; --bg-purple: #f6f3f8; --icon-purple: #9065b0;
+  --color-pink: #b35488; --bg-pink: #f9f2f5; --icon-pink: #c14c8a;
+  --color-red: #c4554d; --bg-red: #faecec; --icon-red: #d44c47;
 }
 [data-theme=dark] {
-  --bg: #191919; --sidebar: #202020; --panel: #252525;
-  --text: #d4d4d4; --muted: #83837e; --placeholder: #5a5a57;
-  --hover: rgba(255, 255, 255, .055); --selected: rgba(255, 255, 255, .085); --line: #33332f;
+  --bg: #191919; --sidebar: #202020; --panel: #202020;
+  --text: #f0efed; --muted: #ada9a3; --placeholder: #7d7a75; --disabled: #5f5e59;
+  --icon: #ada9a3; --icon-strong: #e6e5e3; --section-label: #9b9b9b;
+  --hover: rgba(255, 255, 255, .055); --selected: #383836; --line: #383836; --line-strong: #5f5e59;
+  --code-bg: #272727;
   --selection: rgba(35, 131, 226, .28);
-  --shadow: 0 4px 20px #0006, 0 0 0 1px #ffffff0b;
-  --shadow-menu: 0 14px 28px -6px rgba(0, 0, 0, .4), 0 2px 4px -1px rgba(0, 0, 0, .3), 0 0 0 1px rgba(255, 255, 255, .07);
-  --color-gray: #9b9b9b; --bg-gray: #2f2f2f;
-  --color-brown: #ba856f; --bg-brown: #4a3228;
-  --color-orange: #c77d48; --bg-orange: #5c3b23;
-  --color-yellow: #ca9849; --bg-yellow: #564328;
-  --color-green: #529e72; --bg-green: #243d30;
-  --color-blue: #5e87c9; --bg-blue: #243b53;
-  --color-purple: #9d68d3; --bg-purple: #3c2d49;
-  --color-pink: #d15796; --bg-pink: #4e2c3c;
-  --color-red: #df5452; --bg-red: #522e2a;
+  --divider: rgba(255, 255, 255, .13);
+  --shadow: 0px 0px 0px 1px #383836, 0px 4px 12px -2px #19191914;
+  --shadow-menu: 0px 0px 0px 1px #383836, 0px 14px 28px -6px #19191933, 0px 2px 4px -1px #1919191e;
+  --shadow-sm: 0px 0px 0px 1px #383836, 0px 2px 4px 0px #19191914;
+  --button-shadow: inset 0 0 0 1px #0f0f0f33, 0 1px 2px #0f0f0f1a;
+  --color-gray: #9b9b9b; --bg-gray: #252525; --icon-gray: #7f7f7f;
+  --color-brown: #a27763; --bg-brown: #2e2724; --icon-brown: #aa755f;
+  --color-orange: #cb7b37; --bg-orange: #36291f; --icon-orange: #d9730d;
+  --color-yellow: #c19138; --bg-yellow: #372e20; --icon-yellow: #ca8e1b;
+  --color-green: #4f9768; --bg-green: #242b26; --icon-green: #2d9964;
+  --color-blue: #447acb; --bg-blue: #1f282d; --icon-blue: #2e7cd1;
+  --color-purple: #865dbb; --bg-purple: #2a2430; --icon-purple: #8d5bc1;
+  --color-pink: #ba4a78; --bg-pink: #2e2328; --icon-pink: #c94079;
+  --color-red: #be524b; --bg-red: #332523; --icon-red: #cd4945;
+
+  /* Tags */
+  --tag-gray-bg: #383836; --tag-gray-text: #f0efed;
+  --tag-brown-bg: #45362d; --tag-brown-text: #f5ede9;
+  --tag-orange-bg: #53361f; --tag-orange-text: #fbebde;
+  --tag-yellow-bg: #504425; --tag-yellow-text: #f9f3dc;
+  --tag-green-bg: #263d30; --tag-green-text: #e8f1ec;
+  --tag-blue-bg: #233850; --tag-blue-text: #e5f2fc;
+  --tag-purple-bg: #3c2d47; --tag-purple-text: #f3ebf9;
+  --tag-pink-bg: #4e2b3c; --tag-pink-text: #fae9f1;
+  --tag-red-bg: #502c29; --tag-red-text: #fce9e7;
   color: var(--text); background: var(--bg);
 }
 /* Inline palette colours are stored in Markdown for light mode; dark mode swaps them through the tokens. */

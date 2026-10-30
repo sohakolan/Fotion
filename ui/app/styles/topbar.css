@@ -53,11 +53,11 @@
 }
 
 .slash-divider {
-  color: #b3b3af;
+  color: var(--placeholder);
 }
 
 .private-indicator {
-  color: #a3a29d;
+  color: var(--placeholder);
   display: flex;
   align-items: center;
   gap: 5px;
@@ -78,14 +78,14 @@
   display: flex;
   align-items: center;
   gap: 5px;
-  color: #aaa9a3;
+  color: var(--placeholder);
   font-size: 11px;
   padding: 4px;
   border-radius: 4px;
 }
 
 .save-status svg {
-  color: #a8b2a7;
+  color: var(--placeholder);
 }
 
 .save-error {
@@ -161,7 +161,7 @@
 
 .private-indicator {
   font-size: 12px;
-  color: #96958e;
+  color: var(--placeholder);
   margin-left: 9px;
   padding-left: 12px;
   border-left: 1px solid var(--line);
@@ -169,7 +169,7 @@
 
 .save-status {
   font-size: 12px;
-  color: #96958e;
+  color: var(--placeholder);
   margin-right: 4px;
 }
 

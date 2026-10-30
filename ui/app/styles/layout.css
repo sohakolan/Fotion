@@ -20,7 +20,7 @@
   overflow-x: hidden;
   flex: 1;
   scrollbar-width: thin;
-  scrollbar-color: #dededb transparent;
+  scrollbar-color: var(--line-strong) transparent;
 }
 
 .help-button {
@@ -35,7 +35,7 @@
   box-shadow: 0 2px 5px #00000008;
   font-size: 16px;
   font-family: Georgia,serif;
-  color: #77766e;
+  color: var(--muted);
 }
 
 .toast {

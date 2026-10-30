@@ -22,7 +22,7 @@
 .prose>p:first-child {
   margin-top: 0;
   margin-bottom: 20px;
-  color: #77766e;
+  color: var(--muted);
   line-height: 1.7;
 }
 
@@ -108,7 +108,7 @@
   appearance: none;
   width: 15px;
   height: 15px;
-  border: 1.5px solid #65645e;
+  border: 1.5px solid var(--muted);
   border-radius: 2px;
   display: grid;
   place-items: center;
@@ -133,22 +133,22 @@
 
 .prose li[data-checked=true]>div>p {
   text-decoration: line-through;
-  color: #a6a49c;
+  color: var(--placeholder);
 }
 
 .prose hr {
   border: 0;
-  border-top: 1px solid var(--line);
-  margin: 24px 0;
+  border-top: 1px solid var(--divider);
+  margin: 6px 0;
 }
 
 .prose code {
-  font-family: ui-monospace,SFMono-Regular,Consolas,monospace;
-  font-size: .86em;
-  color: #eb5757;
-  background: var(--hover);
-  padding: 2px 5px;
-  border-radius: 3px;
+  font-family: var(--font-mono);
+  font-size: 85%;
+  color: var(--inline-code);
+  background: var(--inline-code-bg);
+  padding: .2em .4em;
+  border-radius: 4px;
 }
 
 .prose pre {
@@ -210,7 +210,7 @@
 }
 
 .prose .is-empty:before {
-  color: #aaa9a3;
+  color: var(--placeholder);
   content: attr(data-placeholder);
   float: left;
   height: 0;
@@ -224,7 +224,7 @@
   height: 28px;
   line-height: 26px;
   font-size: 24px;
-  color: #a4a39d;
+  color: var(--placeholder);
   border-radius: 4px;
   cursor: grab;
   transform: translateX(-5px);
@@ -377,18 +377,13 @@
   padding: 0;
 }
 
-.prose hr {
-  margin: 17px 0;
-  border-color: var(--line);
-}
-
 .prose strong {
   font-weight: 600;
 }
 
 .prose .is-empty:before {
   font-size: 16px;
-  color: #aaa9a5;
+  color: var(--placeholder);
 }
 
 .prose .ProseMirror-selectednode {
@@ -414,7 +409,7 @@
   display: flex;
   align-items: center;
   gap: 0;
-  color: #a5a49f;
+  color: var(--placeholder);
 }
 
 .block-controls button {
@@ -429,7 +424,7 @@
 
 .block-controls button:hover {
   background: var(--hover);
-  color: #787774;
+  color: var(--muted);
 }
 
 .block-grip {
@@ -605,7 +600,7 @@
 }
 
 [data-theme=dark] .block-controls {
-  color: #777;
+  color: var(--muted);
 }
 
 @media(max-width:760px) {
@@ -945,7 +940,7 @@
 
 .hljs-comment,
 .hljs-quote {
-  color: #858585;
+  color: var(--muted);
 }
 
 .hljs-attr,

@@ -38,13 +38,13 @@
 .avatar {
   display: grid;
   place-items: center;
-  background: #e6e4df;
+  background: var(--line);
   border-radius: 5px;
   height: 23px;
   width: 23px;
   font-size: 14px;
   font-weight: 650;
-  color: #69665f;
+  color: var(--muted);
 }
 
 .collapse-sidebar {
@@ -69,7 +69,7 @@
   width: 100%;
   padding: 0 10px;
   border-radius: 5px;
-  color: #6c6c68;
+  color: var(--muted);
   text-align: left;
   font-weight: 500;
 }
@@ -81,7 +81,7 @@
 }
 
 .primary-nav svg {
-  color: #858580;
+  color: var(--muted);
 }
 
 .sidebar-scroll {
@@ -92,7 +92,7 @@
 }
 
 .sidebar-scroll:hover {
-  scrollbar-color: #d6d5d1 transparent;
+  scrollbar-color: var(--line-strong) transparent;
 }
 
 .section-label {
@@ -126,7 +126,7 @@
   align-items: center;
   border-radius: 5px;
   padding-right: 4px;
-  color: #62625e;
+  color: var(--muted);
 }
 
 .page-row:hover {
@@ -173,7 +173,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #a3a39e;
+  color: var(--placeholder);
 }
 
 .tree-toggle svg {
@@ -229,7 +229,7 @@
   align-items: center;
   gap: 10px;
   padding: 0 13px;
-  color: #787874;
+  color: var(--muted);
   width: 100%;
   border-radius: 5px;
   font-size: 13px;
@@ -242,7 +242,7 @@
   text-align: left;
   padding: 12px 9px;
   margin-bottom: 8px;
-  color: #7b7b75;
+  color: var(--muted);
   font-size: 11px;
   border-radius: 5px;
 }
@@ -253,7 +253,7 @@
 
 .vault-status small {
   display: block;
-  color: #a0a09a;
+  color: var(--placeholder);
   font-size: 10px;
   margin-top: 5px;
 }
@@ -274,7 +274,7 @@
   padding: 0 10px;
   gap: 7px;
   font-size: 12px;
-  color: #8b8b85;
+  color: var(--muted);
 }
 
 .brand-mark {
@@ -292,7 +292,7 @@
 
 .version {
   font-size: 10px;
-  color: #b3b2ad;
+  color: var(--placeholder);
 }
 
 .sidebar-footer .icon-button {
@@ -333,7 +333,7 @@
 /* The document canvas uses Notion's spacing; controls stay outside editable blocks. */
 .sidebar {
   position: relative;
-  background: #f7f7f5;
+  background: var(--sidebar);
   padding: 0 8px;
   font-size: 14px;
 }
@@ -373,14 +373,14 @@
 .primary-nav>button {
   height: 30px;
   font-size: 14px;
-  color: #5f5e5b;
+  color: var(--muted);
   font-weight: 500;
 }
 
 .primary-nav>button svg {
   width: 17px;
   height: 17px;
-  color: #85847f;
+  color: var(--muted);
 }
 
 .section-label {
@@ -397,11 +397,11 @@
 .page-row {
   position: relative;
   height: 30px;
-  color: #5f5e5b;
+  color: var(--muted);
 }
 
 .page-row.selected {
-  background: #ebebea;
+  background: var(--line);
 }
 
 .page-link {
@@ -418,7 +418,7 @@
 }
 
 .page-emoji svg {
-  color: #92918c;
+  color: var(--placeholder);
 }
 
 .tree-toggle {
@@ -435,7 +435,7 @@
   width: 22px;
   height: 22px;
   opacity: 0;
-  color: #92918c;
+  color: var(--placeholder);
 }
 
 .page-row:hover .row-more,
@@ -456,14 +456,14 @@
 .utility-link {
   font-size: 13px;
   height: 30px;
-  color: #73726d;
+  color: var(--muted);
 }
 
 .vault-status {
   font-size: 11px;
   padding: 7px 10px;
   margin: 4px 0;
-  color: #92918b;
+  color: var(--placeholder);
 }
 
 .sidebar-footer {
@@ -542,11 +542,11 @@
 }
 
 [data-theme=dark] .page-row.selected {
-  background: #2c2c2c;
+  background: var(--selected);
 }
 
 [data-theme=dark] .primary-nav>button {
-  color: #a9a9a6;
+  color: var(--placeholder);
 }
 
 @media(max-width:760px) {

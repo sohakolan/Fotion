@@ -50,7 +50,7 @@
 
 .modal p {
   font-size: 14px;
-  color: #898780;
+  color: var(--muted);
   line-height: 1.65;
   margin: 0 0 23px;
 }
@@ -121,13 +121,13 @@
   align-items: center;
   gap: 10px;
   margin: 20px 0;
-  color: #77776f;
+  color: var(--muted);
   font-size: 13px;
 }
 
 .path-box span {
   margin-left: auto;
-  color: #aaa89f;
+  color: var(--placeholder);
 }
 
 .modal-content code {
@@ -159,7 +159,7 @@
 .empty-trash {
   text-align: center;
   padding: 35px 0 10px;
-  color: #b3b1a8;
+  color: var(--placeholder);
 }
 
 .empty-trash svg {
@@ -213,7 +213,7 @@
 }
 
 .search-input input::placeholder {
-  color: #aaa8a1;
+  color: var(--placeholder);
 }
 
 .key-button {
@@ -266,7 +266,7 @@
 }
 
 .search-results svg {
-  color: #aaa89f;
+  color: var(--placeholder);
 }
 
 .search-footer {

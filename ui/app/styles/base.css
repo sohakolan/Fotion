@@ -102,7 +102,7 @@ kbd {
 }
 
 .popover button svg {
-  color: #77766f;
+  color: var(--muted);
 }
 
 .dismiss-layer {

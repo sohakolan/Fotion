@@ -187,7 +187,7 @@ test('callout icon and block colors survive undo and reloading', async ({ page }
   await page.getByRole('button', { name: 'Paramètres', exact: true }).click();
   await page.getByRole('combobox', { name: 'Apparence' }).selectOption('dark');
   await page.getByRole('button', { name: 'Fermer la fenêtre', exact: true }).click();
-  await expect(callout).toHaveCSS('background-color', 'rgb(86, 67, 40)');
+  await expect(callout).toHaveCSS('background-color', 'rgb(55, 46, 32)');
   await page.setViewportSize({ width: 320, height: 740 });
   await page.getByRole('button', { name: 'Fermer la barre latérale', exact: true }).click();
   await icon.click();
