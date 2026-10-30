@@ -11,6 +11,7 @@ Objectif : une implémentation indépendante, open source et légère en TypeScr
 | --- | --- | ---: |
 | [Fonctionnalités](NOTION_FEATURES_TODO.md) | Pages, blocs, manipulation, bases, vues, propriétés, formules, médias, navigation, import/export, fiabilité et écosystème | 408 |
 | [Interface et interactions](NOTION_UI_TODO.md) | Écrans, composants, styles, menus, glisser-déposer, états, clavier, mobile, accessibilité et recette visuelle | 328 |
+| [FotionMark](FOTIONMARK.md) | Surcouche Markdown : directives, interpréteur, schéma et garanties d’aller-retour | v1 |
 | [Références](NOTION_REFERENCE.md) | Sources officielles et limites de la référence visuelle | 51 entrées |
 
 Inventaire aussi complet que possible des familles de fonctionnalités publiques au **30 octobre 2026**, complété par nos critères de recette. Il ne prétend pas documenter tous les détails internes, expérimentations ou variantes commerciales de Notion. Les produits adjacents et fonctions différées sont recensés pour rendre les limites explicites.

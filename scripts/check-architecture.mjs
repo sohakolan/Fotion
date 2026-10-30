@@ -15,12 +15,14 @@ const patterns = [
   /^ui\/features\/[a-z][a-z-]*\/components\/[A-Z][A-Za-z]+\.tsx$/,
   /^ui\/features\/[a-z][a-z-]*\/(?:lib|extensions)\/[a-z][a-z-]*\.ts$/,
   /^engine\/index\.ts$/,
-  /^engine\/(?:document|models|pages|operations)\/[a-z][a-z-]*\.ts$/,
+  /^engine\/(?:document|models|pages|operations|fotionmark)\/[a-z][a-z-]*\.ts$/,
   /^server\/(?:http|storage)\/[a-z][a-z-]*\.ts$/,
 ];
 function allowed(from, to) {
   if (from.startsWith('engine/')) {
     if (!to.startsWith('engine/')) return false;
+    // FotionMark is a standalone format layer: it depends on nothing, not even the editor schema.
+    if (from.startsWith('engine/fotionmark/')) return to.startsWith('engine/fotionmark/');
     if (from.startsWith('engine/models/')) return to.startsWith('engine/models/');
     if (from.startsWith('engine/pages/')) return /^engine\/(models|pages)\//.test(to);
     if (from.startsWith('engine/operations/')) return /^engine\/(models|operations)\//.test(to);
@@ -60,6 +62,8 @@ assert(!allowed('ui/features/editor/index.ts', 'server/storage/vault.ts'));
 assert(allowed('ui/features/editor/components/DocumentEditor.tsx', 'ui/kit/index.ts'));
 assert(!allowed('ui/features/editor/components/DocumentEditor.tsx', 'ui/kit/components/Menu.tsx'));
 assert(!allowed('ui/kit/components/Menu.tsx', 'ui/features/editor/index.ts'));
+assert(!allowed('engine/fotionmark/directives.ts', 'engine/document/blocks.ts'));
+assert(allowed('engine/document/columns.ts', 'engine/fotionmark/index.ts'));
 assert(!patterns.some(pattern => pattern.test('ui/helpers.ts')));
 
 const walk = directory => readdirSync(resolve(root, directory), { withFileTypes: true }).flatMap(entry => {
@@ -84,6 +88,8 @@ for (const file of files) {
         const base = relative(root, resolve(dirname(resolve(root, file)), name));
         const target = [base, `${base}.ts`, `${base}.tsx`, `${base}/index.ts`].find(path => files.includes(path));
         if (!target || !allowed(file, target)) errors.push(`${file} → ${name}: import local interdit ou introuvable`);
+      } else if (file.startsWith('engine/fotionmark/')) {
+        errors.push(`${file} → ${name}: FotionMark reste sans dépendance externe`);
       } else if ((file.startsWith('ui/') || file.startsWith('engine/')) && (name.startsWith('node:') || builtinModules.includes(name))) {
         errors.push(`${file}: API Node réservée au serveur (${name})`);
       } else if (file.startsWith('engine/') && /^(solid-js|lucide-solid)(\/|$)/.test(name)) {

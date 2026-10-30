@@ -15,6 +15,7 @@ engine/                        # Règles et formats des documents
     page-mention.ts             # Références stables entre pages
     table.ts                   # Tables et sérialisation sans perte
     table-of-contents.ts        # Présence du bloc de sommaire
+  fotionmark/                  # FotionMark : syntaxe, interpréteur et schéma (autonome, voir FOTIONMARK.md)
   operations/                  # Transactions et commandes : déplacement, conversion, menu /
   pages/                       # Liens, recherche, backlinks et ordre des pages
 ui/                            # Interface utilisateur
@@ -47,13 +48,14 @@ Les configurations restent à la racine. `public/` contient les ressources stati
 
 ## Responsabilités et dépendances
 
+- **FotionMark** (`engine/fotionmark/`) : la surcouche Markdown et son interpréteur. Il n'importe que lui-même, aucun paquet externe ; le reste du moteur l'utilise (les blocs de `document/` lui demandent si une directive est valide). Spécification : [FOTIONMARK.md](FOTIONMARK.md).
 - **Moteur** : structures de documents, conversions, transactions, formats Markdown/HTML et index des pages. Il n'importe ni `ui/`, ni `server/`, ni Solid, ni Lucide. Les modèles ne dépendent pas des extensions d'éditeur. Le moteur ne connaît pas les menus, les modales, le stockage du navigateur ou les requêtes HTTP.
 - **Interface** : compose les fonctionnalités avec Solid, gère les interactions, applique les vues Tiptap et appelle les opérations du moteur. Elle importe le moteur uniquement par `engine/index.ts`. Elle n'importe jamais les fichiers du serveur.
 - **Serveur** : accède au disque et expose l'API locale. Il utilise les contrats publics du moteur, sans importer l'interface. La validation des entrées, les protections des chemins et la concurrence des écritures restent à la frontière du stockage.
 
 Le sens autorisé est `ui → engine` et `server → engine`. L'interface communique avec le serveur par HTTP. Aucune dépendance inverse n'est autorisée.
 
-Le **UI-Kit** (`ui/kit/`) est la couche de design commune : il n'importe rien d'autre que lui-même, et toute l'interface l'utilise par `ui/kit/index.ts` (seul `ui/main.tsx` charge ses feuilles de style). Les couleurs, tailles, rayons et ombres se lisent dans les variables de `tokens.css` ; ne pas coder une couleur de thème en dur ailleurs. La galerie de référence s'ouvre à l'adresse `#ui-kit`. Le menu de bloc, le menu de page et les info-bulles des poignées utilisent déjà le kit ; les autres écrans de `styles.css` y migrent progressivement.
+Le **UI-Kit** (`ui/kit/`) est la couche de design commune : il n'importe rien d'autre que lui-même, et toute l'interface l'utilise par `ui/kit/index.ts` (seul `ui/main.tsx` charge ses feuilles de style). Les couleurs, tailles, rayons et ombres se lisent dans les variables de `tokens.css` ; ne pas coder une couleur de thème en dur ailleurs. La galerie de référence s'ouvre à l'adresse `#ui-kit`. Le menu de bloc, le menu de page et les info-bulles des poignées utilisent déjà le kit ; les autres écrans de `ui/app/styles/` y migrent progressivement.
 
 Dans l'interface, `app` compose les fonctionnalités par leurs `index.ts`. `pages` peut utiliser l'API publique de `editor` pour un aperçu de version ; `editor` ne dépend pas de `pages`. Les imports privés entre fonctionnalités sont refusés.
 
@@ -71,7 +73,7 @@ Composants en `PascalCase.tsx`, modules du moteur et fonctions en `kebab-case.ts
 
 Un nouveau bloc ajoute son modèle et son format dans `engine/document/`, puis sa vue dans `ui/features/editor/extensions/` si nécessaire. Une nouvelle action sur le document va dans `engine/operations/` ; un menu qui la déclenche reste dans `ui/`. Une nouvelle opération disque reste dans `server/storage/`.
 
-Ne pas créer de dossiers génériques `utils`, `helpers` ou `common`. Réviser ensemble la documentation et le contrôle si une nouvelle couche ou dépendance devient nécessaire. `App.tsx` porte encore plusieurs panneaux et états de session ; les extraire progressivement dans leurs fonctionnalités. Les styles restent regroupés dans `ui/app/styles.css`.
+Ne pas créer de dossiers génériques `utils`, `helpers` ou `common`. Réviser ensemble la documentation et le contrôle si une nouvelle couche ou dépendance devient nécessaire. `App.tsx` porte encore plusieurs panneaux et états de session ; les extraire progressivement dans leurs fonctionnalités. Les styles de l'application sont découpés par zone dans `ui/app/styles/` (chargés dans l'ordre de `index.css`) ; jetons et composants partagés dans `ui/kit/`.
 
 ## Vérifications
 

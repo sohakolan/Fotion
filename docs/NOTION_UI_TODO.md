@@ -455,7 +455,7 @@ Critères propres à Fotion : exigences de fiabilité/recette proposées, pas fo
 
 ## État initial et preuves
 
-La base actuelle est dans [App.tsx](../ui/app/App.tsx), [editor.tsx](../ui/features/editor/components/DocumentEditor.tsx), [BlockControls.tsx](../ui/features/editor/components/BlockControls.tsx) et [style.css](../ui/app/styles.css). Le [scénario JSDOM](../scripts/check-ui.mjs) valide des événements et changements de DOM, pas les pixels ou le comportement du matériel réel.
+La base actuelle est dans [App.tsx](../ui/app/App.tsx), [editor.tsx](../ui/features/editor/components/DocumentEditor.tsx), [BlockControls.tsx](../ui/features/editor/components/BlockControls.tsx) et [styles](../ui/app/styles/). Le [scénario JSDOM](../scripts/check-ui.mjs) valide des événements et changements de DOM, pas les pixels ou le comportement du matériel réel.
 
 À la création : **328 critères**, **0 cochés**, **73 partiels**. Ne pas présenter le ratio comme un pourcentage de parité : les critères ont des tailles et périmètres différents.
 
