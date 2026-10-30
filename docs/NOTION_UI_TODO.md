@@ -219,7 +219,7 @@ Références : [S01](NOTION_REFERENCE.md#s01), [S04](NOTION_REFERENCE.md#s04), [
 - [ ] **UI-153** [PARTIEL] Encadré avec icône, fond et padding ; compléter les variantes.
 - [ ] **UI-154** [PARTIEL] Dépliant avec chevron, résumé éditable et contenu indenté.
 - [ ] **UI-155** Titres dépliants et groupes de blocs sélectionnés.
-- [ ] **UI-156** [PARTIEL] Code avec fond et police ; ajouter langue, copie et traitement des lignes longues.
+- [ ] **UI-156** [PARTIEL] Code avec fond, police, sélecteur de langue, copie, légende et traitement des lignes longues : composants présents, fidélité visuelle à valider.
 - [ ] **UI-157** Équations avec aperçu, édition et erreur.
 - [ ] **UI-158** [PARTIEL] Séparateur et espaces de part et d’autre.
 - [ ] **UI-159** Table des matières et état du titre actif.

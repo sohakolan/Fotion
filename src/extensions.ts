@@ -1,3 +1,4 @@
+import { CodeBlock } from './code-block';
 import { TextColor } from './colors';
 import StarterKit from '@tiptap/starter-kit';
 import { Markdown } from '@tiptap/markdown';
@@ -8,5 +9,5 @@ import Image from '@tiptap/extension-image';
 import { Callout, Toggle, ToggleSummary } from './blocks';
 
 export function editorExtensions() {
-  return [StarterKit.configure({ link: { openOnClick: false }, dropcursor: false }), Markdown.configure({ markedOptions: { gfm: true } }), TaskList, TaskItem.configure({ nested: true }), TableKit.configure({ table: { resizable: false } }), Image, Callout, Toggle, ToggleSummary, TextColor];
+  return [StarterKit.configure({ link: { openOnClick: false }, dropcursor: false, codeBlock: false }), Markdown.configure({ markedOptions: { gfm: true } }), TaskList, TaskItem.configure({ nested: true }), TableKit.configure({ table: { resizable: false } }), Image, Callout, Toggle, ToggleSummary, TextColor, CodeBlock];
 }

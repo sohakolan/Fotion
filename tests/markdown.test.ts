@@ -66,3 +66,33 @@ test('text and background colors preserve nested marks, literal HTML and undo th
   assert.equal(editor.isActive('textColor'), false);
   editor.destroy();
 });
+
+
+test('code fences, language, caption and wrapping survive Markdown and HTML round-trips', () => {
+  for (const language of [null, 'typescript', 'unknown-language', 'custom`language']) {
+    const editor = new Editor({ extensions: editorExtensions(), content: { type: 'doc', content: [
+      { type: 'codeBlock', attrs: { language, wrap: true, caption: 'Exemple <script> & "citation" 😀' }, content: [{ type: 'text', text: '```\n~~~\nconst value = `<span> & ${1}`;\n\n' }] },
+      { type: 'paragraph' },
+    ] } });
+    const before = editor.getJSON();
+    const html = editor.getHTML();
+    editor.commands.setContent(editor.getMarkdown(), { contentType: 'markdown' });
+    assert.deepEqual(editor.getJSON(), before, `Markdown language ${language}`);
+    editor.commands.setContent(html);
+    assert.deepEqual(editor.getJSON(), before, `HTML language ${language}`);
+    editor.destroy();
+  }
+});
+
+test('plain code stays plain and known languages receive syntax decorations without changing saved text', () => {
+  const editor = new Editor({ extensions: editorExtensions(), content: '```typescript\nconst answer = 42;\n```', contentType: 'markdown' });
+  assert.ok(editor.view.dom.querySelector('.hljs-keyword'));
+  assert.equal(editor.state.doc.textContent, 'const answer = 42;');
+  editor.commands.setTextSelection(1);
+  editor.commands.updateAttributes('codeBlock', { language: null });
+  assert.equal(editor.view.dom.querySelector('.hljs-keyword'), null);
+  assert.equal(editor.getMarkdown().trimEnd(), '```\nconst answer = 42;\n```');
+  editor.commands.setContent('```python fotion=broken\nprint(1)\n```', { contentType: 'markdown' });
+  assert.equal(editor.getAttributes('codeBlock').language, 'python fotion=broken');
+  editor.destroy();
+});

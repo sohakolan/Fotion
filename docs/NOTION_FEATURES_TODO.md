@@ -537,3 +537,9 @@ Les cases cochées s’appuient sur [le coffre Markdown](../server/vault.ts), [l
 Les critères FN-048 à FN-050 disposent désormais d’une palette texte/fond, d’une dernière couleur persistée et de son raccourci Ctrl/Cmd + Maj + H, ainsi que d’une action pour retirer toutes les marques de la sélection. Les couleurs combinées aux autres marques sont conservées en Markdown avec des balises `span` documentées dans le README.
 
 Preuves : [extension couleur](../src/colors.ts), [tests de round-trip](../tests/markdown.test.ts), [scénario DOM clavier et sauvegarde](../scripts/check-ui.mjs). La comparaison visuelle avec la référence, les états de sélection mixtes dans tous les blocs et la couleur de bloc complète restent à terminer ; ces critères restent partiels.
+
+## Avancement — blocs de code
+
+FN-072 : langage recherchable, coloration des 37 entrées communes Lowlight, copie avec états de réussite/échec, retour à la ligne et légende sont implémentés. Le langage inconnu importé est conservé. Les extraits contenant leurs propres clôtures Markdown ne tronquent plus la page à la sauvegarde.
+
+Preuves : [extension de code](../src/code-block.ts), [round-trips Markdown et HTML](../tests/markdown.test.ts), [recette DOM des commandes et du presse-papiers](../scripts/check-ui.mjs). Référence : [blocs de code Notion](https://www.notion.com/help/code-blocks). Le catalogue complet des langages de la référence, le chargement des grammaires à la demande, les mesures de performance sur longs extraits et la validation visuelle restent ouverts. FN-072 et UI-156 restent partiels.

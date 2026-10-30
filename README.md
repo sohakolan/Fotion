@@ -62,6 +62,14 @@ Sélectionner du texte puis ouvrir le bouton **A** de la barre de formatage pour
 
 Les couleurs sont enregistrées dans des balises HTML `span` portant `data-fotion-color`, `data-fotion-background` et un style de repli. Fotion adapte leur rendu au thème sombre. Les lecteurs Markdown externes doivent accepter le HTML intégré pour afficher les couleurs ; leur rendu peut différer. Modifier les attributs ou supprimer ces balises dans un autre éditeur peut supprimer la couleur.
 
+## Blocs de code
+
+Chaque bloc propose un langage recherchable, la copie avec retour d’état, le retour à la ligne et une légende. La coloration couvre les 37 entrées du catalogue commun Lowlight, dont le texte brut. Un langage inconnu importé est conservé, sans détection automatique coûteuse pendant la saisie. Les boutons apparaissent au survol, au focus clavier et sur les écrans tactiles.
+
+Le code reste dans des clôtures Markdown standard, allongées si l’extrait contient lui-même des clôtures. Quand une légende ou le retour à la ligne est défini, la ligne d’ouverture reçoit `fotion=` suivi d’un objet JSON encodé comme composant d’URL (`wrap`, `caption`). Les lecteurs externes peuvent ignorer ces propriétés de présentation ; supprimer ce suffixe les retire de Fotion sans supprimer le code.
+
+Les grammaires sont actuellement chargées avec l’éditeur : le build de cette étape représente environ 251 Ko gzip de JavaScript. Le chargement à la demande et les mesures en navigateur réel restent nécessaires pour l’objectif de légèreté.
+
 ## Vérifications
 
 ```sh
