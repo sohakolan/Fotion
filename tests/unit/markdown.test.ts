@@ -193,3 +193,29 @@ test('toggle headings keep levels, rich titles and nested contents through Markd
   assert.equal(editor.view.dom.querySelectorAll('summary > h1,summary > h2,summary > h3').length, 3);
   editor.destroy();
 });
+
+test('custom callouts keep icons, colors and rich nested contents through Markdown and HTML', () => {
+  const editor = new Editor({ extensions: editorExtensions(), content: { type: 'doc', content: [
+    { type: 'callout', attrs: { icon: '🎯', color: 'blue', background: 'yellow' }, content: [
+      { type: 'paragraph', content: [{ type: 'text', text: 'Important <texte>', marks: [{ type: 'bold' }] }] },
+      { type: 'callout', attrs: { icon: '', background: 'red' }, content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Imbriqué' }] }] },
+    ] }, { type: 'paragraph' },
+  ] } });
+  const before = editor.getJSON();
+  const markdown = editor.getMarkdown();
+  assert.match(markdown, /fotion:callout/);
+  editor.commands.setContent(markdown, { contentType: 'markdown' });
+  assert.deepEqual(editor.getJSON(), before);
+  editor.commands.setContent(editor.getHTML());
+  assert.deepEqual(editor.getJSON(), before);
+  assert.equal(editor.state.doc.textContent, 'Important <texte>Imbriqué');
+  const picker = editor.view.dom.firstElementChild!.lastElementChild!;
+  [...picker.querySelectorAll<HTMLButtonElement>('button')].find(button => button.textContent === '🚀')!.click();
+  assert.equal(editor.state.doc.firstChild!.attrs.icon, '🚀');
+  editor.commands.undo();
+  assert.deepEqual(editor.getJSON(), before);
+  editor.commands.setContent('> [!NOTE] <!-- fotion:callout %invalid -->\n> Texte conservé\n\nFin.', { contentType: 'markdown' });
+  assert.equal(editor.state.doc.firstChild!.attrs.icon, '💡');
+  assert.equal(editor.state.doc.firstChild!.textContent, 'Texte conservé');
+  editor.destroy();
+});

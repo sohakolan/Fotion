@@ -9,7 +9,8 @@ import TaskList from '@tiptap/extension-task-list';
 import TaskItem from '@tiptap/extension-task-item';
 import { TableKit } from '@tiptap/extension-table';
 import Image from '@tiptap/extension-image';
-import { Callout, Toggle, ToggleSummary } from './blocks';
+import { Toggle, ToggleSummary } from './blocks';
+import { Callout } from './callout';
 
 export function editorExtensions(getPage: (id: string) => Pick<Page, 'title' | 'icon' | 'trashed'> | undefined = () => undefined) {
   return [StarterKit.configure({ link: { openOnClick: false }, dropcursor: false, codeBlock: false }), Markdown.configure({ markedOptions: { gfm: true } }), TaskList, TaskItem.configure({ nested: true }), TableKit.configure({ table: { resizable: false } }), Image, TableOfContents, Callout, Toggle, ToggleSummary, TextColor, CodeBlock, PageMention.configure({ getPage })];

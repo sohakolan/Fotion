@@ -95,7 +95,7 @@ Références : [S01](NOTION_REFERENCE.md#s01), [S04](NOTION_REFERENCE.md#s04), [
 - [ ] **FN-066** Numérotation continue, reprise et niveaux de listes imbriquées.
 - [ ] **FN-067** [PARTIEL] Citations, y compris plusieurs paragraphes.
 - [ ] **FN-068** [PARTIEL] Séparateur horizontal.
-- [ ] **FN-069** [PARTIEL] Encadrés : terminer icône personnalisable, couleur et conversions.
+- [ ] **FN-069** [PARTIEL] Encadrés : icône et couleurs personnalisables ; terminer conversions et variantes d’icônes.
 - [ ] **FN-070** [PARTIEL] Listes dépliantes : terminer sélection, édition du résumé et interactions imbriquées.
 - [x] **FN-071** Titres dépliants H1/H2/H3.
 - [ ] **FN-072** [PARTIEL] Blocs de code : compléter langues, coloration syntaxique, copie et retour à la ligne.
@@ -581,3 +581,9 @@ Preuves : [blocs dépliants](../src/features/editor/extensions/blocks.ts), [roun
 FN-056 progresse : paragraphe/titre vers dépliant, changement de niveau H1/H2/H3 ou liste dépliante, puis retour vers texte/titre. Le contenu riche est conservé et les blocs du corps sont réinsérés après le titre lors de la conversion inverse. Les destinations interdites par le schéma du parent sont refusées ; les conversions non prises en charge depuis un dépliant sont désactivées avec une explication. Les conversions groupées et les autres couples de blocs restent à compléter.
 
 Preuves : [transaction de conversion](../src/features/editor/lib/toggle-conversion.ts), [tests de conservation et annulation](../tests/unit/toggle-conversion.test.ts), [menu réel et réouverture Chrome](../tests/e2e/editor.spec.ts).
+
+### Personnalisation des encadrés — 30 octobre 2026
+
+FN-069 progresse : sélection d'emoji, icône textuelle personnalisée ou suppression, couleurs du texte et du fond via le menu de bloc. Les réglages sont conservés dans un commentaire de métadonnées après `[!NOTE]`. Le Markdown standard reste inchangé pour un encadré par défaut. Le contenu imbriqué et ses marques survivent à la sérialisation Markdown et HTML, sans inclure le texte des commandes ni dupliquer l'icône. Une modification d'icône ou de couleur ouvre une étape d'annulation distincte.
+
+Preuves : [extension dédiée](../src/features/editor/extensions/callout.ts), [round-trips et annulation](../tests/unit/markdown.test.ts), [personnalisation et réouverture Chrome](../tests/e2e/editor.spec.ts). Référence : [personnaliser les encadrés Notion](https://www.notion.com/help/customize-and-style-your-content). FN-069 reste partiel pour les conversions et les variantes d'icônes/images. La galerie proposée est limitée ; elle ne constitue pas le catalogue de Notion ni une validation visuelle 1:1.

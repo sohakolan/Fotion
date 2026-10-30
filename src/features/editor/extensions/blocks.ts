@@ -1,21 +1,5 @@
 import { Node } from '@tiptap/core';
 
-export const Callout = Node.create({
-  name: 'callout', group: 'block', content: 'block+', defining: true,
-  parseHTML: () => [{ tag: 'aside[data-callout]' }],
-  renderHTML: () => ['aside', { 'data-callout': '', class: 'callout-block' }, ['span', { contenteditable: 'false', class: 'callout-icon' }, '💡'], ['div', {}, 0]],
-  markdownTokenizer: {
-    name: 'callout', level: 'block', start: src => src.indexOf('> [!NOTE]'),
-    tokenize(src, _tokens, lexer) {
-      const match = src.match(/^> \[!NOTE\][^\n]*\n((?:>[^\n]*(?:\n|$))*)/);
-      if (!match) return;
-      return { type: 'callout', raw: match[0], tokens: lexer.blockTokens(match[1].replace(/^> ?/gm, '')) };
-    },
-  },
-  parseMarkdown: (token, helpers) => helpers.createNode('callout', undefined, helpers.parseChildren(token.tokens || [])),
-  renderMarkdown: (node, helpers) => `> [!NOTE]\n${helpers.renderChildren(node.content || [], '\n\n').split('\n').map(line => `> ${line}`).join('\n')}`,
-});
-
 export const ToggleSummary = Node.create({
   name: 'toggleSummary', content: 'inline*', defining: true,
   addAttributes: () => ({ level: { default: 0, rendered: false, parseHTML: element => {

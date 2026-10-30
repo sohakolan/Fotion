@@ -1,3 +1,4 @@
+import { closeHistory } from '@tiptap/pm/history';
 import { convertToggle, type ToggleTarget } from '../lib/toggle-conversion';
 import { createSignal, createMemo, createEffect, onMount, onCleanup, Show, For } from 'solid-js';
 import { Editor, type ChainedCommands } from '@tiptap/core';
@@ -37,7 +38,7 @@ export default function DocumentEditor(props: { content: string; onChange: (cont
   let element!: HTMLDivElement;
   let editor!: Editor;
   const [ready, setReady] = createSignal(false);
-  const [colorMenu, setColorMenu] = createSignal<{ x: number; y: number; from: number; to: number }>();
+  const [colorMenu, setColorMenu] = createSignal<{ x: number; y: number; from: number; to: number; blockPos?: number }>();
   let lastColor: { kind: 'color' | 'background'; value: ColorId } | undefined;
   const [transform, setTransform] = createSignal(false);
   const [blockQuery, setBlockQuery] = createSignal('');
@@ -75,6 +76,11 @@ export default function DocumentEditor(props: { content: string; onChange: (cont
   }
   function applyColor(kind: 'color' | 'background', value: ColorId) {
     const range = colorMenu();
+    if (range?.blockPos !== undefined) {
+      const node = editor.state.doc.nodeAt(range.blockPos);
+      if (node?.type.name === 'callout') editor.view.dispatch(closeHistory(editor.state.tr).setNodeMarkup(range.blockPos, undefined, { ...node.attrs, [kind]: value }));
+      setColorMenu(undefined); editor.commands.focus(); return;
+    }
     const chain = editor.chain().focus();
     if (range) chain.setTextSelection({ from: range.from, to: range.to });
     chain.setMark('textColor', { [kind]: value }).run();
@@ -291,7 +297,7 @@ export default function DocumentEditor(props: { content: string; onChange: (cont
     }}>
       <For each={['color', 'background'] as const}>{kind => <>
         <div class="menu-label">{kind === 'color' ? 'Couleur du texte' : 'Couleur de fond'}</div>
-        <For each={textColors}>{color => <button role="menuitemradio" aria-label={`${color.label}${kind === 'background' ? ' — fond' : ''}`} aria-checked={(revision(), editor.getAttributes('textColor')[kind] || 'default') === color.id} onClick={() => applyColor(kind, color.id)}>
+        <For each={textColors}>{color => <button role="menuitemradio" aria-label={`${color.label}${kind === 'background' ? ' — fond' : ''}`} aria-checked={(revision(), (position().blockPos !== undefined ? editor.state.doc.nodeAt(position().blockPos!)?.attrs[kind] : editor.getAttributes('textColor')[kind]) || 'default') === color.id} onClick={() => applyColor(kind, color.id)}>
           <span aria-hidden="true" class="color-swatch" data-fotion-color={kind === 'color' ? color.id : 'default'} data-fotion-background={kind === 'background' ? color.id : 'default'} style={{ color: kind === 'color' ? color.text : 'inherit', 'background-color': kind === 'background' ? color.background : 'transparent' }}>A</span>
           {color.label}{kind === 'background' && color.id !== 'default' ? ' — fond' : ''}
           <Show when={(revision(), editor.getAttributes('textColor')[kind] || 'default') === color.id}><Check size={14} class="menu-end"/></Show>
@@ -316,6 +322,11 @@ export default function DocumentEditor(props: { content: string; onChange: (cont
         <div class="transform-options"><For each={filteredBlocks().filter(b => !['Séparateur', 'Tableau', 'Table des matières', 'Page', 'Image'].includes(b.label))}>{item => <button role="menuitem" disabled={!canTransform(item.label)} title={!canTransform(item.label) ? 'Conversion indisponible pour préserver la structure du bloc.' : undefined} onClick={() => transformBlock(item.label, item.action)}><span class="transform-icon" aria-hidden="true">{item.icon}</span>{item.label}</button>}</For></div>
       </>}>
         <button role="menuitem" onClick={() => setTransform(true)}><Type size={16}/>Transformer en<ChevronRight size={14} class="menu-end"/></button>
+        <Show when={editor.state.doc.nodeAt(position().pos)?.type.name === 'callout'}><button role="menuitem" onClick={() => {
+          const { pos, x, y } = position(); closeBlockMenu();
+          setColorMenu({ from: pos + 1, to: pos + 1, blockPos: pos, x: Math.max(8, Math.min(x, window.innerWidth - 242)), y: Math.max(8, Math.min(y, window.innerHeight - 440)) });
+          requestAnimationFrame(() => document.querySelector<HTMLButtonElement>('.color-menu button')?.focus());
+        }}><span aria-hidden="true">A</span>Couleur</button></Show>
         <button role="menuitem" onClick={() => { const node = editor.state.doc.nodeAt(position().pos); if (node) editor.chain().focus().insertContentAt(position().pos + node.nodeSize, node.toJSON()).run(); closeBlockMenu(); }}><Copy size={16}/>Dupliquer</button>
         <div class="popover-divider"/>
         <button role="menuitem" onClick={() => moveBlock(-1)}><ArrowUp size={16}/>Déplacer vers le haut</button>

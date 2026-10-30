@@ -126,3 +126,9 @@ Le fichier conserve `<nav data-fotion-toc></nav>`. Fotion reconstruit la liste �
 Les commandes `/titre dépliant 1`, `/titre dépliant 2` et `/titre dépliant 3` insèrent un titre avec son contenu repliable. Cliquer sur la flèche replie le contenu ; cliquer sur le titre permet de l'éditer. Entrée depuis le titre ouvre le dépliant et place le curseur dans son contenu. Les titres dépliants apparaissent dans le sommaire, dont les liens rouvrent les sections masquées.
 
 Le Markdown utilise `<details>` avec `<summary><h1>…</h1></summary>` (ou `h2`/`h3`). Fotion conserve les marques du titre et les blocs imbriqués. Le rendu de Markdown à l'intérieur de HTML dépend du lecteur externe. L'état ouvert/fermé est local à l'affichage et n'est pas enregistré. Le menu du bloc « Transformer en » convertit un paragraphe ou un titre en liste/titre dépliant, change son niveau et le reconvertit en texte ou titre. Le corps d'un dépliant reconverti devient des blocs suivants, sans perte de contenu ; une seule annulation rétablit sa structure. Les conversions incompatibles sont désactivées.
+
+## Encadrés personnalisables
+
+Cliquer sur l'icône d'un encadré pour choisir un emoji, coller une icône textuelle courte ou supprimer l'icône. Le bouton reste accessible au clavier et réapparaît au survol lorsqu'il n'y a plus d'icône. Le menu de bloc **Couleur** applique la palette au texte ou au fond de tout l'encadré ; les marques de couleur explicites dans son contenu gardent leur priorité. Les couleurs s'adaptent au thème sombre.
+
+Un encadré standard conserve `> [!NOTE]`. Les réglages personnalisés sont enregistrés dans un commentaire `<!-- fotion:callout … -->` sur cette première ligne, avec un objet JSON encodé en URI. Les autres lecteurs peuvent conserver le contenu sans reproduire ces réglages visuels. Les images comme icônes et le catalogue complet d'icônes Notion restent à réaliser.
