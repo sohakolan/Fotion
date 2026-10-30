@@ -84,9 +84,12 @@ test('code fences, language, caption and wrapping survive Markdown and HTML roun
   }
 });
 
-test('plain code stays plain and known languages receive syntax decorations without changing saved text', () => {
+test('plain code stays plain and known languages receive syntax decorations without changing saved text', async () => {
   const editor = new Editor({ extensions: editorExtensions(), content: '```typescript\nconst answer = 42;\n```', contentType: 'markdown' });
+  const beforeHighlight = editor.getJSON();
+  for (let i = 0; i < 100 && !editor.view.dom.querySelector('.hljs-keyword'); i++) await new Promise(resolve => setTimeout(resolve, 10));
   assert.ok(editor.view.dom.querySelector('.hljs-keyword'));
+  assert.deepEqual(editor.getJSON(), beforeHighlight);
   assert.equal(editor.state.doc.textContent, 'const answer = 42;');
   editor.commands.setTextSelection(1);
   editor.commands.updateAttributes('codeBlock', { language: null });

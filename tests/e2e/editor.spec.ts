@@ -240,3 +240,46 @@ test('page title grows and shrinks when viewport, page width and font change wit
   await expect(title).toHaveValue('Court');
   await expect.poll(fits).toBe(true);
 });
+
+test('syntax grammars load only when needed and never change saved content', async ({ page }) => {
+  let release!: () => void;
+  const gate = new Promise<void>(resolve => { release = resolve; });
+  let loads = 0, saves = 0;
+  await page.route('**/syntax-highlighting*', async route => { loads++; await gate; await route.continue(); });
+  page.on('request', request => { if (request.method() === 'PUT') saves++; });
+  await createDocument(page, 'Texte simple');
+  expect(loads).toBe(0);
+  const editor = page.getByRole('textbox', { name: 'Contenu de la page' });
+  await editor.click(); await page.keyboard.press('ControlOrMeta+a'); await page.keyboard.type('/code');
+  await page.getByRole('option', { name: /Capturez un extrait de code/ }).click();
+  await expect(editor).toBeFocused(); await page.keyboard.type('const answer = 42;');
+  expect(loads).toBe(0);
+  await page.getByRole('button', { name: 'Langage du code', exact: true }).click();
+  await page.getByRole('textbox', { name: 'Rechercher un langage' }).fill('typescript');
+  await page.getByRole('button', { name: 'TypeScript', exact: true }).click();
+  await expect.poll(() => loads).toBe(1);
+  await expect(page.locator('.prose pre code')).toHaveText('const answer = 42;');
+  await expect(page.locator('.hljs-keyword')).toHaveCount(0);
+  await expect(page.locator('.save-status')).toHaveText('Enregistré');
+  const before = saves;
+  release();
+  await expect(page.locator('.hljs-keyword')).toHaveText('const');
+  expect(saves).toBe(before);
+  await expect(page.locator('.save-status')).toHaveText('Enregistré');
+  await page.reload();
+  await expect(page.locator('.hljs-keyword')).toHaveText('const');
+  await expect(page.locator('.prose pre code')).toHaveText('const answer = 42;');
+});
+
+test('failed syntax download keeps code editable and recoverable after reload', async ({ page }) => {
+  await page.route('**/syntax-highlighting*', route => route.abort());
+  await createDocument(page, '```typescript\nconst answer = 42;\n```');
+  await expect(page.locator('.code-block')).toHaveAttribute('data-highlight-status', 'error');
+  await page.locator('.prose pre code').click(); await page.keyboard.press('End'); await page.keyboard.type(' // conservé');
+  await expect(page.locator('.save-status')).toHaveText('Enregistré');
+  await expect(page.locator('.code-block')).toHaveAttribute('data-highlight-status', 'error');
+  await page.unroute('**/syntax-highlighting*');
+  await page.reload();
+  await expect(page.locator('.hljs-keyword')).toHaveText('const');
+  await expect(page.locator('.prose pre code')).toContainText('// conservé');
+});

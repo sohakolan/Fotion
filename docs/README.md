@@ -72,3 +72,5 @@ Les tolérances de différence visuelle et les budgets de performance seront des
 - [ ] Relire les notes de version Notion à chaque mise à jour majeure de la roadmap.
 - [ ] Ajouter les nouvelles fonctions avec de nouveaux identifiants et leur source.
 - [ ] Mettre à jour l’état et les preuves après chaque livraison.
+
+Mesures de poids et vérifications : [performance](PERFORMANCE.md).

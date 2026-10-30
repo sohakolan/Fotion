@@ -29,7 +29,7 @@ scripts/                       # Vérifications et environnement de test
 tests/                        # Voir répartition ci-dessous
 ```
 
-`tests/unit/` couvre les fonctions, extensions et opérations sur les fichiers. `tests/e2e/` couvre les interactions dans un navigateur réel. `scripts/check-ui.mjs` conserve le scénario d'intégration JSDOM sur le bundle compilé. Les fichiers de configuration des outils restent à la racine ; les documents et captures de référence vont dans `docs/`, les ressources statiques dans `public/`.
+`tests/unit/` couvre les fonctions, extensions et opérations sur les fichiers. `tests/e2e/` couvre les interactions dans un navigateur réel sur le build de production. `scripts/check-ui.mjs` conserve le scénario d'intégration JSDOM sur le bundle compilé. Les fichiers de configuration des outils restent à la racine ; les documents et captures de référence vont dans `docs/`, les ressources statiques dans `public/`.
 
 ## Sens des dépendances
 
@@ -64,3 +64,5 @@ npm run test:browser
 Sur une machine disposant de Chrome : `PLAYWRIGHT_CHANNEL=chrome npm run test:browser`. Le serveur navigateur utilise un coffre temporaire distinct, supprimé à l'arrêt normal. Les captures et traces restent dans `test-results/`, ignoré par Git. Le coffre personnel `vault/`, son historique et les fichiers `.env` ne doivent jamais être versionnés.
 
 Le contrôle d'architecture inspecte les imports et exports statiques ainsi que les imports dynamiques à chaîne littérale. Il ne prouve pas l'absence de cycles au sein d'une même fonctionnalité ni les dépendances transitives des paquets externes. Les imports construits à l'exécution sont à éviter et demandent une revue explicite.
+
+Les grammaires de coloration sont isolées dans `features/editor/lib/syntax-highlighting.ts`, chargé dynamiquement par `lazy-highlighting.ts`. Les types seuls peuvent référencer ce module sans provoquer son chargement. Voir [les mesures](PERFORMANCE.md).

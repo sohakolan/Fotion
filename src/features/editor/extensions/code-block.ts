@@ -1,13 +1,12 @@
-import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight';
-import { common, createLowlight } from 'lowlight';
+import BaseCodeBlock from '@tiptap/extension-code-block';
+import { lazyHighlighting } from '../lib/lazy-highlighting';
 
-// shortcut: common grammars load eagerly; use on-demand loading before expanding the language catalog.
-const lowlight = createLowlight(common);
-export const codeLanguages = ['plaintext', ...lowlight.listLanguages().filter(name => name !== 'plaintext').sort()];
+export const codeLanguages = ['plaintext', 'arduino', 'bash', 'c', 'cpp', 'csharp', 'css', 'diff', 'go', 'graphql', 'ini', 'java', 'javascript', 'json', 'kotlin', 'less', 'lua', 'makefile', 'markdown', 'objectivec', 'perl', 'php', 'php-template', 'python', 'python-repl', 'r', 'ruby', 'rust', 'scss', 'shell', 'sql', 'swift', 'typescript', 'vbnet', 'wasm', 'xml', 'yaml'];
 const labels: Record<string, string> = { plaintext: 'Texte brut', javascript: 'JavaScript', typescript: 'TypeScript', python: 'Python', xml: 'HTML / XML', bash: 'Shell', cpp: 'C++', csharp: 'C#', css: 'CSS', json: 'JSON', sql: 'SQL', yaml: 'YAML', markdown: 'Markdown' };
 const label = (language: string | null) => labels[language || 'plaintext'] || language || 'Texte brut';
 
-export const CodeBlock = CodeBlockLowlight.extend({
+export const CodeBlock = BaseCodeBlock.extend({
+  addProseMirrorPlugins() { return [...(this.parent?.() || []), lazyHighlighting()]; },
   addAttributes() {
     return { ...this.parent?.(), wrap: { default: false, parseHTML: el => el.getAttribute('data-code-wrap') === 'true', renderHTML: attrs => ({ 'data-code-wrap': String(!!attrs.wrap) }) }, caption: { default: '', parseHTML: el => el.getAttribute('data-code-caption') || '', renderHTML: attrs => ({ 'data-code-caption': attrs.caption }) } };
   },
@@ -123,13 +122,4 @@ export const CodeBlock = CodeBlockLowlight.extend({
       };
     };
   },
-}).configure({
-  lowlight: {
-    highlight: lowlight.highlight,
-    listLanguages: lowlight.listLanguages,
-    registered: lowlight.registered,
-    // Unknown and plain languages stay plain; avoid expensive auto-detection on every keystroke.
-    highlightAuto: (value: string) => ({ children: [{ type: 'text', value }] }),
-  },
-  defaultLanguage: null,
-});
+}).configure({ defaultLanguage: null });

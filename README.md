@@ -132,3 +132,7 @@ Le Markdown utilise `<details>` avec `<summary><h1>…</h1></summary>` (ou `h2`/
 Cliquer sur l'icône d'un encadré pour choisir un emoji, coller une icône textuelle courte ou supprimer l'icône. Le bouton reste accessible au clavier et réapparaît au survol lorsqu'il n'y a plus d'icône. Le menu de bloc **Couleur** applique la palette au texte ou au fond de tout l'encadré ; les marques de couleur explicites dans son contenu gardent leur priorité. Les couleurs s'adaptent au thème sombre.
 
 Un encadré standard conserve `> [!NOTE]`. Les réglages personnalisés sont enregistrés dans un commentaire `<!-- fotion:callout … -->` sur cette première ligne, avec un objet JSON encodé en URI. Les autres lecteurs peuvent conserver le contenu sans reproduire ces réglages visuels. Les images comme icônes et le catalogue complet d'icônes Notion restent à réaliser.
+
+## Poids du chargement
+
+La coloration syntaxique est chargée au premier bloc de code avec une langue explicite. Une page sans code ne télécharge pas ses grammaires. Le build mesuré passe de 815,54 à 632,51 ko de JavaScript initial minifié ; voir [mesures, tests et limites](docs/PERFORMANCE.md). Le mode texte et la sauvegarde restent disponibles si le téléchargement de la coloration échoue.

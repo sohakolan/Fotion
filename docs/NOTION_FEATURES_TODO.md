@@ -587,3 +587,7 @@ Preuves : [transaction de conversion](../src/features/editor/lib/toggle-conversi
 FN-069 progresse : sélection d'emoji, icône textuelle personnalisée ou suppression, couleurs du texte et du fond via le menu de bloc. Les réglages sont conservés dans un commentaire de métadonnées après `[!NOTE]`. Le Markdown standard reste inchangé pour un encadré par défaut. Le contenu imbriqué et ses marques survivent à la sérialisation Markdown et HTML, sans inclure le texte des commandes ni dupliquer l'icône. Une modification d'icône ou de couleur ouvre une étape d'annulation distincte.
 
 Preuves : [extension dédiée](../src/features/editor/extensions/callout.ts), [round-trips et annulation](../tests/unit/markdown.test.ts), [personnalisation et réouverture Chrome](../tests/e2e/editor.spec.ts). Référence : [personnaliser les encadrés Notion](https://www.notion.com/help/customize-and-style-your-content). FN-069 reste partiel pour les conversions et les variantes d'icônes/images. La galerie proposée est limitée ; elle ne constitue pas le catalogue de Notion ni une validation visuelle 1:1.
+
+### Coloration différée — 30 octobre 2026
+
+FN-072 : les 37 grammaires communes sont désormais téléchargées au premier besoin, sans transaction de document. Le texte reste éditable en cas d'échec du téléchargement. Les nœuds inchangés réutilisent leurs plages colorées. Voir [mesures et preuves](PERFORMANCE.md). Le catalogue élargi, le chargement par langage et les budgets de latence sur gros documents restent ouverts.

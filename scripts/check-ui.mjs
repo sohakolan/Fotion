@@ -1,3 +1,4 @@
+import { rolldown } from 'rolldown';
 import { JSDOM, VirtualConsole } from 'jsdom';
 import { readFileSync } from 'node:fs';
 import assert from 'node:assert/strict';
@@ -33,7 +34,11 @@ w.HTMLElement.prototype.scrollIntoView = function() {};
 const rect = (top, left = 400, width = 650, height = 30) => ({ top, left, bottom: top + height, right: left + width, width, height, x: left, y: top, toJSON() {} });
 w.Range.prototype.getBoundingClientRect = () => rect(200);
 w.Range.prototype.getClientRects = () => [rect(200)];
-w.eval(readFileSync(`dist${script}`, 'utf8'));
+// JSDOM eval cannot load ES modules; inline the production chunks for this DOM scenario.
+const bundle = await rolldown({ input: `dist${script}`, transform: { define: { 'import.meta': JSON.stringify({ url: `http://localhost:5173${script}` }) } } });
+const { output } = await bundle.generate({ format: 'iife', name: 'FotionSmoke', codeSplitting: false });
+await bundle.close();
+w.eval(output.find(item => item.type === 'chunk').code);
 const settle = () => new Promise(resolve => setTimeout(resolve, 30));
 await settle();
 assert.equal(w.document.querySelector('.page-title').value, page.title);
