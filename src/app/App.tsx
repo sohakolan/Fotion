@@ -1,7 +1,7 @@
 import { createSignal, createMemo, createEffect, onMount, onCleanup, For, Show } from 'solid-js';
 import { Search, House, ChevronDown, ChevronRight, ChevronsLeft, PanelLeft, Plus, Settings, Trash2, Star, MoreHorizontal, LockKeyhole, Check, ArrowUpRight, X, Download, Copy, Undo2, Redo2, FolderOpen, Upload, Smile, ImagePlus, RefreshCw, ArrowLeft, ArrowRight, CircleHelp, CheckCheck, SquarePen, Pencil, FileText, CornerUpRight, GripVertical } from 'lucide-solid';
 import type { Editor } from '@tiptap/core';
-import { PageIndex } from '../features/pages';
+import { PageIndex, PageTitle } from '../features/pages';
 import { VersionHistory } from '../features/pages';
 import { DocumentEditor } from '../features/editor';
 import type { Page, PageEdit } from '../../shared/page';
@@ -121,7 +121,6 @@ export default function App() {
     }
     document.querySelector('.main-scroll')?.scrollTo(0, 0);
     if (window.innerWidth < 760) setSidebar(false);
-    requestAnimationFrame(resizeTitle);
   }
   async function back(direction: number) {
     const index = historyIndex() + direction;
@@ -160,14 +159,10 @@ export default function App() {
       const first = restored.find(p => p.id === preferred && !p.trashed) || restored.find(p => !p.trashed);
       if (first) { setActiveId(first.id); setHistory([first.id]); setHistoryIndex(0); }
       if (dirty.size) { setStatus('pending'); toast('Un brouillon non enregistré a été récupéré.'); void flush(); }
-      requestAnimationFrame(resizeTitle);
     } catch (e) { setError((e as Error).message); }
     finally { setLoading(false); }
   }
-  function resizeTitle() {
-    if (titleInput) { titleInput.style.height = 'auto'; titleInput.style.height = `${titleInput.scrollHeight}px`; }
-    document.title = `${active()?.title || 'Sans titre'} — Fotion`;
-  }
+  createEffect(() => { document.title = `${active()?.title || 'Sans titre'} — Fotion`; });
   async function openVersions() {
     if (!(await flush())) return;
     setMenu(null); setModal('versions');
@@ -183,7 +178,7 @@ export default function App() {
       const saved = await api<Page>(`/api/pages/${encodeURIComponent(id)}/restore`, 'POST', { snapshotVersion, version: current.version });
       setPages(list => list.map(page => page.id === id ? saved : page));
       setEditorEpoch(n => n + 1); setModal(null); setStatus('saved'); setError('');
-      requestAnimationFrame(resizeTitle); toast('Version restaurée. La version remplacée reste dans l’historique.');
+      toast('Version restaurée. La version remplacée reste dans l’historique.');
     } finally { setRestoringHistory(false); }
   }
   function exportPage() {
@@ -337,7 +332,7 @@ export default function App() {
               <Show when={active()?.icon}><div class="page-icon-wrap"><button class="page-icon" aria-label="Changer l’icône de la page" onClick={e => openAppearance('icon', e.currentTarget)}>{active()?.icon}</button></div></Show>
               <div class="page-customize"><button onClick={e => openAppearance('icon', e.currentTarget)}><Smile size={14}/>{active()?.icon ? 'Changer l’icône' : 'Ajouter une icône'}</button><button onClick={e => openAppearance('cover', e.currentTarget)}><ImagePlus size={14}/>{active()?.cover ? 'Changer la couverture' : 'Ajouter une couverture'}</button></div>
               <Show when={incoming().length}><div class="backlinks"><button class="backlinks-toggle" aria-expanded={backlinksOpen()} onClick={() => setBacklinksOpen(!backlinksOpen())}><ChevronRight size={13} classList={{ rotated: backlinksOpen() }}/>{incoming().length} lien{incoming().length > 1 ? 's' : ''} entrant{incoming().length > 1 ? 's' : ''}</button><Show when={backlinksOpen()}><div class="backlinks-list"><For each={incoming()}>{page => <button onClick={() => void navigate(page.id)}><span>{page.icon || '📄'}</span>{page.title || 'Sans titre'}</button>}</For></div></Show></div></Show>
-              <textarea ref={titleInput} class="page-title" aria-label="Titre de la page" rows={1} placeholder="Sans titre" value={active()?.title} onInput={e => { update({ title: e.currentTarget.value.replace(/\n/g, '') }); resizeTitle(); }} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); editor()?.commands.focus('start'); } }}/>
+              <PageTitle inputRef={element => { titleInput = element; }} value={active()?.title || ''} font={font()} onChange={title => update({ title })} onEnter={() => editor()?.commands.focus('start')}/>
               <Show when={editorKey().id ? editorKey() : undefined} keyed>{key => <DocumentEditor content={pages().find(p => p.id === key.id)?.content || ''} onChange={content => update({ content }, key.id)} onReady={setEditor} onCreatePage={() => void create(key.id)} pages={visible()} onOpenPage={id => void navigate(id)}/>}</Show>
               <Show when={children(activeId()).length || activeId() === 'bienvenue.md'}><div class="child-pages"><For each={activeId() === 'bienvenue.md' ? visible().filter(p => ['projets.md', 'notes.md', 'lectures.md'].includes(p.id)) : children(activeId())}>{page => <button onClick={() => void navigate(page.id)}><span>{page.icon}</span><span class="child-page-title">{page.title}</span><ArrowUpRight size={15}/></button>}</For></div></Show>
               <button class="new-subpage" onClick={() => void create(activeId())}><Plus size={15}/>Ajouter une sous-page</button>

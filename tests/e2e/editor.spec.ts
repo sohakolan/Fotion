@@ -202,3 +202,41 @@ test('callout icon and block colors survive undo and reloading', async ({ page }
   await expect(callout).toHaveAttribute('data-callout-icon', '');
 
 });
+
+test('page title grows and shrinks when viewport, page width and font change without reloading', async ({ page }, info) => {
+  const titleText = 'Un titre suffisamment long pour rester entièrement lisible quand la fenêtre devient étroite et que la police ou la largeur de page change';
+  await createDocument(page, 'Le contenu reste sous le titre.', titleText);
+  const title = page.getByLabel('Titre de la page', { exact: true });
+  const fits = () => title.evaluate(element => element.scrollHeight <= element.clientHeight + 1);
+  await expect.poll(fits).toBe(true);
+  const desktopHeight = (await title.boundingBox())!.height;
+  await page.setViewportSize({ width: 320, height: 740 });
+  await page.getByRole('button', { name: 'Fermer la barre latérale', exact: true }).click();
+  await expect.poll(fits).toBe(true);
+  await expect.poll(async () => (await title.boundingBox())!.height).toBeGreaterThan(desktopHeight);
+  await expect(title).toHaveValue(titleText);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(320);
+  await page.screenshot({ path: info.outputPath('full-mobile-title.png') });
+  await page.setViewportSize({ width: 1200, height: 960 });
+  await page.getByRole('button', { name: 'Ouvrir la barre latérale', exact: true }).click();
+  await page.getByRole('button', { name: 'Options de la page', exact: true }).click();
+  await page.getByRole('button', { name: 'Aa Mono', exact: true }).click();
+  await page.getByRole('button', { name: 'Pleine largeur', exact: true }).click();
+  await expect.poll(fits).toBe(true);
+  await page.keyboard.press('Escape');
+  const separator = page.getByRole('separator', { name: 'Largeur de la barre latérale' });
+  await separator.focus();
+  for (let i = 0; i < 18; i++) await page.keyboard.press('ArrowRight');
+  await expect.poll(fits).toBe(true);
+  await title.fill('Court\n');
+  await expect(title).toHaveValue('Court');
+  await expect.poll(fits).toBe(true);
+  await expect.poll(async () => (await title.boundingBox())!.height).toBeLessThan(desktopHeight);
+  await expect(page).toHaveTitle('Court — Fotion');
+  await page.keyboard.press('Enter');
+  await expect(page.getByRole('textbox', { name: 'Contenu de la page' })).toBeFocused();
+  await expect(page.locator('.save-status')).toHaveText('Enregistré');
+  await page.reload();
+  await expect(title).toHaveValue('Court');
+  await expect.poll(fits).toBe(true);
+});

@@ -464,3 +464,9 @@ La base actuelle est dans [App.tsx](../src/app/App.tsx), [editor.tsx](../src/fea
 [Scénarios Playwright](../tests/e2e/editor.spec.ts) exécutés dans Chrome avec un coffre temporaire : déplacement réel au pointeur, annulation/rétablissement, sauvegarde puis rechargement ; sélection totale et palette de couleurs aux largeurs 1440 et 320 px ; pages bureau en thèmes clair/sombre et mobile à 390 px sans débordement horizontal. Les trois scénarios passent. La sélection totale de ProseMirror est désormais prise en charge par la barre de formatage.
 
 Les captures sont générées dans `test-results/`. Cette recette valide ces parcours et contraintes de géométrie ; elle ne constitue pas une comparaison pixel à pixel avec Notion et ne couvre pas Safari, Firefox ni le tactile réel. Les cases de parité visuelle restent ouvertes.
+
+## Hauteur du titre responsive — 30 octobre 2026
+
+UI-085/UI-086 : correction du titre tronqué après réduction de la fenêtre sans rechargement. Le [composant PageTitle](../src/features/pages/components/PageTitle.tsx) observe la largeur réelle du champ et recalcule sa hauteur après modification du texte, de la police ou du viewport. Les changements de largeur de la barre latérale et du mode pleine largeur sont ainsi pris en compte. Les changements de hauteur ne relancent pas l'observation en boucle.
+
+[Recette Chrome](../tests/e2e/editor.spec.ts) : long titre à 320 px, retour au bureau, police monospace, pleine largeur, barre latérale redimensionnée au clavier, raccourcissement du titre, Entrée vers l'éditeur et sauvegarde/rechargement. Le titre du navigateur suit aussi le renommage. Le rendu a été inspecté sur la capture mobile. La métrique typographique exacte de Notion, le maintien du scroll dans toutes les situations et le clavier virtuel sur appareil physique restent à vérifier.

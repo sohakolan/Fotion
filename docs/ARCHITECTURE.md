@@ -16,7 +16,7 @@ src/
       lib/                     # Transactions de déplacement
     pages/
       index.ts                 # API publique des pages
-      components/              # Historique des versions
+      components/              # Titre adaptatif et historique des versions
       lib/                     # Recherche, backlinks, déplacements des pages
 shared/
   page.ts                      # Contrats de données navigateur / serveur
