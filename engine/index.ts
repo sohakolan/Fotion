@@ -3,6 +3,7 @@ export { pageHref, pageIdFromHref, normalizeSearch, countWords } from './pages/p
 export { PageIndex, recencyGroup, type RecencyGroup } from './pages/page-index';
 export { byOrder, planPageMove, type PagePlacement } from './pages/page-move';
 export { blockAt, moveBlockTransaction, isListItem, type Block } from './operations/block-move';
+export { BlockSelection, blockRange, extendBlockSelection, duplicateBlocks, moveBlocks } from './operations/block-selection';
 export { convertToggle, type ToggleTarget } from './operations/toggle-conversion';
 export { slashCommands, searchSlashCommands, slashQuery, turnTargets, type SlashCommand, type SlashGroup } from './operations/slash-commands';
 export { documentExtensions } from './document/extensions';

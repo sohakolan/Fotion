@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createRequire } from 'node:module';
 import { Editor } from '@tiptap/core';
-import { documentExtensions, convertToggle, countWords, slashCommands, searchSlashCommands, slashQuery, PageIndex, recencyGroup } from '../../engine';
+import { documentExtensions, convertToggle, countWords, slashCommands, searchSlashCommands, slashQuery, PageIndex, recencyGroup, BlockSelection, blockRange } from '../../engine';
 const { JSDOM } = createRequire(import.meta.url)('jsdom');
 const dom = new JSDOM('<!doctype html><body></body>');
 Object.assign(globalThis, { window: dom.window, document: dom.window.document, DOMParser: dom.window.DOMParser, Node: dom.window.Node, HTMLElement: dom.window.HTMLElement, getComputedStyle: dom.window.getComputedStyle });
@@ -149,9 +149,9 @@ test('Notion block keys: turn into, move, Escape block selection, Enter back to 
   assert.deepEqual(editor.state.doc.content.content.map(node => node.textContent), ['Deux', 'Un', 'Trois']);
   editor.commands.setTextSelection(editor.state.doc.content.size - 2);
   assert.ok(press(editor, 'Escape'));
-  assert.equal(editor.state.selection.constructor.name, 'NodeSelection');
+  assert.equal(editor.state.selection.constructor.name, 'BlockSelection');
   assert.ok(press(editor, 'ArrowUp'));
-  assert.equal((editor.state.selection as unknown as { node: { textContent: string } }).node.textContent, 'Un');
+  assert.equal(editor.state.selection.content().content.firstChild?.textContent, 'Un');
   assert.ok(press(editor, 'Enter'));
   assert.equal(editor.state.selection.$from.parent.textContent, 'Un');
   editor.destroy();
@@ -165,4 +165,24 @@ test('slash catalogue hides actions and colours until the user types', () => {
   assert.equal(ids('turn h1')[0], 'turn-heading1');
   assert.equal(ids('#')[0], 'heading1');
   assert.equal(ids('num')[0], 'orderedList');
+});
+
+test('multi-block selection extends, duplicates, moves, deletes and spans nested blocks', () => {
+  const editor = new Editor({ extensions: documentExtensions(), content: 'A\n\nB\n\nC\n\nD\n\n- un\n- deux', contentType: 'markdown' });
+  const texts = () => editor.state.doc.content.content.map(node => node.textContent);
+  editor.commands.setTextSelection(4);
+  press(editor, 'Escape'); press(editor, 'ArrowDown', { shift: true });
+  assert.ok(editor.state.selection instanceof BlockSelection);
+  assert.deepEqual((editor.state.selection as BlockSelection).blocks().map(pos => editor.state.doc.nodeAt(pos)?.textContent), ['B', 'C']);
+  press(editor, 'd', { mod: true });
+  assert.deepEqual(texts().slice(0, 6), ['A', 'B', 'C', 'B', 'C', 'D']);
+  press(editor, 'ArrowUp', { mod: true, shift: true });
+  assert.deepEqual(texts().slice(0, 6), ['A', 'B', 'B', 'C', 'C', 'D']);
+  press(editor, 'Backspace');
+  assert.deepEqual(texts().slice(0, 4), ['A', 'B', 'C', 'D']);
+  const range = blockRange(editor.state.doc, 2, editor.state.doc.content.size - 3);
+  assert.equal(range?.blocks().length, 5, 'A range from a paragraph into a list item selects whole top-level blocks');
+  editor.view.dispatch(editor.state.tr.setSelection(range!));
+  assert.match(editor.state.selection.content().content.lastChild?.type.name || '', /bulletList/);
+  editor.destroy();
 });

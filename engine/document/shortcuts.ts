@@ -1,6 +1,8 @@
 import { Extension, InputRule, markInputRule, wrappingInputRule, type Editor } from '@tiptap/core';
-import { NodeSelection, TextSelection } from '@tiptap/pm/state';
+import { NodeSelection, Plugin, TextSelection } from '@tiptap/pm/state';
+import { Decoration, DecorationSet } from '@tiptap/pm/view';
 import { blockAt, moveBlockTransaction } from '../operations/block-move';
+import { BlockSelection, extendBlockSelection, duplicateBlocks, moveBlocks } from '../operations/block-selection';
 import { convertToggle } from '../operations/toggle-conversion';
 
 /**
@@ -9,7 +11,7 @@ import { convertToggle } from '../operations/toggle-conversion';
  */
 export function caretPosition(editor: Editor) {
   const selection = editor.view.dom.ownerDocument.getSelection();
-  if (editor.state.selection instanceof NodeSelection || !selection?.anchorNode || !editor.view.dom.contains(selection.anchorNode)) return editor.state.selection.from;
+  if (editor.state.selection instanceof NodeSelection || editor.state.selection instanceof BlockSelection || !selection?.anchorNode || !editor.view.dom.contains(selection.anchorNode)) return editor.state.selection.from;
   try { return editor.view.posAtDOM(selection.anchorNode, selection.anchorOffset); } catch { return editor.state.selection.from; }
 }
 
@@ -17,13 +19,15 @@ export function caretPosition(editor: Editor) {
 export function selectCurrentBlock(editor: Editor) {
   const block = blockAt(editor.state.doc, caretPosition(editor));
   if (!block) return false;
-  editor.view.dispatch(editor.state.tr.setSelection(NodeSelection.create(editor.state.doc, block.pos)));
-  return true;
+  const selection = BlockSelection.create(editor.state.doc, block.pos, block.pos);
+  if (selection) editor.view.dispatch(editor.state.tr.setSelection(selection));
+  return !!selection;
 }
 
 /** Moves the block around the cursor (or the selected block) up or down, as one undo step. */
 export function moveCurrentBlock(editor: Editor, direction: -1 | 1) {
   const { state } = editor;
+  if (state.selection instanceof BlockSelection) { const tr = moveBlocks(state, direction); if (tr) editor.view.dispatch(tr); return true; }
   let block = blockAt(state.doc, caretPosition(editor));
   if (!block) return false;
   let resolved = state.doc.resolve(block.pos), sibling = resolved.index() + direction;
@@ -90,6 +94,11 @@ export const NotionShortcuts = Extension.create({
       ...(strike ? [markInputRule({ find: /(?:^|\s)(~(?!~)((?:[^~\s][^~]*?)?[^~\s])~)$/, type: strike })] : []),
     ];
   },
+  addProseMirrorPlugins() {
+    return [new Plugin({ props: { decorations: state => state.selection instanceof BlockSelection
+      ? DecorationSet.create(state.doc, state.selection.blocks().map(pos => Decoration.node(pos, pos + state.doc.nodeAt(pos)!.nodeSize, { class: 'block-selected' })))
+      : null } })];
+  },
   addKeyboardShortcuts() {
     const editor = this.editor;
     const turn: Record<string, () => boolean> = {
@@ -105,14 +114,19 @@ export const NotionShortcuts = Extension.create({
     };
     // macOS uses Cmd+Option+digit, Windows and Linux Ctrl+Shift+digit.
     const turnInto = Object.fromEntries(Object.entries(turn).flatMap(([digit, run]) => [[`Mod-Alt-${digit}`, run], [`Ctrl-Shift-${digit}`, run]]));
-    const selected = () => editor.state.selection instanceof NodeSelection ? editor.state.selection : null;
-    const stepSelection = (direction: -1 | 1) => {
+    const selected = () => editor.state.selection instanceof BlockSelection ? editor.state.selection : null;
+    const select = (selection: BlockSelection | null) => { if (selection) editor.view.dispatch(editor.state.tr.setSelection(selection).scrollIntoView()); return !!selection; };
+    const step = (direction: -1 | 1) => {
       const selection = selected(); if (!selection) return false;
-      const $pos = editor.state.doc.resolve(selection.from), index = $pos.index() + direction;
-      if (index < 0 || index >= $pos.parent.childCount) return true;
-      const pos = direction === -1 ? selection.from - $pos.parent.child(index).nodeSize : selection.to;
-      editor.view.dispatch(editor.state.tr.setSelection(NodeSelection.create(editor.state.doc, pos)));
-      return true;
+      const $head = editor.state.doc.resolve(selection.headBlock), index = $head.index() + direction;
+      if (index < 0 || index >= $head.parent.childCount) return true;
+      const pos = direction === -1 ? selection.headBlock - $head.parent.child(index).nodeSize : selection.headBlock + editor.state.doc.nodeAt(selection.headBlock)!.nodeSize;
+      return select(BlockSelection.create(editor.state.doc, pos, pos));
+    };
+    const extend = (direction: -1 | 1) => {
+      // Shift+↑/↓ from the caret first selects the current block, like Notion at a block edge.
+      if (!selected()) return false;
+      return select(extendBlockSelection(editor.state, direction));
     };
     return {
       ...turnInto,
@@ -128,12 +142,16 @@ export const NotionShortcuts = Extension.create({
         return true;
       },
       Enter: () => {
-        const selection = selected(); if (!selection || !selection.node.isBlock || selection.node.isAtom) return false;
-        editor.view.dispatch(editor.state.tr.setSelection(TextSelection.near(editor.state.doc.resolve(selection.to - 1), -1)));
+        const selection = selected(); if (!selection) return false;
+        const head = editor.state.doc.nodeAt(selection.headBlock)!;
+        editor.view.dispatch(editor.state.tr.setSelection(TextSelection.near(editor.state.doc.resolve(selection.headBlock + head.nodeSize - 1), -1)));
         return true;
       },
-      ArrowUp: () => stepSelection(-1),
-      ArrowDown: () => stepSelection(1),
+      'Mod-d': () => { const tr = duplicateBlocks(editor.state); if (tr) editor.view.dispatch(tr); return !!tr; },
+      ArrowUp: () => step(-1),
+      ArrowDown: () => step(1),
+      'Shift-ArrowUp': () => extend(-1),
+      'Shift-ArrowDown': () => extend(1),
     };
   },
 });

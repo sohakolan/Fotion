@@ -536,7 +536,7 @@ test('Notion interactions: slash actions and colours, Escape block selection, Cm
   await lines.last().click();
   await expect.poll(() => page.evaluate(() => window.getSelection()?.anchorNode?.textContent)).toBe('Second');
   await page.keyboard.press('Escape');
-  await expect(page.locator('.prose .ProseMirror-selectednode')).toHaveText('Second');
+  await expect(page.locator('.prose .block-selected')).toHaveText('Second');
   await page.keyboard.press('Backspace');
   await expect(page.locator('.prose', { hasText: 'Second' })).toHaveCount(0);
   await page.locator('.prose > h1').click();
@@ -550,4 +550,34 @@ test('Notion interactions: slash actions and colours, Escape block selection, Cm
   await picker.getByRole('button', { name: 'Icône 🚀', exact: true }).click();
   await expect(page.locator('.prose > p').first()).toContainText('🚀');
   await page.screenshot({ path: test.info().outputPath('interactions.png') });
+});
+
+test('block selection: Escape, Shift+arrows, Shift+click, marquee, delete and duplicate several blocks', async ({ page }) => {
+  await createDocument(page, 'Un\n\nDeux\n\nTrois\n\nQuatre\n\nCinq');
+  const lines = page.locator('.prose > p');
+  await lines.nth(1).click();
+  await expect.poll(() => page.evaluate(() => window.getSelection()?.anchorNode?.textContent)).toBe('Deux');
+  await page.keyboard.press('Escape'); await page.keyboard.press('Shift+ArrowDown');
+  await expect(page.locator('.prose .block-selected')).toHaveText(['Deux', 'Trois']);
+  await page.keyboard.press('ControlOrMeta+d');
+  await expect(lines).toHaveText(['Un', 'Deux', 'Trois', 'Deux', 'Trois', 'Quatre', 'Cinq']);
+  await page.keyboard.press('Backspace');
+  await expect(lines).toHaveText(['Un', 'Deux', 'Trois', 'Quatre', 'Cinq']);
+  await lines.nth(0).click();
+  await expect.poll(() => page.evaluate(() => window.getSelection()?.anchorNode?.textContent)).toBe('Un');
+  await page.keyboard.press('Escape');
+  await lines.nth(2).click({ modifiers: ['Shift'] });
+  await expect(page.locator('.prose .block-selected')).toHaveText(['Un', 'Deux', 'Trois']);
+  await page.keyboard.press('Escape');
+  const editor = (await page.locator('.prose').boundingBox())!;
+  const from = (await lines.nth(3).boundingBox())!, to = (await lines.nth(4).boundingBox())!;
+  await page.mouse.move(editor.x + editor.width + 40, from.y + 4);
+  await page.mouse.down();
+  await page.mouse.move(editor.x + editor.width - 20, to.y + to.height - 4, { steps: 8 });
+  await expect(page.locator('.selection-rectangle')).toBeVisible();
+  await page.screenshot({ path: test.info().outputPath('marquee.png') });
+  await page.mouse.up();
+  await expect(page.locator('.prose .block-selected')).toHaveText(['Quatre', 'Cinq']);
+  await page.keyboard.press('Backspace');
+  await expect(lines).toHaveText(['Un', 'Deux', 'Trois']);
 });

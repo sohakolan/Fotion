@@ -10,8 +10,9 @@ import { textColors, colorId, type ColorId } from '../../../../engine';
 import { editorExtensions } from '../extensions/editor-extensions';
 import { TextSelection, AllSelection } from '@tiptap/pm/state';
 import BlockControls from './BlockControls';
+import SelectionRectangle from './SelectionRectangle';
 import { Menu, MenuItem, MenuDivider, MenuSearch, EmojiPicker, modKey } from '../../../kit';
-import { blockAt, moveBlockTransaction, isListItem, caretPosition, type Block } from '../../../../engine';
+import { blockAt, moveBlockTransaction, isListItem, caretPosition, BlockSelection, blockRange, type Block } from '../../../../engine';
 import { Bold, Italic, Underline, Strikethrough, Code, Link, ChevronDown, ChevronRight, Trash2, Copy, Type, Search, Check, Plus, ImagePlus, X, Repeat2, PaintRoller, AtSign, Smile, Heading1, Heading2, Heading3, List, ListOrdered, SquareCheckBig, ListCollapse, FileText, MessageSquareText, Quote, Table, Minus, Image as ImageIcon, CodeXml, TableOfContents, Columns2, Columns3, Columns4 } from 'lucide-solid';
 
 
@@ -265,7 +266,15 @@ export default function DocumentEditor(props: { content: string; onChange: (cont
       contentType: 'markdown',
       editorProps: {
         attributes: { class: 'prose', 'aria-label': 'Contenu de la page', role: 'textbox', 'aria-multiline': 'true', spellcheck: 'true' },
-        handleDOMEvents: { click: (_view, event) => {
+        handleDOMEvents: { mousedown: (view, event) => {
+          if (!event.shiftKey || event.button !== 0) return false;
+          const target = view.posAtCoords({ left: event.clientX, top: event.clientY });
+          const current = editor.state.selection;
+          if (!target || !(current instanceof BlockSelection)) return false;
+          const range = blockRange(editor.state.doc, current.anchorBlock + 1, target.pos);
+          if (range) { view.dispatch(editor.state.tr.setSelection(range)); event.preventDefault(); return true; }
+          return false;
+        }, click: (_view, event) => {
           const link = (event.target as HTMLElement).closest('a[href]');
           const id = pageIdFromHref(link?.getAttribute('href') || '');
           if (!id) return false;
@@ -295,7 +304,7 @@ export default function DocumentEditor(props: { content: string; onChange: (cont
             if (block) { const coords = editor.view.coordsAtPos(editor.state.selection.from); openBlockMenu(block, coords.left, coords.bottom + 8); }
             event.preventDefault(); return true;
           }
-          if ((event.metaKey || event.ctrlKey) && !event.shiftKey && !event.altKey && event.key.toLowerCase() === 'd') {
+          if ((event.metaKey || event.ctrlKey) && !event.shiftKey && !event.altKey && event.key.toLowerCase() === 'd' && !(editor.state.selection instanceof BlockSelection)) {
             const block = blockAt(editor.state.doc, caretPosition(editor));
             if (block) duplicateBlock(block.pos);
             event.preventDefault(); return true;
@@ -356,6 +365,7 @@ export default function DocumentEditor(props: { content: string; onChange: (cont
   }
   return <>
     <div ref={element} class="editor" />
+    <Show when={ready() && props.editable}><SelectionRectangle editor={editor}/></Show>
     <Show when={ready() && props.editable}><BlockControls editor={editor} onMenu={openBlockMenu} onAdd={insertBelow}/></Show>
     <Show when={selection()}>{position => <div class="bubble-menu" role="toolbar" aria-label="Mise en forme" style={{ left: `${position().x}px`, top: `${position().y}px` }} onMouseDown={e => e.preventDefault()}>
       <button title="Transformer en titre" onClick={() => { const block = blockAt(editor.state.doc, caretPosition(editor)); if (block) { openBlockMenu(block, position().x, position().y + 38); setTransform(true); } }}>{editor?.isActive('heading') ? `Titre ${editor.getAttributes('heading').level}` : 'Texte'} <ChevronDown size={12}/></button><span class="menu-separator"/>
