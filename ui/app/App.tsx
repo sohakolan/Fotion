@@ -160,6 +160,15 @@ export default function App() {
     } catch (e) { setError((e as Error).message); }
     finally { setBusy(false); }
   }
+  /** Creates a sub-page of the current page without leaving it (Notion's « Nouvelle sous-page » in the @-menu). */
+  async function createSubpage(title: string) {
+    const parent = activeId();
+    try {
+      const page = await api<Page>('/api/pages', 'POST', { ...blank, title, parent, order: Math.max(0, ...visible().filter(p => p.parent === parent).map(p => p.order ?? 0)) + 1024 });
+      setPages(list => [...list, page]); setExpanded(s => new Set([...s, parent]));
+      return page;
+    } catch (e) { setError((e as Error).message); return undefined; }
+  }
   async function load() {
     try {
       const fetched = await api<Page[]>('/api/pages');
@@ -373,7 +382,7 @@ export default function App() {
               <Show when={!locked()}><div class="page-customize"><button onClick={e => openAppearance('icon', e.currentTarget)}><Smile size={14}/>{active()?.icon ? 'Changer l’icône' : 'Ajouter une icône'}</button><button onClick={e => openAppearance('cover', e.currentTarget)}><ImagePlus size={14}/>{active()?.cover ? 'Changer la couverture' : 'Ajouter une couverture'}</button></div></Show>
               <PageTitle inputRef={element => { titleInput = element; }} readOnly={locked()} value={active()?.title || ''} font={font()} onChange={title => update({ title })} onEnter={() => editor()?.commands.focus('start')}/>
               <Show when={incoming().length && backlinksMode() !== 'off'}><div class="backlinks"><Show when={backlinksMode() === 'popover'}><button class="backlinks-toggle" aria-expanded={backlinksOpen()} onClick={() => setBacklinksOpen(!backlinksOpen())}><ArrowDownLeft size={14}/>{incoming().length} lien{incoming().length > 1 ? 's' : ''} entrant{incoming().length > 1 ? 's' : ''}</button></Show><Show when={backlinksMode() === 'expanded' || backlinksOpen()}><div class="backlinks-list" classList={{ "kit-menu": backlinksMode() === 'popover', "backlinks-popover": backlinksMode() === 'popover' }} role="list" aria-label="Lié à cette page"><div class="backlinks-label">Lié à cette page</div><For each={incoming()}>{page => <button role="listitem" onClick={() => void navigate(page.id)}><ArrowDownLeft size={14} class="backlink-arrow"/><span>{page.icon || '📄'}</span><span class="backlink-title">{page.title || 'Sans titre'}</span><Show when={parentPath(page)}><span class="backlink-parent">{parentPath(page)}</span></Show></button>}</For></div></Show></div></Show>
-              <Show when={editorKey().id ? editorKey() : undefined} keyed>{key => <DocumentEditor content={pages().find(p => p.id === key.id)?.content || ''} onChange={content => update({ content }, key.id)} onReady={setEditor} onCreatePage={() => void create(key.id)} pages={visible()} onOpenPage={id => void navigate(id)} editable={!locked()}/>}</Show>
+              <Show when={editorKey().id ? editorKey() : undefined} keyed>{key => <DocumentEditor content={pages().find(p => p.id === key.id)?.content || ''} onChange={content => update({ content }, key.id)} onReady={setEditor} onCreatePage={() => void create(key.id)} onCreateSubpage={createSubpage} pages={visible()} onOpenPage={id => void navigate(id)} editable={!locked()}/>}</Show>
               <Show when={children(activeId()).length || activeId() === 'bienvenue.md'}><div class="child-pages"><For each={activeId() === 'bienvenue.md' ? visible().filter(p => ['projets.md', 'notes.md', 'lectures.md'].includes(p.id)) : children(activeId())}>{page => <button onClick={() => void navigate(page.id)}><span>{page.icon}</span><span class="child-page-title">{page.title}</span><ArrowUpRight size={15}/></button>}</For></div></Show>
               <button class="new-subpage" onClick={() => void create(activeId())}><Plus size={15}/>Ajouter une sous-page</button>
 

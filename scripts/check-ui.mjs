@@ -184,7 +184,9 @@ w.getSelection().removeAllRanges(); w.getSelection().addRange(mentionRange);
 w.document.dispatchEvent(new w.Event('selectionchange')); await settle();
 assert.ok(w.document.querySelector('.mention-menu'), 'Typing @ opens the page picker');
 assert.equal(liveRoot.getAttribute('aria-controls'), 'page-mention-menu');
+// The list ends with « Nouvelle sous-page », as in Notion: ↓ then ↑ returns to the page.
 liveRoot.dispatchEvent(new w.KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true, cancelable: true }));
+liveRoot.dispatchEvent(new w.KeyboardEvent('keydown', { key: 'ArrowUp', bubbles: true, cancelable: true }));
 liveRoot.dispatchEvent(new w.KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true }));
 await settle();
 const mentionNode = liveRoot.querySelector('.page-mention');

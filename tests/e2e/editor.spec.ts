@@ -599,3 +599,33 @@ test('Tab nests a paragraph under the block above and survives reloading', async
   await page.keyboard.press('Shift+Tab');
   await expect(page.locator('.prose .fm-indent')).toHaveCount(0);
 });
+
+test('date mentions, reminders and new sub-pages from the @-menu', async ({ page }) => {
+  const created = await createDocument(page, 'Réunion');
+  const iso = (offset: number) => { const d = new Date(); d.setDate(d.getDate() + offset); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
+  await page.locator('.prose > p').first().click(); await page.keyboard.press('ControlOrMeta+ArrowRight'); await page.keyboard.press('End');
+  await page.keyboard.type(' @demain');
+  const menu = page.locator('.mention-menu');
+  await expect(menu.locator('.menu-label').first()).toHaveText('Date');
+  await page.screenshot({ path: test.info().outputPath('mention-date.png') });
+  await page.keyboard.press('Enter');
+  await expect(page.locator('.prose time.date-mention')).toHaveText('@Demain');
+  await page.keyboard.type('/rappel'); await page.keyboard.press('Enter');
+  await expect(page.locator('.prose time.date-mention[data-reminder]')).toHaveText('@Aujourd’hui 09:00');
+  await page.locator('.prose time.date-mention').first().click();
+  await page.getByRole('menuitemcheckbox', { name: 'Rappel' }).click();
+  await expect(page.getByLabel('Heure du rappel')).toHaveValue('09:00');
+  await page.keyboard.press('Escape');
+  await page.locator('.prose > p').first().click(); await page.keyboard.press('ControlOrMeta+ArrowRight'); await page.keyboard.press('End');
+  const title = `Compte rendu ${Date.now().toString(36)}`;
+  await page.keyboard.type(` @${title}`);
+  await expect(menu.getByRole('option', { name: `Nouvelle sous-page « ${title} »` })).toBeVisible();
+  await menu.getByRole('option', { name: `Nouvelle sous-page « ${title} »` }).click();
+  await expect(page.locator('.prose a[data-page-mention]')).toContainText(title);
+  await expect(page.locator('.save-status')).toHaveText('Enregistré');
+  const pages: { id: string; title: string; parent: string | null; content: string }[] = await (await page.request.get('/api/pages')).json();
+  const content = pages.find(p => p.id === created.id)!.content;
+  expect(content).toContain(`<time datetime="${iso(1)}T09:00" data-reminder="true">`);
+  expect(content).toContain(`<time datetime="${iso(0)}T09:00" data-reminder="true">`);
+  expect(pages.find(p => p.title === title)?.parent).toBe(created.id);
+});

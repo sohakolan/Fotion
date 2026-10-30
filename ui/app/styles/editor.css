@@ -1543,3 +1543,42 @@ h3) {
 .prose .fm-indent {
   margin-left: 1.5em;
 }
+
+/* Date mentions: muted like Notion, reminders in blue. */
+.prose .date-mention {
+  color: var(--muted);
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+}
+
+.prose .date-mention:hover {
+  background: var(--hover);
+}
+
+.prose .date-mention[data-reminder] {
+  color: var(--blue);
+}
+
+.date-popover {
+  width: 260px;
+}
+
+.date-field {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 8px;
+  color: var(--icon);
+}
+
+.date-field input {
+  flex: 1;
+  border: 0;
+  border-radius: var(--radius);
+  background: var(--hover);
+  box-shadow: inset 0 0 0 1px var(--line);
+  padding: 4px 8px;
+  font: inherit;
+  font-size: var(--text-ui);
+  color: var(--text);
+}

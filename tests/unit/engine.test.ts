@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createRequire } from 'node:module';
 import { Editor } from '@tiptap/core';
-import { documentExtensions, convertToggle, countWords, slashCommands, searchSlashCommands, slashQuery, PageIndex, recencyGroup, BlockSelection, blockRange } from '../../engine';
+import { documentExtensions, convertToggle, countWords, slashCommands, searchSlashCommands, slashQuery, PageIndex, recencyGroup, BlockSelection, blockRange, parseDatePhrase, dateSuggestions, formatDate } from '../../engine';
 const { JSDOM } = createRequire(import.meta.url)('jsdom');
 const dom = new JSDOM('<!doctype html><body></body>');
 Object.assign(globalThis, { window: dom.window, document: dom.window.document, DOMParser: dom.window.DOMParser, Node: dom.window.Node, HTMLElement: dom.window.HTMLElement, getComputedStyle: dom.window.getComputedStyle });
@@ -217,5 +217,26 @@ test('Tab under a toggle moves the block into its body', () => {
   assert.deepEqual(editor.state.doc.firstChild!.content.content.map(node => node.textContent), ['Plier', 'Corps', 'Dedans']);
   press(editor, 'Tab', { shift: true });
   assert.deepEqual(filled().map(node => node.type.name + ':' + node.textContent), ['toggle:PlierCorps', 'paragraph:Dedans']);
+  editor.destroy();
+});
+
+test('date phrases are understood in French and English like Notion’s @-menu', () => {
+  const now = new Date(2026, 9, 30, 15, 0); // Friday 30 October 2026
+  const cases: [string, string | null][] = [['aujourd’hui', '2026-10-30'], ['Demain', '2026-10-31'], ['hier', '2026-10-29'], ['après-demain', null], ['apres demain', '2026-11-01'],
+    ['lundi', '2026-11-02'], ['vendredi prochain', '2026-11-06'], ['dans 3 jours', '2026-11-02'], ['dans 2 semaines', '2026-11-13'], ['il y a 2 jours', '2026-10-28'],
+    ['25/12', '2026-12-25'], ['31/02', null], ['1 janvier 2027', '2027-01-01'], ['march 3', '2026-03-03'], ['2026-10-30', '2026-10-30'], ['n’importe quoi', null]];
+  for (const [phrase, expected] of cases) assert.equal(parseDatePhrase(phrase, now), expected, phrase);
+  assert.deepEqual(dateSuggestions('dem', now), ['2026-10-31']);
+  assert.equal(formatDate('2026-10-31', now), 'Demain');
+  assert.equal(formatDate('2026-10-31T09:00', now, false), '31 octobre 2026 09:00');
+});
+
+test('date mentions and reminders round-trip as standard <time> HTML', () => {
+  const source = 'Réunion <time datetime="2026-11-02">2 novembre 2026</time> et rappel <time datetime="2026-11-03T09:30" data-reminder="true">3 novembre 2026 09:30</time>.';
+  const editor = new Editor({ extensions: documentExtensions(), content: source, contentType: 'markdown' });
+  const dates: unknown[] = []; editor.state.doc.descendants(node => { if (node.type.name === 'dateMention') dates.push({ ...node.attrs }); });
+  assert.deepEqual(dates, [{ date: '2026-11-02', reminder: false }, { date: '2026-11-03T09:30', reminder: true }]);
+  assert.equal(editor.getMarkdown(), source);
+  assert.match(editor.view.dom.textContent || '', /@2 novembre 2026|@Aujourd|@Demain|@Hier/);
   editor.destroy();
 });

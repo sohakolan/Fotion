@@ -28,6 +28,8 @@ const catalogue: SlashCommand[] = [
   ...[2, 3, 4].map(count => ({ id: `columns${count}`, label: `${count} colonnes`, description: `Répartissez le contenu sur ${count} colonnes.`, group: 'Avancés' as const, aliases: `columns colonnes ${count} cols layout` })),
   ...[1, 2, 3].map(level => ({ id: `toggleHeading${level}`, label: `Titre dépliant ${level}`, description: 'Un titre qui masque ou affiche son contenu.', group: 'Avancés' as const, aliases: `toggle heading h${level} titre dépliant` })),
   { id: 'mention', label: 'Mentionner une page', description: 'Insérez un lien vivant vers une page.', group: 'En ligne', aliases: 'mention @ page lien link' },
+  { id: 'date', label: 'Date ou rappel', description: 'Insérez une date, par exemple aujourd’hui.', group: 'En ligne', aliases: 'date jour today aujourd hui calendrier' },
+  { id: 'reminder', label: 'Rappel', description: 'Insérez un rappel pour aujourd’hui à 9 h.', group: 'En ligne', aliases: 'reminder rappel alarme' },
   { id: 'emoji', label: 'Emoji', description: 'Recherchez et insérez un emoji.', group: 'En ligne', aliases: 'emoji émoticône smiley' },
   { id: 'duplicate', label: 'Dupliquer', description: 'Créez une copie du bloc actuel.', group: 'Actions', aliases: 'duplicate dupliquer copier copy', shortcut: '⌘D', hidden: true },
   { id: 'delete', label: 'Supprimer', description: 'Supprimez le bloc actuel.', group: 'Actions', aliases: 'delete supprimer effacer remove', hidden: true },

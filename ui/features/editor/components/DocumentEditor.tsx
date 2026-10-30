@@ -5,15 +5,15 @@ import { Editor, type ChainedCommands } from '@tiptap/core';
 import Placeholder from '@tiptap/extension-placeholder';
 import { mentionQuery } from '../../../../engine';
 import type { Page } from '../../../../engine';
-import { normalizeSearch, pageIdFromHref, pageHref } from '../../../../engine';
+import { normalizeSearch, pageIdFromHref, pageHref, dateSuggestions, formatDate, isoDay, isDateValue } from '../../../../engine';
 import { textColors, colorId, type ColorId } from '../../../../engine';
 import { editorExtensions } from '../extensions/editor-extensions';
 import { TextSelection, AllSelection } from '@tiptap/pm/state';
 import BlockControls from './BlockControls';
 import SelectionRectangle from './SelectionRectangle';
-import { Menu, MenuItem, MenuDivider, MenuSearch, EmojiPicker, modKey } from '../../../kit';
+import { Menu, MenuItem, MenuDivider, MenuSearch, EmojiPicker, Switch, modKey } from '../../../kit';
 import { blockAt, moveBlockTransaction, isListItem, caretPosition, BlockSelection, blockRange, type Block } from '../../../../engine';
-import { Bold, Italic, Underline, Strikethrough, Code, Link, ChevronDown, ChevronRight, Trash2, Copy, Type, Search, Check, Plus, ImagePlus, X, Repeat2, PaintRoller, AtSign, Smile, Heading1, Heading2, Heading3, List, ListOrdered, SquareCheckBig, ListCollapse, FileText, MessageSquareText, Quote, Table, Minus, Image as ImageIcon, CodeXml, TableOfContents, Columns2, Columns3, Columns4 } from 'lucide-solid';
+import { Bold, Italic, Underline, Strikethrough, Code, Link, ChevronDown, ChevronRight, Trash2, Copy, Type, Search, Check, Plus, ImagePlus, X, Repeat2, PaintRoller, AtSign, Smile, CalendarDays, AlarmClock, Heading1, Heading2, Heading3, List, ListOrdered, SquareCheckBig, ListCollapse, FileText, MessageSquareText, Quote, Table, Minus, Image as ImageIcon, CodeXml, TableOfContents, Columns2, Columns3, Columns4 } from 'lucide-solid';
 
 
 const blockActions: Record<string, { icon: () => JSX.Element; action: (chain: ChainedCommands) => ChainedCommands }> = {
@@ -41,12 +41,13 @@ function derivedAction(command: SlashCommand): { icon: () => JSX.Element; action
   if (command.id.startsWith('turn-')) return { icon: blockActions[command.id.slice(5)]?.icon ?? (() => <Repeat2 size={18}/>), action: blockActions[command.id.slice(5)]?.action ?? (c => c) };
   const color = command.id.match(/^(color|background)-(\w+)$/);
   if (color) return { icon: () => <span class="slash-color" data-fotion-color={color[1] === 'color' ? color[2] : 'default'} data-fotion-background={color[1] === 'background' ? color[2] : 'default'}>A</span>, action: c => c };
-  const icons: Record<string, () => JSX.Element> = { mention: () => <AtSign size={18}/>, emoji: () => <Smile size={18}/>, duplicate: () => <Copy size={18}/>, delete: () => <Trash2 size={18}/> };
+  const icons: Record<string, () => JSX.Element> = { date: () => <CalendarDays size={18}/>, reminder: () => <AlarmClock size={18}/>, mention: () => <AtSign size={18}/>, emoji: () => <Smile size={18}/>, duplicate: () => <Copy size={18}/>, delete: () => <Trash2 size={18}/> };
   return { icon: icons[command.id] ?? (() => <Type size={18}/>), action: c => c };
 }
+type MentionOption = { kind: 'date'; date: string } | { kind: 'page'; page: Page } | { kind: 'new'; title: string };
 const blocks = slashCommands.map(command => ({ ...command, ...(blockActions[command.id] ?? derivedAction(command)) }));
 
-export default function DocumentEditor(props: { content: string; onChange: (content: string) => void; onReady: (editor: Editor | undefined) => void; onCreatePage: () => void; pages: Page[]; onOpenPage: (id: string) => void; editable: boolean }) {
+export default function DocumentEditor(props: { content: string; onChange: (content: string) => void; onReady: (editor: Editor | undefined) => void; onCreatePage: () => void; onCreateSubpage: (title: string) => Promise<Page | undefined>; pages: Page[]; onOpenPage: (id: string) => void; editable: boolean }) {
   let element!: HTMLDivElement;
   let editor!: Editor;
   const [ready, setReady] = createSignal(false);
@@ -57,6 +58,16 @@ export default function DocumentEditor(props: { content: string; onChange: (cont
   const [linkDraft, setLinkDraft] = createSignal<{ value: string; from: number; to: number; x: number; y: number }>();
   const [imageDraft, setImageDraft] = createSignal<string>();
   const [emojiAt, setEmojiAt] = createSignal<{ x: number; y: number }>();
+  const [dateEdit, setDateEdit] = createSignal<{ pos: number; x: number; y: number }>();
+  const dateNode = () => { revision(); const edit = dateEdit(); const node = edit && editor.state.doc.nodeAt(edit.pos); return node?.type.name === 'dateMention' ? node : undefined; };
+  /** Updates the date mention being edited; a reminder always carries a time (9:00 by default, like Notion). */
+  function updateDate(patch: { day?: string; time?: string; reminder?: boolean }) {
+    const edit = dateEdit(), node = dateNode(); if (!edit || !node) return;
+    const [day, time] = (node.attrs.date as string).split('T');
+    const reminder = patch.reminder ?? node.attrs.reminder;
+    const value = `${patch.day || day}${reminder ? `T${patch.time || time || '09:00'}` : ''}`;
+    if (isDateValue(value)) editor.view.dispatch(editor.state.tr.setNodeMarkup(edit.pos, undefined, { date: value, reminder }));
+  }
   const [imageError, setImageError] = createSignal('');
   let imagePosition = 0;
   const linkPages = () => props.pages.filter(page => normalizeSearch(page.title).includes(normalizeSearch(linkDraft()?.value || ''))).slice(0, 20);
@@ -66,6 +77,10 @@ export default function DocumentEditor(props: { content: string; onChange: (cont
   const [mention, setMention] = createSignal<{ from: number; to: number; query: string; x: number; y: number }>();
   const [mentionChoice, setMentionChoice] = createSignal(0);
   const mentionPages = createMemo(() => props.pages.filter(page => !page.trashed && normalizeSearch(page.title || 'Sans titre').includes(normalizeSearch(mention()?.query || ''))).slice(0, 20));
+  const mentionOptions = createMemo<MentionOption[]>(() => {
+    const query = mention()?.query.trim() || '';
+    return [...dateSuggestions(query).map(date => ({ kind: 'date' as const, date })), ...mentionPages().map(page => ({ kind: 'page' as const, page })), ...(query ? [{ kind: 'new' as const, title: query }] : [])];
+  });
   const [choice, setChoice] = createSignal(0);
   const [selection, setSelection] = createSignal<{ x: number; y: number }>();
   const [revision, setRevision] = createSignal(0);
@@ -98,6 +113,7 @@ export default function DocumentEditor(props: { content: string; onChange: (cont
   function runBlockCommand(id: string) {
     const block = blockAt(editor.state.doc, caretPosition(editor));
     if (id === 'mention') { editor.chain().focus().insertContent('@').run(); return; }
+    if (id === 'date' || id === 'reminder') { editor.chain().focus().insertContent([{ type: 'dateMention', attrs: { date: id === 'date' ? isoDay(new Date()) : `${isoDay(new Date())}T09:00`, reminder: id === 'reminder' } }, { type: 'text', text: ' ' }]).run(); return; }
     if (id === 'emoji') { const coords = editor.view.coordsAtPos(editor.state.selection.from); setEmojiAt({ x: Math.max(8, Math.min(coords.left, window.innerWidth - 416)), y: Math.max(8, Math.min(coords.bottom + 8, window.innerHeight - 364)) }); return; }
     if (!block) return;
     if (id === 'duplicate') { duplicateBlock(block.pos); return; }
@@ -137,10 +153,23 @@ export default function DocumentEditor(props: { content: string; onChange: (cont
     try { localStorage.setItem('fotion-last-color', JSON.stringify(lastColor)); } catch { /* Formatting still works when browser storage is unavailable. */ }
     setColorMenu(undefined);
   }
-  function insertMention(page: Page) {
-    const range = mention(); if (!range) return;
+  function insertMention(page: Page, range = mention()) {
+    if (!range) return;
     setMention(undefined);
     editor.chain().focus().insertContentAt({ from: range.from, to: range.to }, [{ type: 'pageMention', attrs: { id: page.id, label: page.title || 'Sans titre' } }, { type: 'text', text: ' ' }]).run();
+  }
+  /** Notion's @-menu: a date, an existing page, or a new sub-page named after the query. */
+  async function chooseMention(option: MentionOption) {
+    const range = mention(); if (!range) return;
+    if (option.kind === 'page') { insertMention(option.page); return; }
+    if (option.kind === 'date') {
+      setMention(undefined);
+      editor.chain().focus().insertContentAt({ from: range.from, to: range.to }, [{ type: 'dateMention', attrs: { date: option.date } }, { type: 'text', text: ' ' }]).run();
+      return;
+    }
+    setMention(undefined);
+    const page = await props.onCreateSubpage(option.title);
+    if (page) insertMention(page, range);
   }
   createEffect(() => {
     const editable = props.editable;
@@ -152,7 +181,7 @@ export default function DocumentEditor(props: { content: string; onChange: (cont
     if (ready()) editor.view.dispatch(editor.state.tr.setMeta('pageMentionsChanged', true).setMeta('addToHistory', false));
   });
   createEffect(() => {
-    const range = mention(), index = mentionChoice(), count = mentionPages().length;
+    const range = mention(), index = mentionChoice(), count = mentionOptions().length;
     if (!ready()) return;
     const root = editor.view.dom;
     if (range) {
@@ -274,7 +303,14 @@ export default function DocumentEditor(props: { content: string; onChange: (cont
           const range = blockRange(editor.state.doc, current.anchorBlock + 1, target.pos);
           if (range) { view.dispatch(editor.state.tr.setSelection(range)); event.preventDefault(); return true; }
           return false;
-        }, click: (_view, event) => {
+        }, click: (view, event) => {
+          const time = (event.target as HTMLElement).closest('time.date-mention');
+          if (time && editor.isEditable) {
+            const at = view.posAtDOM(time, 0), pos = editor.state.doc.nodeAt(at)?.type.name === 'dateMention' ? at : at - 1;
+            const box = time.getBoundingClientRect();
+            setDateEdit({ pos, x: Math.max(8, Math.min(box.left, window.innerWidth - 268)), y: Math.max(8, Math.min(box.bottom + 6, window.innerHeight - 220)) });
+            event.preventDefault(); return true;
+          }
           const link = (event.target as HTMLElement).closest('a[href]');
           const id = pageIdFromHref(link?.getAttribute('href') || '');
           if (!id) return false;
@@ -287,12 +323,12 @@ export default function DocumentEditor(props: { content: string; onChange: (cont
           if (focusedMention && event.key === 'Enter') { const id = pageIdFromHref(focusedMention.getAttribute('href') || ''); if (id) props.onOpenPage(id); event.preventDefault(); return true; }
           if (mention()) {
             if (['ArrowDown', 'ArrowUp'].includes(event.key)) {
-              const count = mentionPages().length;
+              const count = mentionOptions().length;
               if (count) setMentionChoice(i => (i + (event.key === 'ArrowDown' ? 1 : -1) + count) % count);
               document.querySelector('.mention-menu .chosen')?.scrollIntoView({ block: 'nearest' });
               event.preventDefault(); return true;
             }
-            if (event.key === 'Enter' && mentionPages()[mentionChoice()]) { insertMention(mentionPages()[mentionChoice()]); event.preventDefault(); return true; }
+            if (event.key === 'Enter' && mentionOptions()[mentionChoice()]) { void chooseMention(mentionOptions()[mentionChoice()]); event.preventDefault(); return true; }
             if (event.key === 'Escape') { setMention(undefined); event.preventDefault(); return true; }
           }
           if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') { event.preventDefault(); event.stopPropagation(); link(); return true; }
@@ -335,7 +371,7 @@ export default function DocumentEditor(props: { content: string; onChange: (cont
     props.onReady(editor);
     const close = (event: MouseEvent) => { if (!(event.target as HTMLElement).closest('.editor, .mention-menu')) setMention(undefined); if (!(event.target as HTMLElement).closest('.block-menu, .block-controls, .block-submenu')) closeBlockMenu(); };
     const scroll = (e: Event) => { if ((e.target as HTMLElement)?.closest?.('.popover')) return; setSelection(undefined); setSlash(undefined); setMention(undefined); setColorMenu(undefined); closeBlockMenu(); };
-    const escape = (e: KeyboardEvent) => { if (e.key === 'Escape') { setMention(undefined); closeBlockMenu(); if (emojiAt()) { setEmojiAt(undefined); editor.commands.focus(); } setLinkDraft(undefined); setImageDraft(undefined); if (colorMenu()) { setColorMenu(undefined); editor.commands.focus(); } } };
+    const escape = (e: KeyboardEvent) => { if (e.key === 'Escape') { setMention(undefined); closeBlockMenu(); if (emojiAt()) { setEmojiAt(undefined); editor.commands.focus(); } if (dateEdit()) { setDateEdit(undefined); editor.commands.focus(); } setLinkDraft(undefined); setImageDraft(undefined); if (colorMenu()) { setColorMenu(undefined); editor.commands.focus(); } } };
     window.addEventListener('keydown', escape);
     document.addEventListener('pointerdown', close);
     window.addEventListener('scroll', scroll, true);
@@ -396,9 +432,13 @@ export default function DocumentEditor(props: { content: string; onChange: (cont
       </>}</For>
     </div></>}</Show>
     <Show when={mention()}>{position => <div id="page-mention-menu" class="mention-menu popover" role="listbox" aria-label="Mentionner une page" style={{ left: `${position().x}px`, top: `${position().y}px` }}>
-      <div class="menu-label">Mentionner une page</div>
-      <For each={mentionPages()}>{(page, i) => <button id={`page-mention-option-${i()}`} role="option" aria-selected={mentionChoice() === i()} classList={{ chosen: mentionChoice() === i() }} onMouseDown={e => e.preventDefault()} onMouseEnter={() => setMentionChoice(i())} onClick={() => insertMention(page)}><span>{page.icon || '📄'}</span><span>{page.title || 'Sans titre'}</span></button>}</For>
-      <Show when={!mentionPages().length}><p class="empty-message">Aucune page correspondante.</p></Show>
+      <For each={(['date', 'page', 'new'] as const).filter(kind => mentionOptions().some(option => option.kind === kind))}>{kind => <>
+        <div class="menu-label">{kind === 'date' ? 'Date' : kind === 'page' ? 'Mentionner une page' : 'Nouvelle page'}</div>
+        <For each={mentionOptions().filter(option => option.kind === kind)}>{option => { const i = () => mentionOptions().indexOf(option); return <button id={`page-mention-option-${i()}`} role="option" aria-selected={mentionChoice() === i()} classList={{ chosen: mentionChoice() === i() }} onMouseDown={e => e.preventDefault()} onMouseEnter={() => setMentionChoice(i())} onClick={() => void chooseMention(option)}>
+          {option.kind === 'date' ? <><CalendarDays size={16}/><span>{formatDate(option.date)}</span></> : option.kind === 'page' ? <><span>{option.page.icon || '📄'}</span><span>{option.page.title || 'Sans titre'}</span></> : <><Plus size={16}/><span>Nouvelle sous-page « {option.title} »</span></>}
+        </button>; }}</For>
+      </>}</For>
+      <Show when={!mentionOptions().length}><p class="empty-message">Aucune page correspondante.</p></Show>
     </div>}</Show>
     <Show when={slash()}>{position => <div class="slash-menu popover" style={{ left: `${position().x}px`, ...(position().above ? { bottom: `${position().y}px` } : { top: `${position().y}px` }) }} onMouseDown={e => e.preventDefault()}>
       <div class="slash-scroll" role="listbox" aria-label="Types de blocs">
@@ -438,6 +478,13 @@ export default function DocumentEditor(props: { content: string; onChange: (cont
       <Show when={pageIdFromHref(draft().value)}><button type="button" onClick={() => { const id = pageIdFromHref(draft().value); if (id) props.onOpenPage(id); setLinkDraft(undefined); }}>Ouvrir la page liée</button></Show>
       <button type="button" onClick={() => { setLinkDraft({ ...draft(), value: '' }); saveLink(); }}>Supprimer le lien</button>
     </form></>}</Show>
+    <Show when={dateEdit() && dateNode()}><div class="dismiss-layer" onClick={() => { setDateEdit(undefined); editor.commands.focus(); }}/><Menu label="Modifier la date" class="date-popover" style={{ position: 'fixed', left: `${dateEdit()!.x}px`, top: `${dateEdit()!.y}px` }}>
+      <label class="date-field"><CalendarDays size={16}/><input type="date" aria-label="Date" value={(dateNode()!.attrs.date as string).slice(0, 10)} onInput={e => e.currentTarget.value && updateDate({ day: e.currentTarget.value })}/></label>
+      <Show when={dateNode()!.attrs.reminder}><label class="date-field"><AlarmClock size={16}/><input type="time" aria-label="Heure du rappel" value={(dateNode()!.attrs.date as string).slice(11, 16)} onInput={e => e.currentTarget.value && updateDate({ time: e.currentTarget.value })}/></label></Show>
+      <MenuDivider/>
+      <Switch checked={!!dateNode()!.attrs.reminder} onChange={reminder => updateDate({ reminder })}>Rappel</Switch>
+      <MenuItem icon={<Trash2 size={16}/>} onClick={() => { const edit = dateEdit()!; editor.chain().focus().deleteRange({ from: edit.pos, to: edit.pos + 1 }).run(); setDateEdit(undefined); }}>Supprimer</MenuItem>
+    </Menu></Show>
     <Show when={emojiAt()}>{position => <><div class="dismiss-layer" onClick={() => { setEmojiAt(undefined); editor.commands.focus(); }}/><EmojiPicker label="Insérer un emoji" style={{ position: 'fixed', left: `${position().x}px`, top: `${position().y}px` }} onPick={emoji => { setEmojiAt(undefined); editor.chain().focus().insertContent(emoji).run(); }}/></>}</Show>
     <Show when={imageDraft() !== undefined}><div class="modal-backdrop" onMouseDown={e => { if (e.target === e.currentTarget) setImageDraft(undefined); }}><form class="modal image-dialog" role="dialog" aria-modal="true" aria-label="Ajouter une image" onSubmit={e => {
       e.preventDefault(); const src = imageDraft()?.trim() || '';

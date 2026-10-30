@@ -10,6 +10,8 @@ export { documentExtensions } from './document/extensions';
 export { NotionShortcuts, selectCurrentBlock, moveCurrentBlock, caretPosition, syncCaret } from './document/shortcuts';
 export { Columns, Column } from './document/columns';
 export { Indent } from './document/indent';
+export { DateMention } from './document/date-mention';
+export { parseDatePhrase, dateSuggestions, formatDate, isDateValue, isoDay } from './operations/date-query';
 export { indentBlock, outdentBlock, handlesTab } from './operations/indentation';
 export { DirectiveBlock } from './document/directive-block';
 export * as FotionMark from './fotionmark';
