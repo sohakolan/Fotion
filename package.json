@@ -1,0 +1,36 @@
+{
+  "name": "fotion",
+  "version": "0.2.0",
+  "private": true,
+  "type": "module",
+  "license": "MIT",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview --host 127.0.0.1",
+    "test": "tsx --test tests/*.test.ts",
+    "test:ui": "npm run build && node scripts/check-ui.mjs"
+  },
+  "dependencies": {
+    "@tiptap/core": "latest",
+    "@tiptap/extension-image": "latest",
+    "@tiptap/extension-placeholder": "latest",
+    "@tiptap/extension-table": "latest",
+    "@tiptap/extension-task-item": "latest",
+    "@tiptap/extension-task-list": "latest",
+    "@tiptap/markdown": "latest",
+    "@tiptap/pm": "latest",
+    "@tiptap/starter-kit": "latest",
+    "lucide-solid": "latest",
+    "solid-js": "latest",
+    "yaml": "latest"
+  },
+  "devDependencies": {
+    "@types/node": "latest",
+    "jsdom": "latest",
+    "tsx": "latest",
+    "typescript": "latest",
+    "vite": "latest",
+    "vite-plugin-solid": "latest"
+  }
+}
