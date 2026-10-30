@@ -8,7 +8,7 @@ const root = resolve(import.meta.dirname, '..');
 const feature = path => path.match(/^ui\/features\/([^/]+)\//)?.[1];
 const patterns = [
   /^ui\/main\.tsx$/,
-  /^ui\/app\/(?:[A-Z][A-Za-z]+\.tsx|[a-z][a-z-]*\.css)$/,
+  /^ui\/app\/(?:[A-Z][A-Za-z]+\.tsx|styles\/[a-z][a-z-]*\.css)$/,
   /^ui\/kit\/(?:index\.ts|[a-z][a-z-]*\.css)$/,
   /^ui\/kit\/components\/[A-Z][A-Za-z]+\.tsx$/,
   /^ui\/features\/[a-z][a-z-]*\/index\.ts$/,

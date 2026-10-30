@@ -1,0 +1,111 @@
+/* Structure de l’application, messages et états globaux. */
+
+.app-shell {
+  height: 100dvh;
+  display: flex;
+  overflow: hidden;
+}
+
+.main-panel {
+  min-width: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  background: var(--bg);
+}
+
+.main-scroll {
+  overflow-y: auto;
+  overflow-x: hidden;
+  flex: 1;
+  scrollbar-width: thin;
+  scrollbar-color: #dededb transparent;
+}
+
+.help-button {
+  position: absolute;
+  bottom: 22px;
+  right: 25px;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 1px solid var(--line);
+  background: var(--bg);
+  box-shadow: 0 2px 5px #00000008;
+  font-size: 16px;
+  font-family: Georgia,serif;
+  color: #77766e;
+}
+
+.toast {
+  position: fixed;
+  bottom: 25px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--panel);
+  box-shadow: var(--shadow);
+  padding: 12px 19px;
+  display: flex;
+  gap: 9px;
+  align-items: center;
+  font-size: 13px;
+  border-radius: 7px;
+  z-index: 120;
+  white-space: nowrap;
+}
+
+.toast svg {
+  color: #7d9c7c;
+}
+
+.error-banner {
+  background: #fff3e8;
+  color: #986035;
+  font-size: 12px;
+  padding: 10px 18px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.error-banner span {
+  flex: 1;
+}
+
+.error-banner button {
+  text-decoration: underline;
+  white-space: nowrap;
+}
+
+.loading {
+  padding: 100px;
+  text-align: center;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.mobile-sidebar-scrim {
+  display: none;
+}
+
+@media(max-width:760px) {
+  .mobile-sidebar-scrim {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: #0004;
+    z-index: 29;
+  }
+  .help-button {
+    right: 16px;
+    bottom: 16px;
+  }
+  .toast {
+    max-width: 92vw;
+    white-space: normal;
+    width: max-content;
+    font-size: 12px;
+  }
+}
