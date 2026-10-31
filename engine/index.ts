@@ -7,7 +7,7 @@ export { BlockSelection, blockRange, extendBlockSelection, duplicateBlocks, move
 export { convertToggle, type ToggleTarget } from './operations/toggle-conversion';
 export { slashCommands, searchSlashCommands, slashQuery, turnTargets, type SlashCommand, type SlashGroup } from './operations/slash-commands';
 export { documentExtensions } from './document/extensions';
-export { NotionShortcuts, selectCurrentBlock, moveCurrentBlock, caretPosition, syncCaret } from './document/shortcuts';
+export { NotionShortcuts, selectCurrentBlock, moveCurrentBlock, caretPosition, syncCaret, continuedNumberingStart } from './document/shortcuts';
 export { Columns, Column } from './document/columns';
 export { Indent } from './document/indent';
 export { DateMention } from './document/date-mention';

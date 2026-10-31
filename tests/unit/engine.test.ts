@@ -135,6 +135,24 @@ test('Notion typing shortcuts: single-tilde strike and lettered lists', () => {
   editor.destroy();
 });
 
+test('numbered lists continue across paragraphs like Notion and restart after other blocks', () => {
+  const editor = new Editor({ extensions: documentExtensions(), content: '1. Premier\n2. Second\n\nUn paragraphe de séparation\n\n', contentType: 'markdown' });
+  editor.commands.setTextSelection(editor.state.doc.content.size - 1);
+  typeText(editor, '1. Nouvelle entrée');
+  const whole = editor.state.doc;
+  const children: Array<{ type: { name: string }; attrs?: { start?: number } }> = [];
+  whole.content.forEach(node => { children.push(node as unknown as { type: { name: string }; attrs?: { start?: number } }); });
+  const newList = children.find(node => node.type.name === 'orderedList' && node.attrs?.start === 3);
+  assert.ok(newList, 'the continued list exists');
+  assert.match(editor.getMarkdown(), /3\. Nouvelle entrée/);
+  // A bullet list in between resets the numbering, like a new list.
+  editor.commands.setContent('1. Premier\n\n- une puce\n\n1. Redémarrage\n', { contentType: 'markdown' });
+  const afterBullet = editor.state.doc.child(2);
+  assert.equal(afterBullet?.type.name, 'orderedList');
+  assert.equal(afterBullet?.attrs?.start, 1);
+  editor.destroy();
+});
+
 test('Notion block keys: turn into, move, Escape block selection, Enter back to text', () => {
   const editor = new Editor({ extensions: documentExtensions(), content: 'Un\n\nDeux\n\nTrois', contentType: 'markdown' });
   editor.commands.setTextSelection(6);

@@ -1,4 +1,4 @@
-import { Extension, InputRule, markInputRule, wrappingInputRule, type Editor } from '@tiptap/core';
+import { Extension, InputRule, markInputRule, getChangedRanges, wrappingInputRule, type Editor } from '@tiptap/core';
 import { NodeSelection, Plugin, TextSelection } from '@tiptap/pm/state';
 import { Decoration, DecorationSet } from '@tiptap/pm/view';
 import { blockAt, moveBlockTransaction } from '../operations/block-move';
@@ -53,6 +53,21 @@ export function moveCurrentBlock(editor: Editor, direction: -1 | 1) {
   return true;
 }
 
+/**
+ * Notion continues the numbering when a new numbered list starts below an existing one,
+ * even across paragraphs. Only paragraphs and headings are crossed; other blocks reset the count.
+ */
+export function continuedNumberingStart(state: any, range: { from: number }): { start: number; type: string | null } | undefined {
+  const $from = state.doc.resolve(range.from);
+  const container = $from.node($from.depth - 2), index = $from.index($from.depth - 2);
+  for (let position = index - 1; position >= 0; position--) {
+    const node = container.child(position);
+    if (node.type.name === 'orderedList') return { start: node.attrs.start + node.childCount, type: (node.attrs.type ?? null) as string | null };
+    if (node.type.name !== 'paragraph' && node.type.name !== 'heading') return undefined;
+  }
+  return undefined;
+}
+
 /** Notion's Cmd/Ctrl+Enter: check a to-do or open/close a toggle. */
 function actOnBlock(editor: Editor) {
   const { $from } = editor.state.selection;
@@ -99,14 +114,39 @@ export const NotionShortcuts = Extension.create({
       wrappingInputRule({ find: /^\s*"\s$/, type: blockquote }),
       // `a.` or `i.` + space also start a numbered list in Notion.
       ...(orderedList ? [wrappingInputRule({ find: /^\s*([ai])\.\s$/, type: orderedList })] : []),
+      // Typing `1.` below an earlier numbered list is handled by the numbering plugin above;
+      // any other digit keeps Tiptap's own start-based rule.
       // Notion strikes through with single tildes; double tildes stay handled by the Strike extension.
       ...(strike ? [markInputRule({ find: /(?:^|\s)(~(?!~)((?:[^~\s][^~]*?)?[^~\s])~)$/, type: strike })] : []),
     ];
   },
   addProseMirrorPlugins() {
-    return [new Plugin({ props: { decorations: state => state.selection instanceof BlockSelection
+    return [
+      new Plugin({ props: { decorations: state => state.selection instanceof BlockSelection
       ? DecorationSet.create(state.doc, state.selection.blocks().map(pos => Decoration.node(pos, pos + state.doc.nodeAt(pos)!.nodeSize, { class: 'block-selected' })))
-      : null } })];
+      : null } }),
+      // A typed `1.` is wrapped by StarterKit with an explicit start of 1; Notion instead continues
+      // the numbering of an earlier list, even across paragraphs. The rule below retags that fresh
+      // list in the same dispatch, so undo and saving see the final numbering only.
+      new Plugin({
+        appendTransaction(transactions, _oldState, newState) {
+          let candidateFrom: number | undefined;
+          for (const transaction of transactions) {
+            if (!transaction.docChanged) continue;
+            getChangedRanges(transaction).forEach(range =>
+              newState.doc.nodeAt(range.newRange.from)?.type.name === 'orderedList' ? void (candidateFrom ??= range.newRange.from) : undefined);
+          }
+          if (candidateFrom === undefined) return null;
+          const list = newState.doc.nodeAt(candidateFrom);
+          if (!list || list.type.name !== 'orderedList' || (list.attrs.start ?? 1) !== 1) return null;
+          const above = continuedNumberingStart(newState, { from: candidateFrom + 1 });
+          if (!above || above.start <= 1) return null;
+          const tr = newState.tr;
+          tr.setNodeMarkup(candidateFrom, undefined, { ...list.attrs, start: above.start, type: above.type });
+          return tr;
+        },
+      }),
+    ];
   },
   addKeyboardShortcuts() {
     const editor = this.editor;

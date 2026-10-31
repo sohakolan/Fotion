@@ -92,7 +92,7 @@ Références : [S01](NOTION_REFERENCE.md#s01), [S04](NOTION_REFERENCE.md#s04), [
 - [ ] **FN-063** [PARTIEL] Titres H1, H2 et H3.
 - [ ] **FN-064** [PARTIEL] Listes à puces et listes numérotées.
 - [ ] **FN-065** [PARTIEL] Tâches cochables avec état conservé lors d’un déplacement.
-- [ ] **FN-066** Numérotation continue, reprise et niveaux de listes imbriquées.
+- [ ] **FN-066** [PARTIEL] Numérotation continue, reprise et niveaux de listes imbriquées.
 - [ ] **FN-067** [PARTIEL] Citations, y compris plusieurs paragraphes.
 - [ ] **FN-068** [PARTIEL] Séparateur horizontal.
 - [ ] **FN-069** [PARTIEL] Encadrés : icône et couleurs personnalisables ; terminer conversions et variantes d’icônes.
@@ -657,3 +657,9 @@ Liste demandée terminée : sélection multiple, indentation, `/date`, `/reminde
 FN-116 et FN-117 progressent : une image seule sur sa ligne (`![alt](src)`) devient un bloc figure de l'éditeur ; un clic la sélectionne avec son contour bleu #2383e2, une poignée en bas redimensionne la largeur en conservant le ratio natural, et une légende éditable (`figcaption`, placeholder « Écrire une légende… ») vit sous l'image. La largeur est stockée en pourcentage de la colonne ; la légende est du texte simple. La persistance reste réversible : une image sans réglages garde `![alt](src)`, sinon le commentaire `fotion:image {width, caption}` s'ajoute après la ligne (convention documentée du callout). Les images utilisées au milieu d'une ligne restent dans leur paragraphe avec le même rendu qu'avant ; une image sans réglage ne change pas de format sur disque. FN-116 reste partiel : l'alignement (petite/moyenne/largeur pleine avec les icônes de la référence), le remplacement, le téléchargement et l'ouverture en grand ne sont pas faits ; la légende ne conserve pas les marques de texte ; une légende explicite pour le texte alternatif via interface reste à ajouter.
 
 Preuves : [extension image](../engine/document/image.ts) (tokenizer, parseHTML figure, renderMarkdown), [vue d'éditeur](../ui/features/editor/extensions/image-view.ts) (sélection, poignée, overlay contour), [round-trips alt/légende/largeur](../tests/unit/markdown.test.ts), [parcours navigateur légende + sélection + redimensionnement](../tests/e2e/image.spec.ts) (32 scénarios Playwright passants). Références : [images, fichiers et médias](https://www.notion.com/help/images-files-and-media) et les captures locales `ref/help-articles/images-files-and-media/`.
+
+### Numérotation continue des listes — 31 octobre 2026
+
+FN-066 progresse : une nouvelle liste numérotée démarrée sous une liste existante continue la numérotation de celle-ci, même séparée par des paragraphs ou des titres ; toute autre liste (puces, code, citation) redémarre à 1 comme la référence. La continuité est appliquée dans la même transaction que la saisie (appendTransaction qui ré-étiquette la liste fraîchement créée par la règle de Tiptap), donc une seule étape d'annulation; le Markdown sur disque conserve le marqueur de départ standard GFM (`3. …`), lu tel quel par Obsidian et Notion. Les listes imbriquées et la reprise manuelle (menu « Reprendre la numérotation ») restent à faire.
+
+Preuves : [raccourcis](../engine/document/shortcuts.ts) (`continuedNumberingStart`, plugin appendTransaction), [tests du moteur](../tests/unit/engine.test.ts) — round-trip `1./2./texte/1. → 3.` et redémarrage après une puce — et [scénario navigateur](../tests/e2e/list-numbering.spec.ts) : frappe réelle `1. Nouvelle entrée`, second `<ol start="3">`, persistence après rechargement.
