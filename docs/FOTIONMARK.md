@@ -78,6 +78,11 @@ Les déclarations ([`blocks/`](../engine/fotionmark/blocks/)) fixent pour chaque
 | `embed` | ligne | — | `url` : `url`, `height` : `number` (80 à 2000, défaut 400) |
 | `bookmark` | ligne | — | `url`, `title`, `description`, `image` (lu une fois à la création) |
 
+| `breadcrumb` | ligne | — | — · chemin calculé à l’affichage |
+| `button` | conteneur, libellé `[…]` | FotionMark (modèle inséré à chaque clic) | — |
+
+Le libellé `[…]` d’une directive est conservé par l’éditeur pour tous les blocs ; il ne peut contenir ni `]` ni saut de ligne.
+
 Le type `source` accepte une adresse `http(s)` ou un fichier importé du coffre, `attachments/<empreinte>-<nom>`, servi en local et lisible par Obsidian.
 
 ## Garanties

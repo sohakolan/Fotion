@@ -6,8 +6,10 @@ import { Toggle, ToggleSummary } from './blocks';
 import { Callout } from './callout';
 import { LinkToPage } from './link-to-page';
 import { mediaViews } from './media';
+import { Breadcrumb, type Trail } from './breadcrumb';
+import { ButtonBlock } from './button';
 
-export function editorExtensions(getPage: (id: string) => Pick<Page, 'title' | 'icon' | 'trashed'> | undefined = () => undefined) {
-  const views = [TableOfContents, CodeBlock, Toggle, ToggleSummary, Callout, PageMention.configure({ getPage }), LinkToPage.configure({ getPage }), ...mediaViews, tableExtension().configure({ resizable: true })];
+export function editorExtensions(getPage: (id: string) => Pick<Page, 'title' | 'icon' | 'trashed'> | undefined = () => undefined, getTrail: () => Trail = () => []) {
+  const views = [TableOfContents, CodeBlock, Toggle, ToggleSummary, Callout, PageMention.configure({ getPage }), LinkToPage.configure({ getPage }), ...mediaViews, Breadcrumb.configure({ getTrail }), ButtonBlock, tableExtension().configure({ resizable: true })];
   return documentExtensions(getPage).map(extension => views.find(view => view.name === extension.name) || extension);
 }

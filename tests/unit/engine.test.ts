@@ -256,3 +256,12 @@ test('media blocks round-trip as FotionMark and reject unsafe sources', () => {
   assert.equal(editor.getMarkdown().replace(/"/g, ''), source.replace(/"/g, '').replace('Exemple de site', 'Exemple de site').replace('Un site.', 'Un site.'));
   editor.destroy();
 });
+
+test('breadcrumb and button blocks round-trip, keeping the button label', () => {
+  const source = '::breadcrumb\n\n:::button[Ajouter une tâche]\n- [ ] À faire\n:::\n\nFin';
+  const editor = new Editor({ extensions: documentExtensions(), content: source, contentType: 'markdown' });
+  assert.deepEqual(editor.state.doc.content.content.map(node => node.type.name), ['breadcrumb', 'button', 'paragraph']);
+  assert.equal(editor.state.doc.child(1).attrs.label, 'Ajouter une tâche');
+  assert.equal(editor.getMarkdown(), source);
+  editor.destroy();
+});

@@ -2,14 +2,14 @@ import { Node, type JSONContent, type MarkdownToken, type MarkdownLexerConfigura
 import { parseDirective, parseBlocks, stringifyBlocks, validateNode, hasErrors, readAttributes, directiveStart, serializeContainer, serializeLeaf, type BlockDefinition, type BlockNode, type FotionNode, type Attributes, type Value } from '../fotionmark';
 
 type Lexer = Pick<MarkdownLexerConfiguration, 'blockTokens'>;
-type DirectiveToken = MarkdownToken & { attributes: Attributes; tokens: MarkdownToken[] };
+type DirectiveToken = MarkdownToken & { attributes: Attributes; label?: string; tokens: MarkdownToken[] };
 
 /** A block the editor can display, or the preserved directive token when FotionMark reports an error. */
 export function toToken(node: Exclude<FotionNode, { type: 'markdown' }>, lexer: Lexer, parent?: BlockNode): DirectiveToken {
   const raw = stringifyBlocks([node]);
   if (hasErrors(validateNode(node, parent))) return { type: 'directiveBlock', raw, attributes: {}, tokens: [] };
   const tokens = node.type === 'block' ? node.children.flatMap(child => child.type === 'markdown' ? lexer.blockTokens(child.text) : [toToken(child, lexer, node)]) : [];
-  return { type: node.name, raw, attributes: node.attributes, tokens };
+  return { type: node.name, raw, attributes: node.attributes, label: node.label, tokens };
 }
 
 /**
@@ -27,9 +27,13 @@ export function fotionmarkNode(definition: BlockDefinition, editor: { content?: 
     atom: !container || editor.atom,
     isolating: editor.isolating ?? container,
     defining: container,
-    addAttributes: () => ({ attributes: { default: {}, rendered: false, parseHTML: element => { try { return JSON.parse(element.getAttribute('data-attributes') || '{}'); } catch { return {}; } } } }),
+    addAttributes: () => ({
+      attributes: { default: {}, rendered: false, parseHTML: element => { try { return JSON.parse(element.getAttribute('data-attributes') || '{}'); } catch { return {}; } } },
+      // The directive label (`:::name[label]`), e.g. a button's text; null when absent so it is never invented.
+      label: { default: null, rendered: false, parseHTML: element => element.getAttribute('data-label') },
+    }),
     parseHTML: () => [{ tag: `div[data-fotionmark="${definition.name}"]` }],
-    renderHTML: ({ node }) => ['div', { 'data-fotionmark': definition.name, 'data-attributes': JSON.stringify(node.attrs.attributes), class: `fm-${definition.name}`, ...editor.html?.(readAttributes(definition.attributes, node.attrs.attributes)) }, ...(container ? [0] : [])],
+    renderHTML: ({ node }) => ['div', { 'data-fotionmark': definition.name, 'data-attributes': JSON.stringify(node.attrs.attributes), ...(node.attrs.label !== null ? { 'data-label': node.attrs.label } : {}), class: `fm-${definition.name}`, ...editor.html?.(readAttributes(definition.attributes, node.attrs.attributes)) }, ...(container ? [0] : [])],
     ...(definition.parent ? {} : {
       markdownTokenizer: {
         name: definition.name, level: 'block' as const, start: directiveStart,
@@ -46,11 +50,11 @@ export function fotionmarkNode(definition: BlockDefinition, editor: { content?: 
     parseMarkdown(token, helpers) {
       const children = container ? helpers.parseChildren(token.tokens || []) : [];
       const content = container && !children.length && definition.content?.kind === 'markdown' ? [{ type: 'paragraph' }] : children;
-      return helpers.createNode(definition.name, { attributes: token.attributes || {} }, container ? content : undefined);
+      return helpers.createNode(definition.name, { attributes: token.attributes || {}, label: token.label ?? null }, container ? content : undefined);
     },
     renderMarkdown(node: JSONContent, helpers) {
-      const attributes = (node.attrs?.attributes || {}) as Attributes;
-      return container ? serializeContainer(definition.name, attributes, helpers.renderChildren(node.content || [], separator)) : serializeLeaf(definition.name, attributes);
+      const attributes = (node.attrs?.attributes || {}) as Attributes, label = node.attrs?.label ?? undefined;
+      return container ? serializeContainer(definition.name, attributes, helpers.renderChildren(node.content || [], separator), label) : serializeLeaf(definition.name, attributes, label);
     },
   });
 }

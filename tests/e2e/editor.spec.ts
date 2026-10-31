@@ -708,3 +708,29 @@ test('pasting a screenshot and dropping a file import them into the page', async
   expect(content).toMatch(/attachments\/[a-f0-9]{12}-capture\.png/);
   expect(content).toMatch(/::file\{src=attachments\/[a-f0-9]{12}-notes\.txt name=notes\.txt size=5\}/);
 });
+
+test('breadcrumb shows the page path and a button inserts its template', async ({ page }) => {
+  const tag = Date.now().toString(36);
+  const parent = await (await page.request.post('/api/pages', { data: { title: `Parent ${tag}`, icon: '📁', parent: null, favorite: false, cover: '', content: '', trashed: false } })).json();
+  const child = await (await page.request.post('/api/pages', { data: { title: `Enfant ${tag}`, icon: '📄', parent: parent.id, favorite: false, cover: '', content: 'Début', trashed: false } })).json();
+  await page.goto(`/#${encodeURIComponent(child.id)}`);
+  await page.locator('.prose > p').first().click(); await page.keyboard.press('ControlOrMeta+ArrowRight'); await page.keyboard.press('End');
+  await page.keyboard.press('Enter'); await page.keyboard.type('/bread'); await page.keyboard.press('Enter');
+  await expect(page.locator('.prose .fm-breadcrumb .breadcrumb-step')).toHaveText([`📁Parent ${tag}`, `📄Enfant ${tag}`]);
+  await page.keyboard.type('/bouton'); await page.keyboard.press('Enter');
+  const run = page.locator('.prose .fotion-button');
+  await expect(run).toHaveText('Nouvelle tâche');
+  await run.click(); await run.click();
+  await expect(page.locator('.prose > ul[data-type=taskList]')).toHaveCount(2);
+  await page.locator('.prose .fm-button').hover();
+  await page.getByRole('button', { name: 'Modifier le bouton' }).click();
+  await page.getByLabel('Libellé du bouton').fill('Ajouter un point');
+  await expect(run).toHaveText('Ajouter un point');
+  await page.screenshot({ path: test.info().outputPath('button.png') });
+  await expect(page.locator('.save-status')).toHaveText('Enregistré');
+  const content = (await (await page.request.get('/api/pages')).json()).find((p: { id: string }) => p.id === child.id).content as string;
+  expect(content).toContain('::breadcrumb');
+  expect(content).toContain(':::button[Ajouter un point]');
+  await page.locator('.prose .breadcrumb-step').first().click();
+  await expect(page.getByLabel('Titre de la page', { exact: true })).toHaveValue(`Parent ${tag}`);
+});

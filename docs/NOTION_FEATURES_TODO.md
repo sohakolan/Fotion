@@ -106,9 +106,9 @@ Références : [S01](NOTION_REFERENCE.md#s01), [S04](NOTION_REFERENCE.md#s04), [
 - [x] **FN-077** Table des matières liée aux titres et mise à jour après renommage.
 - [x] **FN-078** Lien vers une page sous forme de bloc ; distinct d’une vraie sous-page.
 - [ ] **FN-079** Mentions de pages, dates, personnes et références de base de données.
-- [ ] **FN-080** Fil d’Ariane insérable dans le contenu.
+- [x] **FN-080** Fil d’Ariane insérable dans le contenu.
 - [ ] **FN-081** Blocs synchronisés avec origine, occurrences et désynchronisation.
-- [ ] **FN-082** Boutons de page avec actions configurables.
+- [ ] **FN-082** [PARTIEL] Boutons de page avec actions configurables.
 - [ ] **FN-083** Modèles de blocs réutilisables selon les mécanismes de la référence.
 - [ ] **FN-084** Blocs de bases de données intégrées et vues liées.
 - [ ] **FN-085** [PARTIEL] Marque-pages web avec titre, description et aperçu.
@@ -136,8 +136,8 @@ Références : [S01](NOTION_REFERENCE.md#s01), [S04](NOTION_REFERENCE.md#s04), [
 - [ ] **FN-102** Former des colonnes avec un dépôt à gauche/droite d’un bloc.
 - [ ] **FN-103** Afficher la différence entre insertion verticale, imbrication et colonne.
 - [ ] **FN-104** Déplacer/copier des blocs entre pages via la barre latérale.
-- [ ] **FN-105** Faire glisser une pièce jointe depuis le système de fichiers.
-- [ ] **FN-106** Déposer une image du presse-papiers ou d’un autre navigateur.
+- [x] **FN-105** Faire glisser une pièce jointe depuis le système de fichiers.
+- [x] **FN-106** Déposer une image du presse-papiers ou d’un autre navigateur.
 - [ ] **FN-107** [PARTIEL] Réordonner et imbriquer des pages dans la barre latérale.
 - [ ] **FN-108** Gérer le dépôt sur les favoris et la corbeille avec un résultat explicite.
 - [ ] **FN-109** Vérifier souris, pavé tactile, stylet et interactions tactiles.
@@ -151,7 +151,7 @@ Références : [S06](NOTION_REFERENCE.md#s06).
 
 - [ ] **FN-113** [PARTIEL] Insérer une image par URL.
 - [x] **FN-114** Importer une image locale et copier le fichier dans le coffre.
-- [ ] **FN-115** Coller une capture d’écran et déposer plusieurs images.
+- [x] **FN-115** Coller une capture d’écran et déposer plusieurs images.
 - [ ] **FN-116** Redimensionner et aligner une image.
 - [ ] **FN-117** Ajouter une légende et un texte alternatif.
 - [ ] **FN-118** Remplacer, télécharger et ouvrir une image en grand.

@@ -1716,3 +1716,96 @@ h3) {
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
+/* Breadcrumb block: the page path, muted like Notion. */
+.prose .fm-breadcrumb {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px;
+  padding: 3px 0;
+  font-size: var(--text-ui);
+  color: var(--muted);
+}
+
+.prose .breadcrumb-step {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 4px;
+  border-radius: var(--radius-sm);
+  color: var(--muted);
+  text-decoration: none;
+}
+
+.prose .breadcrumb-step:hover {
+  background: var(--hover);
+  color: var(--text);
+}
+
+.breadcrumb-separator {
+  color: var(--disabled);
+  padding: 0 2px;
+}
+
+/* Button block: Notion's grey button with a settings gear. */
+.prose .fm-button {
+  margin: 4px 0;
+}
+
+.button-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.prose .fotion-button {
+  height: 28px;
+  padding: 0 10px;
+  border-radius: var(--radius);
+  box-shadow: var(--button-shadow);
+  font-size: var(--text-ui);
+  color: var(--text);
+}
+
+.prose .fotion-button:hover {
+  background: var(--hover);
+}
+
+.prose .button-edit {
+  width: 24px;
+  height: 24px;
+  border-radius: var(--radius-sm);
+  color: var(--icon);
+  opacity: 0;
+}
+
+.fm-button:hover .button-edit,
+.button-edit:focus-visible {
+  opacity: 1;
+}
+
+.button-settings {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+  font-size: var(--text-sm);
+  color: var(--muted);
+}
+
+.button-settings input {
+  height: 26px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: var(--radius);
+  background: var(--hover);
+  box-shadow: inset 0 0 0 1px var(--line);
+  color: var(--text);
+}
+
+.button-template {
+  margin-top: 4px;
+  padding: 4px 8px;
+  border-left: 2px solid var(--line);
+}

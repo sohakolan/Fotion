@@ -8,13 +8,13 @@ import type { Page } from '../../../../engine';
 import { normalizeSearch, pageIdFromHref, pageHref, dateSuggestions, formatDate, isoDay, isDateValue } from '../../../../engine';
 import { textColors, colorId, type ColorId } from '../../../../engine';
 import { editorExtensions } from '../extensions/editor-extensions';
-import { TextSelection, AllSelection } from '@tiptap/pm/state';
+import { TextSelection, AllSelection, NodeSelection } from '@tiptap/pm/state';
 import BlockControls from './BlockControls';
 import SelectionRectangle from './SelectionRectangle';
 import MediaDialog, { upload, mediaKindOf, type MediaKind, type MediaResult } from './MediaDialog';
 import { Menu, MenuItem, MenuDivider, MenuSearch, EmojiPicker, Switch, modKey } from '../../../kit';
 import { blockAt, moveBlockTransaction, isListItem, caretPosition, BlockSelection, blockRange, type Block } from '../../../../engine';
-import { Bold, Italic, Underline, Strikethrough, Code, Link, ChevronDown, ChevronRight, Trash2, Copy, Type, Search, Check, Plus, ImagePlus, X, Repeat2, PaintRoller, AtSign, Smile, CalendarDays, AlarmClock, CornerUpRight, ArrowUpRight, Video, Music, FileType, Paperclip, Bookmark, Globe, Heading1, Heading2, Heading3, List, ListOrdered, SquareCheckBig, ListCollapse, FileText, MessageSquareText, Quote, Table, Minus, Image as ImageIcon, CodeXml, TableOfContents, Columns2, Columns3, Columns4 } from 'lucide-solid';
+import { Bold, Italic, Underline, Strikethrough, Code, Link, ChevronDown, ChevronRight, Trash2, Copy, Type, Search, Check, Plus, ImagePlus, X, Repeat2, PaintRoller, AtSign, Smile, CalendarDays, AlarmClock, CornerUpRight, ArrowUpRight, Video, Music, FileType, Paperclip, Bookmark, Globe, ChevronsRight, MousePointerClick, Heading1, Heading2, Heading3, List, ListOrdered, SquareCheckBig, ListCollapse, FileText, MessageSquareText, Quote, Table, Minus, Image as ImageIcon, CodeXml, TableOfContents, Columns2, Columns3, Columns4 } from 'lucide-solid';
 
 
 const blockActions: Record<string, { icon: () => JSX.Element; action: (chain: ChainedCommands) => ChainedCommands }> = {
@@ -28,6 +28,8 @@ const blockActions: Record<string, { icon: () => JSX.Element; action: (chain: Ch
   toggle: { icon: () => <ListCollapse size={18}/>, action: c => c.insertContent({ type: 'toggle', content: [{ type: 'toggleSummary', content: [{ type: 'text', text: 'Liste dépliante' }] }, { type: 'paragraph' }] }) },
   page: { icon: () => <FileText size={18}/>, action: c => c },
   link: { icon: () => <ArrowUpRight size={18}/>, action: c => c },
+  button: { icon: () => <MousePointerClick size={18}/>, action: c => c.insertContent({ type: 'button', attrs: { label: 'Nouvelle tâche', attributes: {} }, content: [{ type: 'taskList', content: [{ type: 'taskItem', attrs: { checked: false }, content: [{ type: 'paragraph' }] }] }] }) },
+  breadcrumb: { icon: () => <ChevronsRight size={18}/>, action: c => c.insertContent({ type: 'breadcrumb', attrs: { attributes: {} } }) },
   callout: { icon: () => <MessageSquareText size={18}/>, action: c => c.wrapIn('callout') },
   quote: { icon: () => <Quote size={18}/>, action: c => c.toggleBlockquote() },
   table: { icon: () => <Table size={18}/>, action: c => c.insertTable({ rows: 3, cols: 3, withHeaderRow: true }) },
@@ -73,6 +75,17 @@ export default function DocumentEditor(props: { content: string; onChange: (cont
   function openPagePicker(purpose: 'link' | 'move', pos: number) {
     const coords = editor.view.coordsAtPos(editor.state.selection.from);
     setPagePicker({ purpose, pos, query: '', x: Math.max(8, Math.min(coords.left, window.innerWidth - 328)), y: Math.max(8, Math.min(coords.bottom + 8, window.innerHeight - 360)) });
+  }
+  /**
+   * After inserting a whole block (divider, table of contents, breadcrumb…), Notion leaves the caret on the
+   * line below; keeping the block selected would let the next keystroke replace it.
+   */
+  function continueBelowBlock() {
+    const { selection } = editor.state;
+    if (!(selection instanceof NodeSelection) || !selection.node.isBlock) return;
+    const after = selection.to, next = editor.state.doc.nodeAt(after);
+    const tr = next?.isTextblock ? editor.state.tr : editor.state.tr.insert(after, editor.state.schema.nodes.paragraph.create());
+    editor.view.dispatch(tr.setSelection(TextSelection.near(tr.doc.resolve(after + 1))));
   }
   /** Puts a block where the slash command was typed: it replaces an empty line, otherwise goes right below. */
   function insertBlockHere(pos: number, content: Record<string, unknown>) {
@@ -127,6 +140,12 @@ export default function DocumentEditor(props: { content: string; onChange: (cont
   let dismissedSlash = -1;
   const [mention, setMention] = createSignal<{ from: number; to: number; query: string; x: number; y: number }>();
   const [mentionChoice, setMentionChoice] = createSignal(0);
+  /** Path from the root to this page, for the breadcrumb block. */
+  const trail = () => {
+    const path: Page[] = [], seen = new Set<string>();
+    for (let page = props.pages.find(p => p.id === props.pageId); page && !seen.has(page.id); page = props.pages.find(p => p.id === page!.parent)) { seen.add(page.id); path.unshift(page); }
+    return path;
+  };
   const mentionPages = createMemo(() => props.pages.filter(page => !page.trashed && normalizeSearch(page.title || 'Sans titre').includes(normalizeSearch(mention()?.query || ''))).slice(0, 20));
   const mentionOptions = createMemo<MentionOption[]>(() => {
     const query = mention()?.query.trim() || '';
@@ -159,6 +178,7 @@ export default function DocumentEditor(props: { content: string; onChange: (cont
       chain = chain.insertContentAt(after, { type: 'paragraph' }).setTextSelection(after + 1);
     }
     item.action(chain).run();
+    continueBelowBlock();
     if (item.id === 'page') props.onCreatePage();
     if (item.id === 'link') { const block = blockAt(editor.state.doc, editor.state.selection.from); if (block) openPagePicker('link', block.pos); }
     if (mediaKinds.includes(item.id as MediaKind)) setMediaDraft({ kind: item.id as MediaKind, pos: editor.state.selection.from });
@@ -344,7 +364,7 @@ export default function DocumentEditor(props: { content: string; onChange: (cont
     } catch { /* Ignore invalid preferences without affecting the document. */ }
     editor = new Editor({
       element,
-      extensions: [...editorExtensions(id => props.pages.find(page => page.id === id)), Placeholder.configure({ placeholder: 'Appuyez sur « / » pour les commandes…' })],
+      extensions: [...editorExtensions(id => props.pages.find(page => page.id === id), trail), Placeholder.configure({ placeholder: 'Appuyez sur « / » pour les commandes…' })],
       content: props.content,
       editable: props.editable,
       contentType: 'markdown',
