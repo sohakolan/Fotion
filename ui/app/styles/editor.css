@@ -798,9 +798,14 @@
 }
 
 .code-toolbar {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  z-index: 2;
+  pointer-events: none;
   display: flex;
   align-items: center;
-  min-height: 36px;
   gap: 8px;
   padding: 4px 10px;
   color: var(--muted);
@@ -809,10 +814,23 @@
 }
 
 .code-toolbar button {
+  pointer-events: auto;
   border-radius: 4px;
   padding: 4px 6px;
   font-size: 12px;
   white-space: nowrap;
+  background: var(--code-bg);
+}
+
+/* Notion reveals the language selector and actions only on block hover. */
+.code-language {
+  opacity: 0;
+  transition: opacity .12s ease;
+}
+
+.code-block:hover .code-language,
+.code-block:focus-within .code-language {
+  opacity: 1;
 }
 
 .code-actions {
@@ -839,7 +857,7 @@
 
 .prose .code-block pre {
   margin: 0;
-  padding: 10px 24px 24px;
+  padding: 16px 24px 20px;
   background: transparent;
   border-radius: 0;
   tab-size: 2;

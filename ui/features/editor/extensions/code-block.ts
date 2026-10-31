@@ -2,7 +2,7 @@ import { CodeBlock as EngineCodeBlock } from '../../../../engine';
 import { lazyHighlighting } from '../lib/lazy-highlighting';
 
 export const codeLanguages = ['plaintext', 'arduino', 'bash', 'c', 'cpp', 'csharp', 'css', 'diff', 'go', 'graphql', 'ini', 'java', 'javascript', 'json', 'kotlin', 'less', 'lua', 'makefile', 'markdown', 'objectivec', 'perl', 'php', 'php-template', 'python', 'python-repl', 'r', 'ruby', 'rust', 'scss', 'shell', 'sql', 'swift', 'typescript', 'vbnet', 'wasm', 'xml', 'yaml'];
-const labels: Record<string, string> = { plaintext: 'Texte brut', javascript: 'JavaScript', typescript: 'TypeScript', python: 'Python', xml: 'HTML / XML', bash: 'Shell', cpp: 'C++', csharp: 'C#', css: 'CSS', json: 'JSON', sql: 'SQL', yaml: 'YAML', markdown: 'Markdown' };
+const labels: Record<string, string> = { plaintext: 'Texte brut', javascript: 'JavaScript', typescript: 'TypeScript', python: 'Python', xml: 'HTML / XML', bash: 'Shell', cpp: 'C++', csharp: 'C#', css: 'CSS', json: 'JSON', sql: 'SQL', yaml: 'YAML', markdown: 'Markdown', ts: 'TypeScript', js: 'JavaScript', yml: 'YAML', py: 'Python', py3: 'Python', sh: 'Shell', rb: 'Ruby', php: 'PHP', go: 'Go', rs: 'Rust', kt: 'Kotlin', swift: 'Swift', c: 'C', java: 'Java' };
 const label = (language: string | null) => labels[language || 'plaintext'] || language || 'Texte brut';
 
 export const CodeBlock = EngineCodeBlock.extend({
