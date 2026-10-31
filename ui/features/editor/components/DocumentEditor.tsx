@@ -1,5 +1,6 @@
 import { closeHistory } from '@tiptap/pm/history';
-import { convertToggle, slashCommands, searchSlashCommands, slashQuery, type ToggleTarget, type SlashCommand } from '../../../../engine';
+import { convertToggle, slashCommands, searchSlashCommands, slashQuery, withRecentSlashCommands, type ToggleTarget, type SlashCommand } from '../../../../engine';
+import { recentSlashIds, pushRecentSlashCommand } from '../lib/slash-recents';
 import { createSignal, createMemo, createEffect, onMount, onCleanup, Show, For, type JSX } from 'solid-js';
 import { Editor, type ChainedCommands } from '@tiptap/core';
 import Placeholder from '@tiptap/extension-placeholder';
@@ -157,16 +158,31 @@ export default function DocumentEditor(props: { content: string; onChange: (cont
   const [revision, setRevision] = createSignal(0);
   const [blockMenu, setBlockMenu] = createSignal<{ x: number; y: number; pos: number }>();
   const filteredBlocks = () => searchSlashCommands(blockQuery(), blocks);
-  const options = createMemo(() => searchSlashCommands(slash()?.query || '', blocks));
-  // Without a query the menu is grouped like Notion; filtered results are a single ranked list.
-  const optionGroups = createMemo(() => slash()?.query ? [{ name: '', items: options() }] : [...new Set(options().map(b => b.group))].map(name => ({ name, items: options().filter(b => b.group === name) })));
+  const [recents, setRecents] = createSignal<string[]>(recentSlashIds());
+  const options = createMemo(() => {
+    const query = slash()?.query || '';
+    const results = searchSlashCommands(query, blocks);
+    if (query) return results;
+    return withRecentSlashCommands(results, recents());
+  });
+  // Without a query the menu is grouped like Notion, with a pinned « Récemment utilisés » head.
+  const optionGroups = createMemo(() => {
+    if (slash()?.query) return [{ name: '', items: options() }];
+    const recent = withRecentSlashCommands(searchSlashCommands('', blocks), recents()).slice(0, recents().length);
+    const groups = [...new Set(options().map(b => b.group))].map(name => ({ name, items: options().filter(b => b.group === name) }));
+    if (!recent.length) return groups;
+    const recentIds = new Set(recent.map(b => b.id));
+    const trimmed = groups.map(group => ({ ...group, items: group.items.filter(b => !recentIds.has(b.id)) })).filter(group => group.items.length);
+    return [{ name: 'Récemment utilisés', items: recent }, ...trimmed];
+  });
   const active = (name: string) => { revision(); return editor?.isActive(name); };
   const apply = (index: number) => {
     const item = options()[index];
     const range = slash();
     if (!item || !range) return;
     setSlash(undefined);
-    // Like Notion, a command typed after existing text creates the new block below instead of converting the line.
+    pushRecentSlashCommand(item.id);
+    setRecents(recentSlashIds());
     const $from = editor.state.doc.resolve(range.from);
     const typed = range.to - range.from;
     // Commands that open a picker or dialog must not ask Tiptap for a delayed focus: it would steal it back.

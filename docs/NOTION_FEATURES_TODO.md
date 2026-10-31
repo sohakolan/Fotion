@@ -75,7 +75,7 @@ Références : [S01](NOTION_REFERENCE.md#s01), [S03](NOTION_REFERENCE.md#s03), [
 - [ ] **FN-051** [PARTIEL] Afficher la barre de formatage au-dessus d’une sélection de texte.
 - [ ] **FN-052** [PARTIEL] Ouvrir le menu / et filtrer les commandes par nom et alias.
 - [ ] **FN-053** [PARTIEL] Parcourir le menu / avec les flèches, valider avec Entrée et fermer avec Échap.
-- [ ] **FN-054** Gérer les commandes récemment utilisées et les catégories selon la version de référence.
+- [ ] **FN-054** [PARTIEL] Gérer les commandes récemment utilisées et les catégories selon la version de référence.
 - [ ] **FN-055** [PARTIEL] Ouvrir un sélecteur de blocs avec le bouton + dans la marge.
 - [ ] **FN-056** [PARTIEL] Transformer un bloc sans perdre son texte ; couvrir tous les couples de conversion compatibles.
 - [ ] **FN-057** Convertir plusieurs blocs à la fois et expliquer les conversions impossibles.
@@ -663,3 +663,9 @@ Preuves : [extension image](../engine/document/image.ts) (tokenizer, parseHTML f
 FN-066 progresse : une nouvelle liste numérotée démarrée sous une liste existante continue la numérotation de celle-ci, même séparée par des paragraphs ou des titres ; toute autre liste (puces, code, citation) redémarre à 1 comme la référence. La continuité est appliquée dans la même transaction que la saisie (appendTransaction qui ré-étiquette la liste fraîchement créée par la règle de Tiptap), donc une seule étape d'annulation; le Markdown sur disque conserve le marqueur de départ standard GFM (`3. …`), lu tel quel par Obsidian et Notion. Les listes imbriquées et la reprise manuelle (menu « Reprendre la numérotation ») restent à faire.
 
 Preuves : [raccourcis](../engine/document/shortcuts.ts) (`continuedNumberingStart`, plugin appendTransaction), [tests du moteur](../tests/unit/engine.test.ts) — round-trip `1./2./texte/1. → 3.` et redémarrage après une puce — et [scénario navigateur](../tests/e2e/list-numbering.spec.ts) : frappe réelle `1. Nouvelle entrée`, second `<ol start="3">`, persistence après rechargement.
+
+### Récemment utilisés dans le menu / — 31 octobre 2026
+
+FN-054 progresse : le menu / regroupe en tête une section « Récemment utilisés » avec les commandes réellement employées (6 maximum, sans doublon, preference dans le navigateur) ; les groupes d'origine restent sous la section, sans doublon d'entrée. Avec un filtre, la liste reprend le classement simple. La mise à jour se fait à l'application effective de la commande (clic, Entrée) et re-survit au rechargement de la page. Restes selon la référence : la persistance cross-fenêtres et l'exclusion éventuelle des sous-menus `turn`/couleurs de la liste, et la comparaison visuelle du menu filtré.
+
+Preuves : [classement et tri des récents](../engine/operations/slash-commands.ts), [mémorisation navigateur](../ui/features/editor/lib/slash-recents.ts) (localStorage interdit au moteur, frontière vérifiée par [check-architecture](../scripts/check-architecture.mjs)), [test du tri](../tests/unit/engine.test.ts), [parcours navigateur](../tests/e2e/slash-recents.spec.ts) avec rechargement et capture `slash-recents.png`.

@@ -83,6 +83,18 @@ export function searchSlashCommands<T extends SlashCommand>(query: string, comma
     .map(entry => entry.command);
 }
 
+const recentLimit = 6;
+
+/** Empty-query menu: recently used commands lead, then the rest keeps its order. */
+export function withRecentSlashCommands<T extends SlashCommand>(commands: T[], recents: string[]): T[] {
+  if (!recents.length) return commands;
+  const recent = new Map(recents.map((id, index) => [id, index]));
+  const inRecents = commands.filter(command => recent.has(command.id))
+    .sort((a, b) => (recent.get(a.id) ?? 0) - (recent.get(b.id) ?? 0));
+  const rest = commands.filter(command => !recent.has(command.id));
+  return [...inRecents, ...rest];
+}
+
 /** Detects `/query` at the cursor: at the start of the block or after a space, like Notion. */
 export function slashQuery(textBefore: string): { query: string; length: number } | null {
   const match = textBefore.match(/(?:^|\s)\/((?!\s)[^/\n]{0,40})$/);

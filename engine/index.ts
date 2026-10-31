@@ -5,7 +5,7 @@ export { byOrder, planPageMove, type PagePlacement } from './pages/page-move';
 export { blockAt, moveBlockTransaction, isListItem, type Block } from './operations/block-move';
 export { BlockSelection, blockRange, extendBlockSelection, duplicateBlocks, moveBlocks } from './operations/block-selection';
 export { convertToggle, type ToggleTarget } from './operations/toggle-conversion';
-export { slashCommands, searchSlashCommands, slashQuery, turnTargets, type SlashCommand, type SlashGroup } from './operations/slash-commands';
+export { slashCommands, searchSlashCommands, slashQuery, turnTargets, withRecentSlashCommands, type SlashCommand, type SlashGroup } from './operations/slash-commands';
 export { documentExtensions } from './document/extensions';
 export { NotionShortcuts, selectCurrentBlock, moveCurrentBlock, caretPosition, syncCaret, continuedNumberingStart } from './document/shortcuts';
 export { Columns, Column } from './document/columns';

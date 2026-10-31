@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createRequire } from 'node:module';
 import { Editor } from '@tiptap/core';
-import { documentExtensions, convertToggle, countWords, slashCommands, searchSlashCommands, slashQuery, PageIndex, recencyGroup, BlockSelection, blockRange, parseDatePhrase, dateSuggestions, formatDate } from '../../engine';
+import { documentExtensions, convertToggle, countWords, slashCommands, searchSlashCommands, slashQuery, withRecentSlashCommands, PageIndex, recencyGroup, BlockSelection, blockRange, parseDatePhrase, dateSuggestions, formatDate, type SlashCommand } from '../../engine';
 const { JSDOM } = createRequire(import.meta.url)('jsdom');
 const dom = new JSDOM('<!doctype html><body></body>');
 Object.assign(globalThis, { window: dom.window, document: dom.window.document, DOMParser: dom.window.DOMParser, Node: dom.window.Node, HTMLElement: dom.window.HTMLElement, getComputedStyle: dom.window.getComputedStyle });
@@ -103,6 +103,12 @@ test('FotionMark columns open in the editor and unknown blocks are saved back un
   editor.commands.setContent(saved, { contentType: 'markdown' });
   assert.deepEqual(editor.getJSON(), before);
   editor.destroy();
+});
+
+test('the slash menu pins recently used commands ahead of their group', () => {
+  const commands = [{ id: 'heading', label: 'Titre 1', group: 'Blocs de base' }, { id: 'todo', label: 'À faire', group: 'Blocs de base' }, { id: 'divider', label: 'Séparateur', group: 'Médias' }] as unknown as SlashCommand[];
+  assert.deepEqual(withRecentSlashCommands(commands, ['divider', 'heading']).map(command => command.id), ['divider', 'heading', 'todo']);
+  assert.deepEqual(withRecentSlashCommands(commands, []).map(command => command.id), ['heading', 'todo', 'divider']);
 });
 
 test('FotionMark keeps unknown attributes and isolates an invalid child inside a valid block', () => {
