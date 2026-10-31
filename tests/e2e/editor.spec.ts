@@ -687,3 +687,24 @@ test('media blocks: import files and images into the vault, external content wai
   expect(content).toContain('::video{src="https://www.youtube.com/watch?v=dQw4w9WgXcQ"}');
   await expect(prose).toBeVisible();
 });
+
+test('pasting a screenshot and dropping a file import them into the page', async ({ page }) => {
+  const created = await createDocument(page, 'Collage');
+  await page.locator('.prose > p').first().click(); await page.keyboard.press('ControlOrMeta+ArrowRight'); await page.keyboard.press('End');
+  await page.evaluate(async () => {
+    const bytes = Uint8Array.from(atob('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=='), c => c.charCodeAt(0));
+    const data = new DataTransfer(); data.items.add(new File([bytes], 'capture.png', { type: 'image/png' }));
+    document.querySelector('.ProseMirror')!.dispatchEvent(new ClipboardEvent('paste', { clipboardData: data, bubbles: true, cancelable: true }));
+  });
+  await expect(page.locator('.prose img')).toHaveAttribute('src', /^attachments\/[a-f0-9]{12}-capture\.png$/);
+  const box = (await page.locator('.prose > p').first().boundingBox())!;
+  await page.evaluate(({ x, y }) => {
+    const data = new DataTransfer(); data.items.add(new File(['notes'], 'notes.txt', { type: 'text/plain' }));
+    document.querySelector('.ProseMirror')!.dispatchEvent(new DragEvent('drop', { dataTransfer: data, clientX: x, clientY: y, bubbles: true, cancelable: true }));
+  }, { x: box.x + 10, y: box.y + box.height / 2 });
+  await expect(page.locator('.prose .media-file')).toContainText('notes.txt');
+  await expect(page.locator('.save-status')).toHaveText('Enregistré');
+  const content = (await (await page.request.get('/api/pages')).json()).find((p: { id: string }) => p.id === created.id).content as string;
+  expect(content).toMatch(/attachments\/[a-f0-9]{12}-capture\.png/);
+  expect(content).toMatch(/::file\{src=attachments\/[a-f0-9]{12}-notes\.txt name=notes\.txt size=5\}/);
+});

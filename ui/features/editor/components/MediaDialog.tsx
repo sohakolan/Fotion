@@ -8,7 +8,8 @@ const titles: Record<MediaKind, string> = { image: 'Ajouter une image', video: '
 const accept: Partial<Record<MediaKind, string>> = { image: 'image/*', video: 'video/*', audio: 'audio/*', pdf: 'application/pdf', file: '' };
 const placeholders: Record<MediaKind, string> = { image: 'Collez le lien de l’image…', video: 'Collez un lien YouTube, Vimeo ou vidéo…', audio: 'Collez le lien du fichier audio…', pdf: 'Collez le lien du PDF…', file: 'Collez le lien du fichier…', bookmark: 'Collez un lien, par exemple https://notion.com', embed: 'Collez le lien à intégrer…' };
 
-async function upload(file: File): Promise<{ path: string; name: string; size: number }> {
+/** Copies a file into the vault's attachments/ folder and returns its relative path. */
+export async function upload(file: File): Promise<{ path: string; name: string; size: number }> {
   const response = await fetch('/api/attachments', { method: 'POST', headers: { 'Content-Type': 'application/octet-stream', 'X-File-Name': encodeURIComponent(file.name) }, body: file });
   const data = await response.json();
   if (!response.ok) throw new Error(data.error || 'Import impossible.');
@@ -16,6 +17,14 @@ async function upload(file: File): Promise<{ path: string; name: string; size: n
 }
 
 /** Notion's media popover: « Importer » copies the file into the vault, « Intégrer un lien » keeps the address. */
+/** Media block for a dropped or pasted file, from its type, like Notion. */
+export function mediaKindOf(file: File): MediaKind {
+  if (file.type.startsWith('image/')) return 'image';
+  if (file.type.startsWith('video/')) return 'video';
+  if (file.type.startsWith('audio/')) return 'audio';
+  return file.type === 'application/pdf' ? 'pdf' : 'file';
+}
+
 export default function MediaDialog(props: { kind: MediaKind; onSubmit: (result: MediaResult) => void; onClose: () => void }) {
   const canUpload = () => props.kind in accept;
   const [tab, setTab] = createSignal<'upload' | 'link'>(canUpload() ? 'upload' : 'link');

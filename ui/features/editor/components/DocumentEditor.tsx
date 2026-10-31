@@ -11,7 +11,7 @@ import { editorExtensions } from '../extensions/editor-extensions';
 import { TextSelection, AllSelection } from '@tiptap/pm/state';
 import BlockControls from './BlockControls';
 import SelectionRectangle from './SelectionRectangle';
-import MediaDialog, { type MediaKind, type MediaResult } from './MediaDialog';
+import MediaDialog, { upload, mediaKindOf, type MediaKind, type MediaResult } from './MediaDialog';
 import { Menu, MenuItem, MenuDivider, MenuSearch, EmojiPicker, Switch, modKey } from '../../../kit';
 import { blockAt, moveBlockTransaction, isListItem, caretPosition, BlockSelection, blockRange, type Block } from '../../../../engine';
 import { Bold, Italic, Underline, Strikethrough, Code, Link, ChevronDown, ChevronRight, Trash2, Copy, Type, Search, Check, Plus, ImagePlus, X, Repeat2, PaintRoller, AtSign, Smile, CalendarDays, AlarmClock, CornerUpRight, ArrowUpRight, Video, Music, FileType, Paperclip, Bookmark, Globe, Heading1, Heading2, Heading3, List, ListOrdered, SquareCheckBig, ListCollapse, FileText, MessageSquareText, Quote, Table, Minus, Image as ImageIcon, CodeXml, TableOfContents, Columns2, Columns3, Columns4 } from 'lucide-solid';
@@ -56,7 +56,7 @@ const mediaKinds: MediaKind[] = ['image', 'video', 'audio', 'pdf', 'file', 'book
 type MentionOption = { kind: 'date'; date: string } | { kind: 'page'; page: Page } | { kind: 'new'; title: string };
 const blocks = slashCommands.map(command => ({ ...command, ...(blockActions[command.id] ?? derivedAction(command)) }));
 
-export default function DocumentEditor(props: { content: string; onChange: (content: string) => void; onReady: (editor: Editor | undefined) => void; onCreatePage: () => void; onCreateSubpage: (title: string) => Promise<Page | undefined>; onMoveBlock: (markdown: string, targetId: string) => Promise<boolean>; pageId: string; pages: Page[]; onOpenPage: (id: string) => void; editable: boolean }) {
+export default function DocumentEditor(props: { content: string; onChange: (content: string) => void; onReady: (editor: Editor | undefined) => void; onCreatePage: () => void; onCreateSubpage: (title: string) => Promise<Page | undefined>; onMoveBlock: (markdown: string, targetId: string) => Promise<boolean>; onError: (message: string) => void; pageId: string; pages: Page[]; onOpenPage: (id: string) => void; editable: boolean }) {
   let element!: HTMLDivElement;
   let editor!: Editor;
   const [ready, setReady] = createSignal(false);
@@ -82,6 +82,16 @@ export default function DocumentEditor(props: { content: string; onChange: (cont
     else editor.chain().insertContentAt(empty ? { from: block.pos, to: block.pos + block.node.nodeSize } : block.pos + block.node.nodeSize, content).run();
     // Immediate focus: Tiptap's delayed focus would reset the selection after the user's next click.
     editor.view.focus();
+  }
+  /** Dropped or pasted files: imported into the vault, then inserted in order where they landed. */
+  async function importFiles(files: File[], pos: number) {
+    for (const file of files) {
+      try {
+        const stored = await upload(file), kind = mediaKindOf(file);
+        insertMedia(kind, pos, kind === 'file' ? { src: stored.path, name: stored.name, size: String(stored.size) } : { src: stored.path });
+        pos = Math.min(editor.state.selection.to + 1, editor.state.doc.content.size);
+      } catch (error) { props.onError((error as Error).message); }
+    }
   }
   function insertMedia(kind: MediaKind, pos: number, result: MediaResult) {
     if (kind === 'image') { insertBlockHere(pos, { type: 'image', attrs: { src: result.src, alt: '' } }); return; }
@@ -339,6 +349,21 @@ export default function DocumentEditor(props: { content: string; onChange: (cont
       editable: props.editable,
       contentType: 'markdown',
       editorProps: {
+        handleDrop: (view, event) => {
+          const files = [...(event.dataTransfer?.files || [])];
+          if (!files.length || !editor.isEditable) return false;
+          event.preventDefault();
+          const target = view.posAtCoords({ left: event.clientX, top: event.clientY });
+          void importFiles(files, target?.pos ?? editor.state.selection.from);
+          return true;
+        },
+        handlePaste: (_view, event) => {
+          const files = [...(event.clipboardData?.files || [])];
+          if (!files.length || !editor.isEditable) return false;
+          event.preventDefault();
+          void importFiles(files, editor.state.selection.from);
+          return true;
+        },
         attributes: { class: 'prose', 'aria-label': 'Contenu de la page', role: 'textbox', 'aria-multiline': 'true', spellcheck: 'true' },
         handleDOMEvents: { mousedown: (view, event) => {
           if (!event.shiftKey || event.button !== 0) return false;
