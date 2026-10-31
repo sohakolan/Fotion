@@ -566,3 +566,64 @@
   justify-content: flex-end;
   gap: 8px;
 }
+
+/* Notion's media popover: Importer / Intégrer un lien. */
+.media-dialog {
+  max-width: 540px;
+}
+
+.media-tabs {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0 8px;
+  border-bottom: 1px solid var(--line);
+}
+
+.media-tabs [role=tab] {
+  padding: 10px 6px 8px;
+  font-size: var(--text-ui);
+  color: var(--muted);
+}
+
+.media-tabs [role=tab][aria-selected=true] {
+  color: var(--text);
+  box-shadow: inset 0 -2px 0 var(--text);
+}
+
+.media-close {
+  margin-left: auto;
+}
+
+.media-body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 18px 16px;
+}
+
+.media-url {
+  width: 100%;
+  height: 32px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: var(--radius);
+  background: var(--hover);
+  box-shadow: inset 0 0 0 1px var(--line);
+  color: var(--text);
+  font-size: var(--text-ui);
+}
+
+.media-drop small {
+  color: var(--muted);
+  font-size: var(--text-sm);
+}
+
+.media-drop {
+  cursor: pointer;
+}
+
+.media-error {
+  padding: 0 16px 14px;
+}

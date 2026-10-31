@@ -12,7 +12,9 @@ export type AttributeType =
   | { type: 'percent'; default?: number }
   | { type: 'url'; default?: string }
   | { type: 'page'; default?: string }
-  | { type: 'date'; default?: string };
+  | { type: 'date'; default?: string }
+  /** A web address or a file imported into the vault (`attachments/…`). */
+  | { type: 'source'; default?: string };
 export type AttributeTypes = Record<string, AttributeType>;
 export type Value = string | number | boolean;
 
@@ -29,6 +31,7 @@ export function readValue(type: AttributeType, text: string): Value | undefined 
     case 'percent': { const match = text.match(/^(\d{1,3}(?:\.\d+)?)%$/); const value = match ? Number(match[1]) : NaN; return value > 0 && value < 100 ? value : undefined; }
     case 'url': return /^(https?:\/\/|mailto:)[^\s]+$/i.test(text) ? text : undefined;
     case 'page': return /^[^/\\:\x00-\x1f]{1,220}\.md$/.test(text) && !text.startsWith('.') ? text : undefined;
+    case 'source': return /^https?:\/\/[^\s]+$/i.test(text) || /^attachments\/[^/\\\s.][^/\\\s]{0,199}$/.test(text) ? text : undefined;
     case 'date': return /^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2}(:\d{2})?(Z|[+-]\d{2}:\d{2})?)?$/.test(text) && !Number.isNaN(Date.parse(text)) ? text : undefined;
   }
 }

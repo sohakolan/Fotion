@@ -11,9 +11,10 @@ import { editorExtensions } from '../extensions/editor-extensions';
 import { TextSelection, AllSelection } from '@tiptap/pm/state';
 import BlockControls from './BlockControls';
 import SelectionRectangle from './SelectionRectangle';
+import MediaDialog, { type MediaKind, type MediaResult } from './MediaDialog';
 import { Menu, MenuItem, MenuDivider, MenuSearch, EmojiPicker, Switch, modKey } from '../../../kit';
 import { blockAt, moveBlockTransaction, isListItem, caretPosition, BlockSelection, blockRange, type Block } from '../../../../engine';
-import { Bold, Italic, Underline, Strikethrough, Code, Link, ChevronDown, ChevronRight, Trash2, Copy, Type, Search, Check, Plus, ImagePlus, X, Repeat2, PaintRoller, AtSign, Smile, CalendarDays, AlarmClock, CornerUpRight, ArrowUpRight, Heading1, Heading2, Heading3, List, ListOrdered, SquareCheckBig, ListCollapse, FileText, MessageSquareText, Quote, Table, Minus, Image as ImageIcon, CodeXml, TableOfContents, Columns2, Columns3, Columns4 } from 'lucide-solid';
+import { Bold, Italic, Underline, Strikethrough, Code, Link, ChevronDown, ChevronRight, Trash2, Copy, Type, Search, Check, Plus, ImagePlus, X, Repeat2, PaintRoller, AtSign, Smile, CalendarDays, AlarmClock, CornerUpRight, ArrowUpRight, Video, Music, FileType, Paperclip, Bookmark, Globe, Heading1, Heading2, Heading3, List, ListOrdered, SquareCheckBig, ListCollapse, FileText, MessageSquareText, Quote, Table, Minus, Image as ImageIcon, CodeXml, TableOfContents, Columns2, Columns3, Columns4 } from 'lucide-solid';
 
 
 const blockActions: Record<string, { icon: () => JSX.Element; action: (chain: ChainedCommands) => ChainedCommands }> = {
@@ -32,6 +33,12 @@ const blockActions: Record<string, { icon: () => JSX.Element; action: (chain: Ch
   table: { icon: () => <Table size={18}/>, action: c => c.insertTable({ rows: 3, cols: 3, withHeaderRow: true }) },
   divider: { icon: () => <Minus size={18}/>, action: c => c.setHorizontalRule() },
   image: { icon: () => <ImageIcon size={18}/>, action: c => c },
+  video: { icon: () => <Video size={18}/>, action: c => c },
+  audio: { icon: () => <Music size={18}/>, action: c => c },
+  pdf: { icon: () => <FileType size={18}/>, action: c => c },
+  file: { icon: () => <Paperclip size={18}/>, action: c => c },
+  bookmark: { icon: () => <Bookmark size={18}/>, action: c => c },
+  embed: { icon: () => <Globe size={18}/>, action: c => c },
   code: { icon: () => <CodeXml size={18}/>, action: c => c.toggleCodeBlock() },
   toc: { icon: () => <TableOfContents size={18}/>, action: c => c.insertContent({ type: 'tableOfContents' }) },
   ...Object.fromEntries(([[2, Columns2], [3, Columns3], [4, Columns4]] as const).map(([count, Icon]) => [`columns${count}`, { icon: () => <Icon size={18}/>, action: (c: ChainedCommands) => c.insertContent({ type: 'columns', content: Array.from({ length: count }, () => ({ type: 'column', content: [{ type: 'paragraph' }] })) }) }])),
@@ -45,6 +52,7 @@ function derivedAction(command: SlashCommand): { icon: () => JSX.Element; action
   const icons: Record<string, () => JSX.Element> = { moveto: () => <CornerUpRight size={18}/>, date: () => <CalendarDays size={18}/>, reminder: () => <AlarmClock size={18}/>, mention: () => <AtSign size={18}/>, emoji: () => <Smile size={18}/>, duplicate: () => <Copy size={18}/>, delete: () => <Trash2 size={18}/> };
   return { icon: icons[command.id] ?? (() => <Type size={18}/>), action: c => c };
 }
+const mediaKinds: MediaKind[] = ['image', 'video', 'audio', 'pdf', 'file', 'bookmark', 'embed'];
 type MentionOption = { kind: 'date'; date: string } | { kind: 'page'; page: Page } | { kind: 'new'; title: string };
 const blocks = slashCommands.map(command => ({ ...command, ...(blockActions[command.id] ?? derivedAction(command)) }));
 
@@ -57,7 +65,7 @@ export default function DocumentEditor(props: { content: string; onChange: (cont
   const [transform, setTransform] = createSignal(false);
   const [blockQuery, setBlockQuery] = createSignal('');
   const [linkDraft, setLinkDraft] = createSignal<{ value: string; from: number; to: number; x: number; y: number }>();
-  const [imageDraft, setImageDraft] = createSignal<string>();
+  const [mediaDraft, setMediaDraft] = createSignal<{ kind: MediaKind; pos: number }>();
   const [emojiAt, setEmojiAt] = createSignal<{ x: number; y: number }>();
   const [dateEdit, setDateEdit] = createSignal<{ pos: number; x: number; y: number }>();
   const [pagePicker, setPagePicker] = createSignal<{ purpose: 'link' | 'move'; pos: number; x: number; y: number; query: string }>();
@@ -65,6 +73,19 @@ export default function DocumentEditor(props: { content: string; onChange: (cont
   function openPagePicker(purpose: 'link' | 'move', pos: number) {
     const coords = editor.view.coordsAtPos(editor.state.selection.from);
     setPagePicker({ purpose, pos, query: '', x: Math.max(8, Math.min(coords.left, window.innerWidth - 328)), y: Math.max(8, Math.min(coords.bottom + 8, window.innerHeight - 360)) });
+  }
+  /** Puts a block where the slash command was typed: it replaces an empty line, otherwise goes right below. */
+  function insertBlockHere(pos: number, content: Record<string, unknown>) {
+    const block = blockAt(editor.state.doc, Math.min(pos, editor.state.doc.content.size));
+    const empty = block?.node.type.name === 'paragraph' && !block.node.content.size;
+    if (!block) editor.chain().insertContent(content).run();
+    else editor.chain().insertContentAt(empty ? { from: block.pos, to: block.pos + block.node.nodeSize } : block.pos + block.node.nodeSize, content).run();
+    // Immediate focus: Tiptap's delayed focus would reset the selection after the user's next click.
+    editor.view.focus();
+  }
+  function insertMedia(kind: MediaKind, pos: number, result: MediaResult) {
+    if (kind === 'image') { insertBlockHere(pos, { type: 'image', attrs: { src: result.src, alt: '' } }); return; }
+    insertBlockHere(pos, { type: kind, attrs: { attributes: result } });
   }
   /** /link inserts a link-to-page block in place of an empty line; /moveto sends the block to another page. */
   async function pickPage(page: Page) {
@@ -90,8 +111,6 @@ export default function DocumentEditor(props: { content: string; onChange: (cont
     const value = `${patch.day || day}${reminder ? `T${patch.time || time || '09:00'}` : ''}`;
     if (isDateValue(value)) editor.view.dispatch(editor.state.tr.setNodeMarkup(edit.pos, undefined, { date: value, reminder }));
   }
-  const [imageError, setImageError] = createSignal('');
-  let imagePosition = 0;
   const linkPages = () => props.pages.filter(page => normalizeSearch(page.title).includes(normalizeSearch(linkDraft()?.value || ''))).slice(0, 20);
   const [linkError, setLinkError] = createSignal('');
   const [slash, setSlash] = createSignal<{ from: number; to: number; query: string; x: number; y: number; above: boolean }>();
@@ -120,7 +139,9 @@ export default function DocumentEditor(props: { content: string; onChange: (cont
     // Like Notion, a command typed after existing text creates the new block below instead of converting the line.
     const $from = editor.state.doc.resolve(range.from);
     const typed = range.to - range.from;
-    let chain = editor.chain().focus().deleteRange({ from: range.from, to: range.to });
+    // Commands that open a picker or dialog must not ask Tiptap for a delayed focus: it would steal it back.
+    const opensPopover = ['link', 'moveto', 'emoji', ...mediaKinds].includes(item.id);
+    let chain = (opensPopover ? editor.chain() : editor.chain().focus()).deleteRange({ from: range.from, to: range.to });
     // Actions, colours and inline entries work on the current block instead of creating a new one.
     if (['Actions', 'Couleurs', 'En ligne'].includes(item.group)) { chain.run(); runBlockCommand(item.id); return; }
     if ($from.parent.content.size > typed && item.id !== 'page') {
@@ -130,7 +151,7 @@ export default function DocumentEditor(props: { content: string; onChange: (cont
     item.action(chain).run();
     if (item.id === 'page') props.onCreatePage();
     if (item.id === 'link') { const block = blockAt(editor.state.doc, editor.state.selection.from); if (block) openPagePicker('link', block.pos); }
-    if (item.id === 'image') { imagePosition = editor.state.selection.from; setImageError(''); setImageDraft(''); requestAnimationFrame(() => document.querySelector<HTMLInputElement>('.image-url-input')?.focus()); }
+    if (mediaKinds.includes(item.id as MediaKind)) setMediaDraft({ kind: item.id as MediaKind, pos: editor.state.selection.from });
   };
   /** Commands that act on the block around the cursor, reached from the slash menu or the keyboard. */
   function runBlockCommand(id: string) {
@@ -395,7 +416,7 @@ export default function DocumentEditor(props: { content: string; onChange: (cont
     props.onReady(editor);
     const close = (event: MouseEvent) => { if (!(event.target as HTMLElement).closest('.editor, .mention-menu')) setMention(undefined); if (!(event.target as HTMLElement).closest('.block-menu, .block-controls, .block-submenu')) closeBlockMenu(); };
     const scroll = (e: Event) => { if ((e.target as HTMLElement)?.closest?.('.popover')) return; setSelection(undefined); setSlash(undefined); setMention(undefined); setColorMenu(undefined); closeBlockMenu(); };
-    const escape = (e: KeyboardEvent) => { if (e.key === 'Escape') { setMention(undefined); closeBlockMenu(); if (emojiAt()) { setEmojiAt(undefined); editor.commands.focus(); } if (dateEdit()) { setDateEdit(undefined); editor.commands.focus(); } if (pagePicker()) { setPagePicker(undefined); editor.commands.focus(); } setLinkDraft(undefined); setImageDraft(undefined); if (colorMenu()) { setColorMenu(undefined); editor.commands.focus(); } } };
+    const escape = (e: KeyboardEvent) => { if (e.key === 'Escape') { setMention(undefined); closeBlockMenu(); if (emojiAt()) { setEmojiAt(undefined); editor.commands.focus(); } if (dateEdit()) { setDateEdit(undefined); editor.commands.focus(); } if (pagePicker()) { setPagePicker(undefined); editor.commands.focus(); } setLinkDraft(undefined); setMediaDraft(undefined); if (colorMenu()) { setColorMenu(undefined); editor.commands.focus(); } } };
     window.addEventListener('keydown', escape);
     document.addEventListener('pointerdown', close);
     window.addEventListener('scroll', scroll, true);
@@ -515,11 +536,7 @@ export default function DocumentEditor(props: { content: string; onChange: (cont
       <Show when={!pickerPages().length}><p class="empty-message">Aucune page trouvée.</p></Show>
     </Menu></>}</Show>
     <Show when={emojiAt()}>{position => <><div class="dismiss-layer" onClick={() => { setEmojiAt(undefined); editor.commands.focus(); }}/><EmojiPicker label="Insérer un emoji" style={{ position: 'fixed', left: `${position().x}px`, top: `${position().y}px` }} onPick={emoji => { setEmojiAt(undefined); editor.chain().focus().insertContent(emoji).run(); }}/></>}</Show>
-    <Show when={imageDraft() !== undefined}><div class="modal-backdrop" onMouseDown={e => { if (e.target === e.currentTarget) setImageDraft(undefined); }}><form class="modal image-dialog" role="dialog" aria-modal="true" aria-label="Ajouter une image" onSubmit={e => {
-      e.preventDefault(); const src = imageDraft()?.trim() || '';
-      if (!/^https?:\/\//i.test(src)) { setImageError('Saisissez une adresse d’image http:// ou https://.'); return; }
-      editor.chain().focus().setTextSelection(Math.min(imagePosition, editor.state.doc.content.size)).setImage({ src, alt: '' }).run(); setImageDraft(undefined);
-    }}><div class="popover-heading"><span>Intégrer une image</span><button type="button" class="icon-button" aria-label="Fermer" onClick={() => setImageDraft(undefined)}><X size={16}/></button></div><div class="image-dialog-body"><ImagePlus size={26}/><input class="image-url-input" aria-label="Lien de l’image" placeholder="Collez le lien de votre image…" value={imageDraft()} onInput={e => setImageDraft(e.currentTarget.value)}/><Show when={imageError()}><p class="field-error">{imageError()}</p></Show><button class="primary-button" type="submit">Intégrer l’image</button><small>Le lien de l’image est conservé dans votre fichier Markdown.</small></div></form></div></Show>
+    <Show when={mediaDraft()}>{draft => <MediaDialog kind={draft().kind} onClose={() => { setMediaDraft(undefined); editor.commands.focus(); }} onSubmit={result => { const { kind, pos } = draft(); setMediaDraft(undefined); insertMedia(kind, pos, result); }}/>}</Show>
     <Show when={ready() && (revision(), editor?.isActive('table'))}><div class="table-tools" role="toolbar" aria-label="Modifier le tableau">
       <button onMouseDown={e => e.preventDefault()} onClick={() => editor.chain().focus().addRowAfter().run()}><Plus size={13}/>Ligne</button>
       <button onMouseDown={e => e.preventDefault()} onClick={() => editor.chain().focus().addColumnAfter().run()}><Plus size={13}/>Colonne</button>

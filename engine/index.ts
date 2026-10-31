@@ -12,6 +12,7 @@ export { Columns, Column } from './document/columns';
 export { Indent } from './document/indent';
 export { DateMention } from './document/date-mention';
 export { LinkToPage } from './document/link-to-page';
+export { mediaNodes } from './document/media';
 export { parseDatePhrase, dateSuggestions, formatDate, isDateValue, isoDay } from './operations/date-query';
 export { indentBlock, outdentBlock, handlesTab } from './operations/indentation';
 export { DirectiveBlock } from './document/directive-block';

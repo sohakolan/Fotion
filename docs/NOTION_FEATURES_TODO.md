@@ -31,7 +31,7 @@ Références : [S01](NOTION_REFERENCE.md#s01), [S02](NOTION_REFERENCE.md#s02), [
 - [ ] **FN-017** [PARTIEL] Revenir à la page précédente ou suivante en conservant position et sélection.
 - [ ] **FN-018** Afficher les pages récemment visitées et retrouver une page fermée.
 - [x] **FN-019** Verrouiller et déverrouiller une page contre les modifications accidentelles.
-- [ ] **FN-020** Déplacer un bloc vers une page existante ou une nouvelle page.
+- [ ] **FN-020** [PARTIEL] Déplacer un bloc vers une page existante ou une nouvelle page.
 - [ ] **FN-021** Transformer un bloc en page et réintégrer une page sous forme de blocs.
 - [ ] **FN-022** [PARTIEL] Gérer les liens vers une page supprimée, inaccessible ou déplacée.
 - [ ] **FN-023** [PARTIEL] Supprimer/restaurer un sous-arbre avec un comportement explicite pour ses descendants.
@@ -45,8 +45,8 @@ Références : [S01](NOTION_REFERENCE.md#s01), [S05](NOTION_REFERENCE.md#s05).
 - [ ] **FN-026** [PARTIEL] Insérer un paragraphe, scinder un bloc avec Entrée et fusionner avec Retour arrière.
 - [ ] **FN-027** Reproduire Entrée et Maj+Entrée dans chaque type de bloc et à ses frontières.
 - [ ] **FN-028** [PARTIEL] Distinguer sélection de texte, sélection d’un bloc et sélection de plusieurs blocs.
-- [ ] **FN-029** Étendre une sélection avec Maj+clic, Maj+flèches et navigation au clavier.
-- [ ] **FN-030** Sélectionner un ensemble de blocs en traçant un rectangle dans la marge.
+- [ ] **FN-029** [PARTIEL] Étendre une sélection avec Maj+clic, Maj+flèches et navigation au clavier.
+- [x] **FN-030** Sélectionner un ensemble de blocs en traçant un rectangle dans la marge.
 - [ ] **FN-031** Couper, copier, coller et dupliquer une sélection multibloc.
 - [ ] **FN-032** Conserver un presse-papiers structuré entre pages et fenêtres de Fotion.
 - [ ] **FN-033** Coller du texte brut sans styles, et conserver les styles lors du collage riche.
@@ -104,16 +104,16 @@ Références : [S01](NOTION_REFERENCE.md#s01), [S04](NOTION_REFERENCE.md#s04), [
 - [ ] **FN-075** [PARTIEL] Colonnes de contenu avec création par dépôt latéral.
 - [ ] **FN-076** Redimensionnement, réorganisation et suppression des colonnes.
 - [x] **FN-077** Table des matières liée aux titres et mise à jour après renommage.
-- [ ] **FN-078** Lien vers une page sous forme de bloc ; distinct d’une vraie sous-page.
+- [x] **FN-078** Lien vers une page sous forme de bloc ; distinct d’une vraie sous-page.
 - [ ] **FN-079** Mentions de pages, dates, personnes et références de base de données.
 - [ ] **FN-080** Fil d’Ariane insérable dans le contenu.
 - [ ] **FN-081** Blocs synchronisés avec origine, occurrences et désynchronisation.
 - [ ] **FN-082** Boutons de page avec actions configurables.
 - [ ] **FN-083** Modèles de blocs réutilisables selon les mécanismes de la référence.
 - [ ] **FN-084** Blocs de bases de données intégrées et vues liées.
-- [ ] **FN-085** Marque-pages web avec titre, description et aperçu.
-- [ ] **FN-086** Blocs embarqués : vidéo, audio, PDF et contenus externes compatibles.
-- [ ] **FN-087** Bloc de fichier téléchargeable.
+- [ ] **FN-085** [PARTIEL] Marque-pages web avec titre, description et aperçu.
+- [ ] **FN-086** [PARTIEL] Blocs embarqués : vidéo, audio, PDF et contenus externes compatibles.
+- [x] **FN-087** Bloc de fichier téléchargeable.
 - [x] **FN-088** Traitement explicite des blocs non reconnus, sans suppression silencieuse.
 
 ## 05. Glisser-déposer et manipulation — P0
@@ -150,32 +150,32 @@ Références : [S01](NOTION_REFERENCE.md#s01), [S04](NOTION_REFERENCE.md#s04), [
 Références : [S06](NOTION_REFERENCE.md#s06).
 
 - [ ] **FN-113** [PARTIEL] Insérer une image par URL.
-- [ ] **FN-114** Importer une image locale et copier le fichier dans le coffre.
+- [x] **FN-114** Importer une image locale et copier le fichier dans le coffre.
 - [ ] **FN-115** Coller une capture d’écran et déposer plusieurs images.
 - [ ] **FN-116** Redimensionner et aligner une image.
 - [ ] **FN-117** Ajouter une légende et un texte alternatif.
 - [ ] **FN-118** Remplacer, télécharger et ouvrir une image en grand.
 - [ ] **FN-119** Recadrer/repositionner lorsque la référence l’autorise.
 - [ ] **FN-120** Afficher une galerie de sélection d’images et les sources de couverture disponibles.
-- [ ] **FN-121** Importer des fichiers avec taille, type, nom et téléchargement.
-- [ ] **FN-122** Lire audio et vidéo avec contrôles accessibles.
-- [ ] **FN-123** Afficher un PDF intégré et permettre son téléchargement.
+- [ ] **FN-121** [PARTIEL] Importer des fichiers avec taille, type, nom et téléchargement.
+- [ ] **FN-122** [PARTIEL] Lire audio et vidéo avec contrôles accessibles.
+- [ ] **FN-123** [PARTIEL] Afficher un PDF intégré et permettre son téléchargement.
 - [ ] **FN-124** Intégrer les fournisseurs externes observés dans la référence, avec liste de compatibilité datée.
 - [ ] **FN-125** Afficher les états de chargement, erreur, accès refusé et URL expirée.
 - [ ] **FN-126** Autoriser l’ouverture d’un lien sans exécuter de contenu actif non fiable.
 - [ ] **FN-127** Conserver les médias après déplacement, duplication, import et export.
-- [ ] **FN-128** Respecter la confidentialité : aucune requête externe avant qu’un média distant soit utilisé.
+- [x] **FN-128** Respecter la confidentialité : aucune requête externe avant qu’un média distant soit utilisé.
 
 ## 07. Liens, mentions, recherche — P1
 
 Références : [S08](NOTION_REFERENCE.md#s08), [S09](NOTION_REFERENCE.md#s09), [S10](NOTION_REFERENCE.md#s10).
 
 - [ ] **FN-129** [PARTIEL] Créer un lien interne avec @, [[ et le menu de lien selon la référence.
-- [ ] **FN-130** Créer une nouvelle page depuis une recherche de lien sans résultat.
+- [x] **FN-130** Créer une nouvelle page depuis une recherche de lien sans résultat.
 - [ ] **FN-131** [PARTIEL] Afficher les mentions entrantes et les backlinks d’une page.
 - [ ] **FN-132** [PARTIEL] Mettre à jour les libellés des références après renommage.
 - [ ] **FN-133** Afficher un aperçu de page au survol d’une mention.
-- [ ] **FN-134** Créer une mention de date et interpréter les dates relatives.
+- [x] **FN-134** Créer une mention de date et interpréter les dates relatives.
 - [ ] **FN-135** Définir une heure, un fuseau et un rappel.
 - [ ] **FN-136** Afficher les rappels arrivés à échéance et permettre leur modification.
 - [ ] **FN-137** [PARTIEL] Rechercher dans le titre et le contenu des pages.
@@ -632,4 +632,14 @@ Référence : liste officielle des raccourcis de Notion (notion.com/help/keyboar
 - Les commandes de bloc lisent la position du curseur affichée, pour agir sur le bon bloc même juste après un clic.
 
 Preuves : [raccourcis](../engine/document/shortcuts.ts), [catalogue](../engine/operations/slash-commands.ts), [tests du moteur](../tests/unit/engine.test.ts), [scénario navigateur](../tests/e2e/editor.spec.ts).
+
+## Avancement — sélection, indentation, dates, liens et médias
+
+- Sélection de blocs (FN-028 à FN-031) : Échap, Maj+↑/↓, Maj+clic, rectangle depuis la marge ; supprimer, dupliquer, déplacer, copier/coller la sélection.
+- Tab/Maj+Tab sur tout bloc : FotionMark `:::indent`, corps des listes dépliantes.
+- Dates (FN-134) : `<time datetime>` standard, phrases françaises et anglaises, `/date`, `/reminder`, menu @ avec Date et « Nouvelle sous-page » (FN-130), édition au clic. Notifications de rappel (FN-136) à faire.
+- `/link` (FN-078) et `/moveto` (FN-020, vers une page existante ; création de page et sous-blocs à faire).
+- Médias : import dans `attachments/` (50 Mo, empreinte, types sûrs servis en ligne, le reste en téléchargement), images locales (FN-114), vidéo (YouTube sans cookie, Vimeo, fichiers), audio, PDF, fichier, intégration isolée, signet web avec aperçu lu côté serveur (adresses locales et privées refusées). Aucun contenu externe ne se charge avant un clic (FN-128).
+
+Restent de la liste : `/math`, `/bread`, `/button`, notifications de rappel, glisser-déposer de fichiers et collage d’images (FN-105, FN-106, FN-115).
 

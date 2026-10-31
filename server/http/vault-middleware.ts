@@ -1,9 +1,14 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import { Vault, VaultError } from '../storage/vault.ts';
+import { AssetStore, maxAssetBytes } from '../storage/assets.ts';
+import { linkPreview } from './link-preview.ts';
 
 export function vaultMiddleware(vault: Vault) {
+  const assets = new AssetStore(vault.root);
   return async (req: IncomingMessage, res: ServerResponse, next: () => void) => {
     const url = new URL(req.url || '/', 'http://localhost');
+    // Pages reference imported files relatively (`attachments/…`), so they are also served from the site root.
+    if (url.pathname.startsWith('/attachments/')) url.pathname = `/api${url.pathname}`;
     if (!url.pathname.startsWith('/api/')) return next();
     res.setHeader('Content-Type', 'application/json; charset=utf-8');
     res.setHeader('Cache-Control', 'no-store');
@@ -14,6 +19,25 @@ export function vaultMiddleware(vault: Vault) {
       if (req.method === 'GET' && versions) {
         const id = decodeURIComponent(versions[1]);
         res.end(JSON.stringify(versions[2] ? vault.snapshot(id, versions[2]) : vault.history(id))); return;
+      }
+      if (req.method === 'GET' && url.pathname === '/api/link-preview') { res.end(JSON.stringify(await linkPreview(url.searchParams.get('url') || ''))); return; }
+      const asset = url.pathname.match(/^\/api\/attachments\/([^/]+)$/);
+      if (req.method === 'GET' && asset) {
+        const file = assets.read(decodeURIComponent(asset[1]));
+        res.setHeader('Content-Type', file.type);
+        res.setHeader('X-Content-Type-Options', 'nosniff');
+        // Imported files never run code in the app's origin.
+        res.setHeader('Content-Security-Policy', `default-src 'none'; img-src 'self'; media-src 'self'; style-src 'unsafe-inline'${file.type === 'application/pdf' ? '' : '; sandbox'}`);
+        if (file.download) res.setHeader('Content-Disposition', `attachment; filename*=UTF-8''${encodeURIComponent(decodeURIComponent(asset[1]).replace(/^[a-f0-9]{12}-/, ''))}`);
+        res.setHeader('Cache-Control', 'private, max-age=31536000, immutable');
+        res.end(file.bytes); return;
+      }
+      if (req.method === 'POST' && url.pathname === '/api/attachments') {
+        if (req.headers['content-type'] !== 'application/octet-stream') throw new VaultError(415, 'Un fichier brut est requis.');
+        const chunks: Buffer[] = []; let size = 0;
+        for await (const chunk of req) { size += chunk.length; if (size > maxAssetBytes) throw new VaultError(413, 'Fichier trop volumineux (50 Mo maximum).'); chunks.push(chunk); }
+        const name = decodeURIComponent(String(req.headers['x-file-name'] || 'fichier'));
+        res.end(JSON.stringify(assets.save(name, Buffer.concat(chunks)))); return;
       }
       const restore = url.pathname.match(/^\/api\/pages\/([^/]+)\/restore$/);
       if (url.pathname === '/api/pages' && req.method === 'GET') { res.end(JSON.stringify(vault.list())); return; }

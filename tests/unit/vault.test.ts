@@ -160,3 +160,29 @@ test('permanent deletion only removes trashed, unchanged pages and keeps a histo
   const copies = readdirSync(join(vault.root, '.history')).map(name => readFileSync(join(vault.root, '.history', name), 'utf8'));
   assert.ok(copies.some(text => text.includes('trashed: true')), 'The deleted file is recoverable from the history folder');
 });
+
+test('imported files are stored once under attachments/ and only media are served inline', async t => {
+  const vault = fixture(t);
+  const middleware = vaultMiddleware(vault);
+  const server = createServer((req, res) => void middleware(req, res, () => { res.statusCode = 404; res.end(); })); await new Promise<void>(done => server.listen(0, '127.0.0.1', done)); t.after(() => server.close());
+  const base = `http://127.0.0.1:${(server.address() as { port: number }).port}`;
+  const upload = (name: string, body: string) => fetch(`${base}/api/attachments`, { method: 'POST', headers: { 'Content-Type': 'application/octet-stream', 'X-File-Name': encodeURIComponent(name) }, body });
+  const first = await (await upload('../photo.png', 'PNG')).json();
+  assert.match(first.path, /^attachments\/[a-f0-9]{12}-photo\.png$/);
+  assert.equal((await (await upload('photo.png', 'PNG')).json()).path, first.path, 'The same content is stored once');
+  const image = await fetch(`${base}/api/${first.path}`);
+  assert.equal(image.headers.get('content-type'), 'image/png'); assert.equal(image.headers.get('content-disposition'), null);
+  const page = await (await upload('page.html', '<script>alert(1)</script>')).json();
+  const html = await fetch(`${base}/api/${page.path}`);
+  assert.equal(html.headers.get('content-type'), 'application/octet-stream');
+  assert.match(html.headers.get('content-disposition') || '', /^attachment/);
+  assert.match(html.headers.get('content-security-policy') || '', /sandbox/);
+  assert.equal((await fetch(`${base}/api/attachments/..%2Fsecret.md`)).status, 400);
+  assert.equal((await fetch(`${base}/api/attachments`, { method: 'POST', headers: { 'Content-Type': 'application/octet-stream', Origin: 'http://evil.example' }, body: 'x' })).status, 403);
+});
+
+test('link previews refuse local and private addresses', async () => {
+  const { linkPreview } = await import('../../server/http/link-preview');
+  for (const url of ['file:///etc/passwd', 'http://localhost:5175', 'http://127.0.0.1/', 'http://192.168.1.10/', 'http://[::1]/', 'http://printer.local/', 'pas une url'])
+    await assert.rejects(linkPreview(url), (e: VaultError) => e.status === 400, url);
+});

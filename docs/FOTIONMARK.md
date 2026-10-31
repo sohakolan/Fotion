@@ -73,6 +73,12 @@ Les déclarations ([`blocks/`](../engine/fotionmark/blocks/)) fixent pour chaque
 | `column` | conteneur, dans `columns` | FotionMark | `width` : `percent` (entre 0 et 100 exclus) |
 | `indent` | conteneur | FotionMark | — · enfants du bloc précédent (Tab dans Notion) |
 | `link-to-page` | ligne | — | `page` : `page` (identifiant de la page liée) |
+| `video`, `audio`, `pdf` | ligne | — | `src` : `source` |
+| `file` | ligne | — | `src` : `source`, `name` : `string`, `size` : `number` (octets) |
+| `embed` | ligne | — | `url` : `url`, `height` : `number` (80 à 2000, défaut 400) |
+| `bookmark` | ligne | — | `url`, `title`, `description`, `image` (lu une fois à la création) |
+
+Le type `source` accepte une adresse `http(s)` ou un fichier importé du coffre, `attachments/<empreinte>-<nom>`, servi en local et lisible par Obsidian.
 
 ## Garanties
 
@@ -117,7 +123,7 @@ Ces règles s’appliquent à chaque nouvelle fonctionnalité Notion portée en 
 
 ### Attributs
 
-- Toujours typés : `string`, `enum`, `number`, `boolean`, `percent`, `url`, `page`, `date`. Un nouveau type s’ajoute dans `schema/attributes.ts` avec ses tests.
+- Toujours typés : `string`, `enum`, `number`, `boolean`, `percent`, `url`, `page`, `date`, `source`. Un nouveau type s’ajoute dans `schema/attributes.ts` avec ses tests.
 - Une valeur égale au défaut n’est jamais écrite ; les guillemets ne sont écrits que si nécessaire. Une même donnée a donc une seule écriture.
 - Un attribut inconnu est **conservé** et signalé par un avertissement : un fichier écrit par une version plus récente ne perd rien.
 - Une valeur invalide est une **erreur** : le bloc n’est pas interprété, il est affiché comme bloc conservé et réécrit à l’identique. Un enfant en erreur est conservé seul, sans invalider son parent.

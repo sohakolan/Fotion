@@ -1,4 +1,4 @@
-import { Show, type JSX } from 'solid-js';
+import { Show, onMount, type JSX } from 'solid-js';
 import { ChevronRight, Search } from 'lucide-solid';
 
 /** Floating menu surface: Notion's 10px radius, layered shadow and 4px inner padding. */
@@ -22,5 +22,8 @@ export const MenuFootnote = (props: { children: JSX.Element }) => <div class="ki
 
 /** Search field at the top of a menu, as in Notion's block menu. */
 export function MenuSearch(props: { label: string; placeholder: string; value: string; onInput: (value: string) => void; autofocus?: boolean }) {
-  return <label class="kit-menu-search"><Search size={14}/><input aria-label={props.label} placeholder={props.placeholder} value={props.value} ref={element => { if (props.autofocus) requestAnimationFrame(() => element.focus()); }} onInput={e => props.onInput(e.currentTarget.value)}/></label>;
+  let input!: HTMLInputElement;
+  // Focus as soon as the menu is in the page, so the very next keystrokes go to the search field.
+  onMount(() => { if (props.autofocus) input.focus(); });
+  return <label class="kit-menu-search"><Search size={14}/><input ref={input} aria-label={props.label} placeholder={props.placeholder} value={props.value} onInput={e => props.onInput(e.currentTarget.value)}/></label>;
 }

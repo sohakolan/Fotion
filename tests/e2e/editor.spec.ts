@@ -653,3 +653,37 @@ test('/link inserts a link-to-page block and /moveto sends a block to another pa
   await page.locator('.prose .link-to-page').click();
   await expect(page.getByLabel('Titre de la page', { exact: true })).toHaveValue(`Destination ${tag}`);
 });
+
+test('media blocks: import files and images into the vault, external content waits for consent', async ({ page }) => {
+  const created = await createDocument(page, 'Médias');
+  const prose = page.getByRole('textbox', { name: 'Contenu de la page' });
+  const newLine = async () => { await page.locator('.prose > p').first().click(); await page.keyboard.press('ControlOrMeta+ArrowRight'); await page.keyboard.press('End'); await page.keyboard.press('Enter'); };
+  await newLine(); await page.keyboard.type('/fichier'); await page.keyboard.press('Enter');
+  await page.getByRole('dialog', { name: 'Ajouter un fichier' }).getByLabel('Choisir un fichier').setInputFiles({ name: 'rapport.txt', mimeType: 'text/plain', buffer: Buffer.from('Bonjour') });
+  await expect(page.locator('.prose .media-file')).toContainText('rapport.txt');
+  await expect(page.locator('.prose .media-file')).toContainText('7 o');
+  await newLine(); await page.keyboard.type('/image'); await page.keyboard.press('Enter');
+  const pixel = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==', 'base64');
+  await page.getByRole('dialog', { name: 'Ajouter une image' }).getByLabel('Choisir un fichier').setInputFiles({ name: 'point.png', mimeType: 'image/png', buffer: pixel });
+  const image = page.locator('.prose img');
+  await expect(image).toHaveAttribute('src', /^attachments\/[a-f0-9]{12}-point\.png$/);
+  await expect.poll(() => image.evaluate((img: HTMLImageElement) => img.naturalWidth)).toBe(1);
+  await newLine(); await page.keyboard.type('/integration'); await page.keyboard.press('Enter');
+  const dialog = page.getByRole('dialog', { name: 'Intégrer une page web' });
+  await dialog.getByLabel('Lien').fill('https://example.com/carte'); await dialog.getByLabel('Lien').press('Enter');
+  await expect(page.locator('.prose .media-consent')).toHaveText('Afficher le contenu de example.com');
+  await expect(page.locator('.prose iframe')).toHaveCount(0);
+  await newLine(); await page.keyboard.type('/video'); await page.keyboard.press('Enter');
+  await page.getByRole('dialog', { name: 'Ajouter une vidéo' }).getByRole('tab', { name: 'Intégrer un lien' }).click();
+  await page.getByRole('dialog', { name: 'Ajouter une vidéo' }).getByLabel('Lien').fill('https://www.youtube.com/watch?v=dQw4w9WgXcQ');
+  await page.getByRole('dialog', { name: 'Ajouter une vidéo' }).getByLabel('Lien').press('Enter');
+  await expect(page.locator('.prose .media-consent').last()).toHaveText('Afficher la vidéo de www.youtube.com');
+  await page.screenshot({ path: test.info().outputPath('media.png') });
+  await expect(page.locator('.save-status')).toHaveText('Enregistré');
+  const content = (await (await page.request.get('/api/pages')).json()).find((p: { id: string }) => p.id === created.id).content as string;
+  expect(content).toMatch(/::file\{src=attachments\/[a-f0-9]{12}-rapport\.txt name=rapport\.txt size=7\}/);
+  expect(content).toMatch(/!\[\]\(attachments\/[a-f0-9]{12}-point\.png\)/);
+  expect(content).toContain('::embed{url=https://example.com/carte}');
+  expect(content).toContain('::video{src="https://www.youtube.com/watch?v=dQw4w9WgXcQ"}');
+  await expect(prose).toBeVisible();
+});
