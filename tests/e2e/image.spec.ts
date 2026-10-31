@@ -36,7 +36,17 @@ test('image caption editing, selection outline and saving', async ({ page }, inf
   // Escape leaves the node selection without deleting the image.
   await page.keyboard.press('Escape');
   await expect(page.locator('.image-block.image-selected')).toHaveCount(0);
-  await expect(image).toBeVisible();
+  // The hover strip offers Notion's three width presets.
+  await image.hover();
+  const medium = page.getByRole('button', { name: 'Largeur moyenne' });
+  await expect(medium).toBeVisible();
+  await medium.click();
+  const block = page.locator('.prose .image-block').first();
+  await expect(block).toHaveCSS('width', '468px');
+  const box = (await block.boundingBox())!;
+  expect(box.width).toBeGreaterThan(400);
+  expect(box.width).toBeLessThan(500);
+  await expect(page.locator('.save-status')).toHaveText('Enregistré');
   expect(errors).toEqual([]);
 });
 

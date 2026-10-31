@@ -3,6 +3,19 @@ import { NodeSelection } from '@tiptap/pm/state';
 import { Plugin, PluginKey } from '@tiptap/pm/state';
 import { Decoration, DecorationSet } from '@tiptap/pm/view';
 
+const widthSvgs: Record<string, string> = {
+  full: '<svg viewBox="0 0 20 20" width="18" height="18" aria-hidden="true"><rect x="2" y="6" width="16" height="8" rx="1.5" fill="currentColor"/></svg>',
+  medium: '<svg viewBox="0 0 20 20" width="18" height="18" aria-hidden="true"><rect x="8" y="6" width="10" height="8" rx="1.5" fill="currentColor"/><rect x="3.2" y="6" width="2.4" height="8" rx="1" fill="currentColor" opacity="0.55"/></svg>',
+  small: '<svg viewBox="0 0 20 20" width="18" height="18" aria-hidden="true"><rect x="13" y="6" width="5" height="8" rx="1.2" fill="currentColor"/><rect x="3.2" y="6" width="2.4" height="8" rx="1" fill="currentColor" opacity="0.55"/></svg>',
+};
+
+/** Width presets echo the reference row above the image: full column, centered medium, centered small. */
+const widthPresets: Array<{ value: number | null; id: string; label: string }> = [
+  { value: null, id: 'full', label: 'Pleine largeur' },
+  { value: 65, id: 'medium', label: 'Largeur moyenne' },
+  { value: 40, id: 'small', label: 'Petite largeur' },
+];
+
 /** Notion figure: hover reveals a bottom handle that resizes the width, a blue outline marks the selection
  * and the caption sits under the image as a real editor hole (placeholder added by CSS). */
 export const ImageView = imageExtension().extend({
@@ -32,12 +45,35 @@ export const ImageView = imageExtension().extend({
       handle.disabled = !editor.isEditable;
       handle.setAttribute('aria-label', 'Redimensionner l’image');
       frame.append(overlay, image); dom.append(frame, handle);
+      // Reference control row shown on hover, above the frame.
+      const controls = document.createElement('div'); controls.className = 'image-controls'; controls.contentEditable = 'false';
+      controls.setAttribute('role', 'toolbar'); controls.setAttribute('aria-label', 'Taille de l’image');
+      const presetButtons = widthPresets.map(preset => {
+        const button = document.createElement('button');
+        button.type = 'button'; button.className = 'image-width-' + preset.id;
+        button.innerHTML = widthSvgs[preset.id];
+        button.setAttribute('aria-label', preset.label);
+        button.disabled = !editor.isEditable;
+        button.addEventListener('click', event => {
+          event.preventDefault(); event.stopPropagation();
+          const pos = getPos(); if (typeof pos !== 'number') return;
+          const live = editor.state.doc.nodeAt(pos); if (live?.type.name !== 'image') return;
+          editor.view.dispatch(editor.state.tr.setNodeMarkup(pos, undefined, { ...live.attrs, width: preset.value }));
+        });
+        return button;
+      });
+      controls.append(...presetButtons);
+      dom.append(controls);
       const caption = document.createElement('figcaption'); caption.className = 'image-caption'; dom.append(caption);
       image.src = (node.attrs.src as string) || '';
       image.alt = (node.attrs.alt as string) || '';
       const applyWidth = () => { const width = typeof current.attrs.width === 'number' ? current.attrs.width : null; dom.style.width = width ? `${width}%` : ''; };
+      const refresh = () => {
+        applyWidth();
+        const width = typeof current.attrs.width === 'number' ? current.attrs.width : null;
+        for (const [index, preset] of widthPresets.entries()) presetButtons[index].setAttribute('aria-pressed', String((preset.value ?? null) === (width ?? null)));
+      };
       refresh();
-      function refresh() { applyWidth(); }
       // Live resizing: vertical drag maps to width, the img height follows its own natural ratio.
       let dragging: { startY: number; startPx: number; ratio: number; width: number } | undefined;
       const onMove = (event: PointerEvent) => {
@@ -84,7 +120,7 @@ export const ImageView = imageExtension().extend({
       return {
         dom, contentDOM: caption,
         update(updated) { if (updated.type.name !== 'image') return false; current = updated; image.src = (current.attrs.src as string) || ''; image.alt = (current.attrs.alt as string) || ''; refresh(); syncOverlay(); return true; },
-        stopEvent: event => event.target instanceof Node && (handle.contains(event.target) || image.contains(event.target) || overlay.contains(event.target)),
+        stopEvent: event => event.target instanceof Node && (handle.contains(event.target) || image.contains(event.target) || overlay.contains(event.target) || controls.contains(event.target)),
         // Only the caption stays live: any other mutation comes from this view itself and must not rebuild it.
         ignoreMutation: mutation => !caption.contains(mutation.target as Node) || mutation.target !== caption,
         destroy() { overlayWatcher?.disconnect(); window.removeEventListener('pointermove', onMove); window.removeEventListener('pointerup', onUp); },

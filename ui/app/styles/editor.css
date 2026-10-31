@@ -1957,3 +1957,47 @@ h3) {
   pointer-events: none;
   z-index: 1;
 }
+
+/* Width presets row above the image, like the reference hover strip. */
+.prose .image-controls {
+  position: absolute;
+  top: -38px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: inline-flex;
+  gap: 2px;
+  padding: 3px;
+  border-radius: var(--radius);
+  background: var(--bg, #fff);
+  box-shadow: 0 0 0 1px var(--line), 0 2px 8px rgba(15, 15, 15, 0.08);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.12s ease;
+  z-index: 2;
+}
+
+.prose .image-block:hover .image-controls,
+.prose .image-block.image-resizing .image-controls {
+  opacity: 1;
+  visibility: visible;
+}
+
+.prose .image-controls button {
+  display: grid;
+  place-items: center;
+  padding: 4px;
+  border: 0;
+  background: none;
+  border-radius: var(--radius-sm);
+  color: var(--icon);
+  cursor: pointer;
+}
+
+.prose .image-controls button:hover {
+  background: var(--hover);
+}
+
+.prose .image-controls button[aria-pressed="true"] {
+  background: var(--blue);
+  color: #fff;
+}
