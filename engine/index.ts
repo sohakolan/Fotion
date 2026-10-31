@@ -18,6 +18,8 @@ export { ButtonBlock } from './document/button';
 export { BlockMath, InlineMath } from './document/math';
 export { parseDatePhrase, dateSuggestions, formatDate, isDateValue, isoDay } from './operations/date-query';
 export { indentBlock, outdentBlock, handlesTab } from './operations/indentation';
+export { detectLanguage } from './operations/language-detect';
+export { codeTab } from './operations/code-tab';
 export { DirectiveBlock } from './document/directive-block';
 export * as FotionMark from './fotionmark';
 export { CodeBlock } from './document/code-block';

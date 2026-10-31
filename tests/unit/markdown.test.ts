@@ -42,6 +42,11 @@ test('images keep alt, caption and width through Markdown with a reversible comm
   assert.equal(plainNode?.type, 'image');
   assert.equal(plainNode?.attrs?.width, null);
   assert.equal(editor2.getMarkdown(), plain.replace(/\n$/, ''));
+  // Alignment follows the reversible metadata like width and caption.
+  const alignInput = '![g](attachments/align.png) <!-- fotion:image %7B%22width%22%3A65%2C%22align%22%3A%22left%22%7D -->\n';
+  const editor4 = new Editor({ extensions: editorExtensions(), content: alignInput, contentType: 'markdown' });
+  assert.equal(editor4.getJSON().content?.[0]?.attrs?.align, 'left');
+  assert.equal(editor4.getMarkdown(), alignInput.replace(/\n$/, ''));
   // An image inside a longer line of text is reflowed as its own block, like Notion.
   const mixed = 'Avant ![img](https://example.com/b.png) après\n';
   const editor3 = new Editor({ extensions: editorExtensions(), content: mixed, contentType: 'markdown' });

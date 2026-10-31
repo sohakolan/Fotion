@@ -47,6 +47,28 @@ test('image caption editing, selection outline and saving', async ({ page }, inf
   expect(box.width).toBeGreaterThan(400);
   expect(box.width).toBeLessThan(500);
   await expect(page.locator('.save-status')).toHaveText('Enregistré');
+  // Reference side guides resize the width on drag.
+  await image.hover();
+  const rightEdge = page.locator('.image-resize-right').first();
+  const before = (await page.locator('.prose .image-block').first().boundingBox())!.width;
+  const edgeBox = (await rightEdge.boundingBox())!;
+  await page.mouse.move(edgeBox.x + edgeBox.width / 2, edgeBox.y + 100);
+  await page.mouse.down();
+  await page.mouse.move(edgeBox.x + edgeBox.width / 2 - 120, edgeBox.y + 100, { steps: 8 });
+  await page.mouse.up();
+  await expect(page.locator('.image-resizing').first()).toHaveCount(0);
+  const after = (await page.locator('.prose .image-block').first().boundingBox())!.width;
+  expect(after).toBeLessThan(before);
+  await expect(page.locator('.save-status')).toHaveText('Enregistré');
+  // Alignment cycles left → center → right, like the reference alignment control.
+  await image.hover();
+  await image.hover();
+  await page.getByRole('button', { name: 'Aligner l’image' }).click();
+  await expect(page.locator('.image-align-left')).toHaveCount(1);
+  await image.hover();
+  await page.getByRole('button', { name: 'Aligner l’image' }).click();
+  await expect(page.locator('.image-align-right')).toHaveCount(1);
+  await expect(page.locator('.save-status')).toHaveText('Enregistré');
   // The controls adapt to the dark theme like the rest of the surface.
   await page.getByRole('button', { name: 'Paramètres', exact: true }).click();
   await page.getByRole('combobox', { name: 'Apparence' }).selectOption('dark');

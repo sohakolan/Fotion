@@ -2,7 +2,13 @@ import BaseCodeBlock from '@tiptap/extension-code-block';
 
 export const CodeBlock = BaseCodeBlock.extend({
   addAttributes() {
-    return { ...this.parent?.(), wrap: { default: false, parseHTML: el => el.getAttribute('data-code-wrap') === 'true', renderHTML: attrs => ({ 'data-code-wrap': String(!!attrs.wrap) }) }, caption: { default: '', parseHTML: el => el.getAttribute('data-code-caption') || '', renderHTML: attrs => ({ 'data-code-caption': attrs.caption }) } };
+    return {
+      ...this.parent?.(),
+      wrap: { default: false, parseHTML: el => el.getAttribute('data-code-wrap') === 'true', renderHTML: attrs => ({ 'data-code-wrap': String(!!attrs.wrap) }) },
+      caption: { default: '', parseHTML: el => el.getAttribute('data-code-caption') || '', renderHTML: attrs => ({ 'data-code-caption': attrs.caption }) },
+      // Editor-only state: the language guess of the auto-detection never touches the stored Markdown.
+      autoLanguage: { default: false, rendered: false },
+    };
   },
   parseMarkdown(token, helpers) {
     let language = token.lang || null, wrap = false, caption = '';

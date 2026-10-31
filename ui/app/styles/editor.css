@@ -857,10 +857,15 @@
 
 .prose .code-block pre {
   margin: 0;
-  padding: 16px 24px 20px;
+  /* The hover controls live in the reserved band: the first line never hides under them. */
+  padding: 46px 24px 20px;
   background: transparent;
   border-radius: 0;
   tab-size: 2;
+}
+
+.prose .code-block:first-child pre {
+  padding-top: 46px;
 }
 
 .prose .code-block pre code {
@@ -1548,7 +1553,7 @@ h3) {
   position: relative;
   display: block;
   width: 100%;
-  margin: 6px 0;
+  margin: 6px auto;
 }
 
 .prose .image-frame {
@@ -1576,32 +1581,42 @@ h3) {
 }
 
 
+/* Reference resize guides: vertical edges on both sides, revealed on hover. */
 .prose .image-resize {
   position: absolute;
-  bottom: -2px;
-  left: 50%;
-  transform: translateX(-50%);
+  top: 0;
+  bottom: 0;
+  width: 14px;
   border: 0;
   background: transparent;
-  color: var(--muted);
-  font-size: 15px;
-  line-height: 1;
-  padding: 0 6px 4px;
-  cursor: ns-resize;
+  cursor: ew-resize;
   opacity: 0;
   transition: opacity 0.15s ease;
+  z-index: 3;
 }
+
+.prose .image-resize-left { left: -8px; }
+.prose .image-resize-right { right: -8px; }
 
 .prose .image-block:hover .image-resize,
 .prose .image-block.image-resizing .image-resize {
   opacity: 1;
 }
 
-/* Dashed red frame while resizing, echoing the reference canvas. */
-.prose .image-block.image-resizing .image-frame img {
-  outline: 2px dashed rgba(212, 76, 71, 0.5);
-  outline-offset: -2px;
+/* Black vertical guide at the dragged edge, like the reference resize visuals. */
+.prose .image-block.image-resizing .image-resize::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 2px;
+  transform: translateX(-50%);
+  background: rgba(255, 255, 255, 0.9);
 }
+
+.prose .image-align-left { margin-left: 0; margin-right: auto; }
+.prose .image-align-right { margin-right: 0; margin-left: auto; }
 
 .prose .image-caption {
   color: var(--muted);

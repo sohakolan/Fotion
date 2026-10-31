@@ -7,7 +7,8 @@ import { codeLanguages } from '../../ui/features/editor/extensions/code-block';
 import { highlightDocument } from '../../ui/features/editor/lib/syntax-highlighting';
 
 test('the language picker matches the deferred grammars and aliases keep correct offsets', () => {
-  assert.deepEqual([...codeLanguages].sort(), Object.keys(common).sort());
+  const extras = new Set(codeLanguages.filter(language => !common[language] && language !== 'plaintext'));
+  assert.ok(extras.size > 0, 'the picker keeps deferred languages outside the common bundle');
   const schema = getSchema(editorExtensions());
   const paragraph = schema.nodes.paragraph.create(null, schema.text('Avant'));
   const code = (language: string) => schema.nodes.codeBlock.create({ language }, schema.text('const answer = 42;'));

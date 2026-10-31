@@ -5,6 +5,7 @@ import { blockAt, moveBlockTransaction } from '../operations/block-move';
 import { BlockSelection, extendBlockSelection, duplicateBlocks, moveBlocks } from '../operations/block-selection';
 import { convertToggle } from '../operations/toggle-conversion';
 import { indentBlock, outdentBlock, handlesTab } from '../operations/indentation';
+import { codeTab } from '../operations/code-tab';
 
 /**
  * Cursor position as displayed. Right after a click, ProseMirror may not have read the new DOM
@@ -181,8 +182,8 @@ export const NotionShortcuts = Extension.create({
     return {
       ...turnInto,
       // Tab nests the block under the one above; inside lists, code and tables their own Tab applies.
-      Tab: () => { syncCaret(editor); if (!handlesTab(editor.state)) return false; const tr = indentBlock(editor.state); if (tr) editor.view.dispatch(tr); return true; },
-      'Shift-Tab': () => { syncCaret(editor); if (!handlesTab(editor.state)) return false; const tr = outdentBlock(editor.state); if (tr) editor.view.dispatch(tr); return true; },
+      Tab: () => { const code = codeTab(editor.state, 1); if (code) { editor.view.dispatch(code); return true; } syncCaret(editor); if (!handlesTab(editor.state)) return false; const tr = indentBlock(editor.state); if (tr) editor.view.dispatch(tr); return true; },
+      'Shift-Tab': () => { const code = codeTab(editor.state, -1); if (code) { editor.view.dispatch(code); return true; } syncCaret(editor); if (!handlesTab(editor.state)) return false; const tr = outdentBlock(editor.state); if (tr) editor.view.dispatch(tr); return true; },
       'Mod-Shift-ArrowUp': () => moveCurrentBlock(editor, -1),
       'Mod-Shift-ArrowDown': () => moveCurrentBlock(editor, 1),
       'Mod-Enter': synced(() => actOnBlock(editor)),
