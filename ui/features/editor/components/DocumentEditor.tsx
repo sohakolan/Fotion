@@ -69,7 +69,7 @@ export default function DocumentEditor(props: { content: string; onChange: (cont
   const [transform, setTransform] = createSignal(false);
   const [blockQuery, setBlockQuery] = createSignal('');
   const [linkDraft, setLinkDraft] = createSignal<{ value: string; from: number; to: number; x: number; y: number }>();
-  const [mediaDraft, setMediaDraft] = createSignal<{ kind: MediaKind; pos: number }>();
+  const [mediaDraft, setMediaDraft] = createSignal<{ kind: MediaKind; pos: number; replace?: number }>();
   const [emojiAt, setEmojiAt] = createSignal<{ x: number; y: number }>();
   const [dateEdit, setDateEdit] = createSignal<{ pos: number; x: number; y: number }>();
   const [pagePicker, setPagePicker] = createSignal<{ purpose: 'link' | 'move'; pos: number; x: number; y: number; query: string }>();
@@ -108,8 +108,16 @@ export default function DocumentEditor(props: { content: string; onChange: (cont
       } catch (error) { props.onError((error as Error).message); }
     }
   }
-  function insertMedia(kind: MediaKind, pos: number, result: MediaResult) {
-    if (kind === 'image') { insertBlockHere(pos, { type: 'image', attrs: { src: result.src, alt: '' } }); return; }
+  function insertMedia(kind: MediaKind, pos: number, result: MediaResult, replacedImage?: number) {
+    if (kind === 'image') {
+      if (typeof replacedImage === 'number') {
+        const live = editor.state.doc.nodeAt(replacedImage);
+        if (live?.type.name === 'image') editor.view.dispatch(editor.state.tr.setNodeMarkup(replacedImage, undefined, { ...live.attrs, src: result.src }));
+        return;
+      }
+      insertBlockHere(pos, { type: 'image', attrs: { src: result.src, alt: '' } });
+      return;
+    }
     insertBlockHere(pos, { type: kind, attrs: { attributes: result } });
   }
   /** /link inserts a link-to-page block in place of an empty line; /moveto sends the block to another page. */
@@ -483,7 +491,10 @@ export default function DocumentEditor(props: { content: string; onChange: (cont
     window.addEventListener('keydown', escape);
     document.addEventListener('pointerdown', close);
     window.addEventListener('scroll', scroll, true);
-    onCleanup(() => { window.removeEventListener('keydown', escape); document.removeEventListener('pointerdown', close); window.removeEventListener('scroll', scroll, true); props.onReady(undefined); editor.destroy(); });
+    // The image lightbox's « Remplacer » asks to reopen the media dialog for that node.
+    const requestReplace = (event: Event) => { event.stopPropagation(); setMediaDraft(undefined); setMediaDraft({ kind: 'image', pos: (event as CustomEvent<number>).detail, replace: (event as CustomEvent<number>).detail }); };
+    window.addEventListener('fotion-replace-image', requestReplace);
+    onCleanup(() => { window.removeEventListener('fotion-replace-image', requestReplace); window.removeEventListener('keydown', escape); document.removeEventListener('pointerdown', close); window.removeEventListener('scroll', scroll, true); props.onReady(undefined); editor.destroy(); });
   });
   function link() {
     const range = TextSelection.between(editor.state.selection.$from, editor.state.selection.$to);
@@ -599,7 +610,7 @@ export default function DocumentEditor(props: { content: string; onChange: (cont
       <Show when={!pickerPages().length}><p class="empty-message">Aucune page trouvée.</p></Show>
     </Menu></>}</Show>
     <Show when={emojiAt()}>{position => <><div class="dismiss-layer" onClick={() => { setEmojiAt(undefined); editor.commands.focus(); }}/><EmojiPicker label="Insérer un emoji" style={{ position: 'fixed', left: `${position().x}px`, top: `${position().y}px` }} onPick={emoji => { setEmojiAt(undefined); editor.chain().focus().insertContent(emoji).run(); }}/></>}</Show>
-    <Show when={mediaDraft()}>{draft => <MediaDialog kind={draft().kind} onClose={() => { setMediaDraft(undefined); editor.commands.focus(); }} onSubmit={result => { const { kind, pos } = draft(); setMediaDraft(undefined); insertMedia(kind, pos, result); }}/>}</Show>
+    <Show when={mediaDraft()}>{draft => <MediaDialog kind={draft().kind} onClose={() => { setMediaDraft(undefined); editor.commands.focus(); }} onSubmit={result => { const { kind, pos, replace } = draft(); setMediaDraft(undefined); insertMedia(kind, pos, result, replace); }}/>}</Show>
     <Show when={ready() && (revision(), editor?.isActive('table'))}><div class="table-tools" role="toolbar" aria-label="Modifier le tableau">
       <button onMouseDown={e => e.preventDefault()} onClick={() => editor.chain().focus().addRowAfter().run()}><Plus size={13}/>Ligne</button>
       <button onMouseDown={e => e.preventDefault()} onClick={() => editor.chain().focus().addColumnAfter().run()}><Plus size={13}/>Colonne</button>

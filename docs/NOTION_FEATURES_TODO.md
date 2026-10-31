@@ -154,7 +154,7 @@ Références : [S06](NOTION_REFERENCE.md#s06).
 - [x] **FN-115** Coller une capture d’écran et déposer plusieurs images.
 - [ ] **FN-116** [PARTIEL] Redimensionner et aligner une image.
 - [ ] **FN-117** [PARTIEL] Ajouter une légende et un texte alternatif.
-- [ ] **FN-118** Remplacer, télécharger et ouvrir une image en grand.
+- [ ] **FN-118** [PARTIEL] Remplacer, télécharger et ouvrir une image en grand.
 - [ ] **FN-119** Recadrer/repositionner lorsque la référence l’autorise.
 - [ ] **FN-120** Afficher une galerie de sélection d’images et les sources de couverture disponibles.
 - [ ] **FN-121** [PARTIEL] Importer des fichiers avec taille, type, nom et téléchargement.
@@ -669,3 +669,9 @@ Preuves : [raccourcis](../engine/document/shortcuts.ts) (`continuedNumberingStar
 FN-054 progresse : le menu / regroupe en tête une section « Récemment utilisés » avec les commandes réellement employées (6 maximum, sans doublon, preference dans le navigateur) ; les groupes d'origine restent sous la section, sans doublon d'entrée. Avec un filtre, la liste reprend le classement simple. La mise à jour se fait à l'application effective de la commande (clic, Entrée) et re-survit au rechargement de la page. Restes selon la référence : la persistance cross-fenêtres et l'exclusion éventuelle des sous-menus `turn`/couleurs de la liste, et la comparaison visuelle du menu filtré.
 
 Preuves : [classement et tri des récents](../engine/operations/slash-commands.ts), [mémorisation navigateur](../ui/features/editor/lib/slash-recents.ts) (localStorage interdit au moteur, frontière vérifiée par [check-architecture](../scripts/check-architecture.mjs)), [test du tri](../tests/unit/engine.test.ts), [parcours navigateur](../tests/e2e/slash-recents.spec.ts) avec rechargement et capture `slash-recents.png`.
+
+### Visionneuse image — 31 octobre 2026
+
+FN-118 progresse : un double-clic ouvre la visionneuse plein écran de la référence — fond sombre, image centrée, `Fermer l'aperçu` (bouton ×, Échap ou clic hors image) — avec `Télécharger` (attribut download ; téléchargement natif pour les pièces du coffre), `Remplacer` (rouvre le dialogue média déjà utilisé par l'insertion ; la source remplacée conserve alt, légende et largeur en une étape d'annulation) via la couche d'événements `fotion-replace-image` sous la configuration de l'éditeur. Le critère reste partiel : remplacer par un fichier importé local doit aussi couvrir les vidéos/audio, l'ouverture depuis la visionneuse des références externes reste dans un onglet classique, et aménagement image par image (zoom/repositionnement) reste ouvert (FN-119).
+
+Preuves : [visionneuse](../ui/features/editor/extensions/image-view.ts) (double-clic, barre des actions, Échap), [remplacement de source](../ui/features/editor/components/DocumentEditor.tsx) (`insertMedia` avec nœud remplacé), [parcours navigateur](../tests/e2e/image-lightbox.spec.ts) : image importée dans le coffre, ouverture, Échap, remplacement par un second fichier, source unique dans le Markdown sauvegardé, capture `lightbox.png`.

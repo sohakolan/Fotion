@@ -108,6 +108,33 @@ export const ImageView = imageExtension().extend({
         const pos = getPos(); if (typeof pos !== 'number') return;
         editor.view.dispatch(editor.state.tr.setSelection(NodeSelection.create(editor.state.doc, pos)));
       });
+      // Notion opens the image full-size; the lightbox also hosts Télécharger and Remplacer.
+      const requestReplace = (): number | undefined => { const pos = getPos(); return typeof pos === 'number' ? pos : undefined; };
+      const openLightbox = () => {
+        const viewer = document.createElement('div'); viewer.className = 'image-viewer';
+        const shown = document.createElement('img'); shown.src = image.src; shown.alt = image.alt;
+        const bar = document.createElement('div'); bar.className = 'image-viewer-bar';
+        const download = document.createElement('a'); download.className = 'kit-button'; download.textContent = 'Télécharger';
+        download.href = image.src; download.setAttribute('download', image.src.split('/').pop() || 'image'); download.rel = 'noopener';
+        const replace = document.createElement('button'); replace.type = 'button'; replace.className = 'kit-button'; replace.textContent = 'Remplacer';
+        const close = document.createElement('button'); close.type = 'button'; close.className = 'icon-button image-viewer-close'; close.innerHTML = '&times;'; close.setAttribute('aria-label', 'Fermer l’aperçu');
+        const shut = () => { viewer.remove(); document.removeEventListener('keydown', onKey); };
+        const onKey = (event: KeyboardEvent) => { if (event.key === 'Escape') { event.preventDefault(); shut(); } };
+        replace.addEventListener('click', () => { const pos = requestReplace(); shut(); if (pos !== undefined) window.dispatchEvent(new CustomEvent('fotion-replace-image', { detail: pos })); });
+        close.addEventListener('click', shut);
+        viewer.addEventListener('click', event => { if (event.target === viewer) shut(); });
+        bar.append(replace, download, close);
+        viewer.append(shown, bar);
+        document.body.append(viewer);
+        document.addEventListener('keydown', onKey);
+        const focusable = viewer.querySelector('img');
+        focusable?.setAttribute('tabindex', '0');
+        focusable?.focus();
+      };
+      image.addEventListener('dblclick', event => {
+        event.preventDefault();
+        openLightbox();
+      });
       // ProseMirror toggles its own class on the node view; show the overlay from it (a redraw-safe path).
       const overlayWatcher = typeof MutationObserver === 'function' ? new MutationObserver(() => {
         const selected = dom.classList.contains('ProseMirror-selectednode') || dom.classList.contains('image-selected');
