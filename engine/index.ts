@@ -26,4 +26,5 @@ export { PageMention, mentionQuery } from './document/page-mention';
 export { Toggle, ToggleSummary } from './document/blocks';
 export { TableOfContents } from './document/table-of-contents';
 export { tableExtension } from './document/table';
+export { imageExtension } from './document/image';
 export { TextColor, textColors, colorId, type ColorId } from './document/colors';

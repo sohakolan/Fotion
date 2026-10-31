@@ -6,11 +6,12 @@ import { Toggle, ToggleSummary } from './blocks';
 import { Callout } from './callout';
 import { LinkToPage } from './link-to-page';
 import { mediaViews } from './media';
+import { ImageView } from './image-view';
 import { Breadcrumb, type Trail } from './breadcrumb';
 import { ButtonBlock } from './button';
 import { BlockMath, InlineMath } from './math';
 
 export function editorExtensions(getPage: (id: string) => Pick<Page, 'title' | 'icon' | 'trashed'> | undefined = () => undefined, getTrail: () => Trail = () => []) {
-  const views = [TableOfContents, CodeBlock, Toggle, ToggleSummary, Callout, PageMention.configure({ getPage }), LinkToPage.configure({ getPage }), ...mediaViews, Breadcrumb.configure({ getTrail }), ButtonBlock, BlockMath, InlineMath, tableExtension().configure({ resizable: true })];
+  const views = [TableOfContents, CodeBlock, Toggle, ToggleSummary, Callout, PageMention.configure({ getPage }), LinkToPage.configure({ getPage }), ...mediaViews, ImageView, Breadcrumb.configure({ getTrail }), ButtonBlock, BlockMath, InlineMath, tableExtension().configure({ resizable: true })];
   return documentExtensions(getPage).map(extension => views.find(view => view.name === extension.name) || extension);
 }

@@ -1525,6 +1525,81 @@ h3) {
   border-radius: var(--radius-sm);
 }
 
+/* Notion figure: full-column by default; the width share comes from the stored attribute. */
+.prose .image-block {
+  position: relative;
+  display: block;
+  width: 100%;
+  margin: 6px 0;
+}
+
+.prose .image-frame {
+  position: relative;
+  max-width: 100%;
+  transition: box-shadow 0.1s ease;
+}
+
+.prose .image-frame img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  border-radius: var(--radius);
+  object-fit: contain;
+}
+
+/* Blue outline once the node is selected; a border paints over a replaced image where shadows fail. */
+/* Notion figure: selected images show a blue border; the transparent border keeps sizes stable. */
+.prose .image-block img {
+  border: 2px solid transparent;
+}
+.prose .image-block.ProseMirror-selectednode img,
+.prose .image-block.image-selected img {
+  border-color: #2383e2;
+}
+
+
+.prose .image-resize {
+  position: absolute;
+  bottom: -2px;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font-size: 15px;
+  line-height: 1;
+  padding: 0 6px 4px;
+  cursor: ns-resize;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.prose .image-block:hover .image-resize,
+.prose .image-block.image-resizing .image-resize {
+  opacity: 1;
+}
+
+/* Dashed red frame while resizing, echoing the reference canvas. */
+.prose .image-block.image-resizing .image-frame img {
+  outline: 2px dashed rgba(212, 76, 71, 0.5);
+  outline-offset: -2px;
+}
+
+.prose .image-caption {
+  color: var(--muted);
+  font-size: var(--text-sm, 14px);
+  line-height: 1.4;
+  padding: 6px 2px 2px;
+}
+
+.prose .image-caption:not(:focus):empty::before,
+.prose .image-caption:not(:focus) br:only-child::before {
+  content: 'Écrire une légende…';
+  color: var(--muted);
+  opacity: 0.7;
+}
+
+
 /* Notion block selection: whole blocks tinted blue, no caret. */
 .prose .block-selected {
   background: var(--selection);
@@ -1872,4 +1947,13 @@ h3) {
 .math-preview {
   min-height: 24px;
   overflow-x: auto;
+}
+
+.prose .image-outline {
+  position: absolute;
+  inset: 0;
+  box-shadow: 0 0 0 2px #2383e2 inset;
+  border-radius: var(--radius);
+  pointer-events: none;
+  z-index: 1;
 }

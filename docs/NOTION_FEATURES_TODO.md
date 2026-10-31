@@ -152,8 +152,8 @@ Références : [S06](NOTION_REFERENCE.md#s06).
 - [ ] **FN-113** [PARTIEL] Insérer une image par URL.
 - [x] **FN-114** Importer une image locale et copier le fichier dans le coffre.
 - [x] **FN-115** Coller une capture d’écran et déposer plusieurs images.
-- [ ] **FN-116** Redimensionner et aligner une image.
-- [ ] **FN-117** Ajouter une légende et un texte alternatif.
+- [ ] **FN-116** [PARTIEL] Redimensionner et aligner une image.
+- [ ] **FN-117** [PARTIEL] Ajouter une légende et un texte alternatif.
 - [ ] **FN-118** Remplacer, télécharger et ouvrir une image en grand.
 - [ ] **FN-119** Recadrer/repositionner lorsque la référence l’autorise.
 - [ ] **FN-120** Afficher une galerie de sélection d’images et les sources de couverture disponibles.
@@ -651,3 +651,9 @@ Restent de la liste : `/math`, `/bread`, `/button`, notifications de rappel, gli
 
 Liste demandée terminée : sélection multiple, indentation, `/date`, `/reminder`, `/link`, `/moveto`, `/math`, `/bread`, `/button`, `/video`, `/audio`, `/file`, `/pdf`, `/book`, `/embed`.
 
+
+### Images redimensionnables avec légende — 31 octobre 2026
+
+FN-116 et FN-117 progressent : une image seule sur sa ligne (`![alt](src)`) devient un bloc figure de l'éditeur ; un clic la sélectionne avec son contour bleu #2383e2, une poignée en bas redimensionne la largeur en conservant le ratio natural, et une légende éditable (`figcaption`, placeholder « Écrire une légende… ») vit sous l'image. La largeur est stockée en pourcentage de la colonne ; la légende est du texte simple. La persistance reste réversible : une image sans réglages garde `![alt](src)`, sinon le commentaire `fotion:image {width, caption}` s'ajoute après la ligne (convention documentée du callout). Les images utilisées au milieu d'une ligne restent dans leur paragraphe avec le même rendu qu'avant ; une image sans réglage ne change pas de format sur disque. FN-116 reste partiel : l'alignement (petite/moyenne/largeur pleine avec les icônes de la référence), le remplacement, le téléchargement et l'ouverture en grand ne sont pas faits ; la légende ne conserve pas les marques de texte ; une légende explicite pour le texte alternatif via interface reste à ajouter.
+
+Preuves : [extension image](../engine/document/image.ts) (tokenizer, parseHTML figure, renderMarkdown), [vue d'éditeur](../ui/features/editor/extensions/image-view.ts) (sélection, poignée, overlay contour), [round-trips alt/légende/largeur](../tests/unit/markdown.test.ts), [parcours navigateur légende + sélection + redimensionnement](../tests/e2e/image.spec.ts) (32 scénarios Playwright passants). Références : [images, fichiers et médias](https://www.notion.com/help/images-files-and-media) et les captures locales `ref/help-articles/images-files-and-media/`.

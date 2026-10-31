@@ -24,6 +24,35 @@ test('supported Markdown survives editor parse, edit, serialization and reload',
   editor.destroy();
 });
 
+test('images keep alt, caption and width through Markdown with a reversible comment', () => {
+  const input = '![Légende du visuel](attachments/clap.png) <!-- fotion:image %7B%22width%22%3A50%2C%22caption%22%3A%22L%C3%A9gende%20du%20visuel%22%7D -->\n';
+  const editor = new Editor({ extensions: editorExtensions(), content: input, contentType: 'markdown' });
+  const before = editor.getJSON();
+  assert.equal(before.type, 'doc');
+  const node = before.content?.[0];
+  assert.equal(node?.type, 'image');
+  assert.equal(node?.attrs?.src, 'attachments/clap.png');
+  assert.equal(node?.attrs?.width, 50);
+  assert.equal((node?.content?.[0] as { text?: string } | undefined)?.text, 'Légende du visuel');
+  assert.equal(editor.getMarkdown(), input.replace(/\n$/, ''));
+  // A plain image without extras keeps the standard Markdown form.
+  const plain = '![Texte alternatif](https://example.com/a.png)\n';
+  const editor2 = new Editor({ extensions: editorExtensions(), content: plain, contentType: 'markdown' });
+  const plainNode = editor2.getJSON().content?.[0];
+  assert.equal(plainNode?.type, 'image');
+  assert.equal(plainNode?.attrs?.width, null);
+  assert.equal(editor2.getMarkdown(), plain.replace(/\n$/, ''));
+  // An image inside a longer line of text is reflowed as its own block, like Notion.
+  const mixed = 'Avant ![img](https://example.com/b.png) après\n';
+  const editor3 = new Editor({ extensions: editorExtensions(), content: mixed, contentType: 'markdown' });
+  const reflowed = editor3.getJSON();
+  assert.equal(reflowed.content?.[0]?.type, 'paragraph');
+  assert.equal(reflowed.content?.[0]?.content?.[1]?.type, 'image');
+  assert.match(editor3.getMarkdown(), /!\[img\]\(https:\/\/example\.com\/b\.png\)/);
+  editor.destroy(); editor2.destroy(); editor3.destroy();
+});
+
+
 test('callouts, nested toggles and underline retain content through Markdown', () => {
   const editor = new Editor({ extensions: editorExtensions(), content: { type: 'doc', content: [
     { type: 'callout', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'À retenir', marks: [{ type: 'bold' }] }] }] },

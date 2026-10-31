@@ -240,7 +240,7 @@ Références : [S06](NOTION_REFERENCE.md#s06), [S51](NOTION_REFERENCE.md#s51).
 - [ ] **UI-169** Redimensionnement manuel des colonnes et adaptation à la largeur.
 - [ ] **UI-170** Navigation Tab/Maj+Tab, Entrée et collage tabulaire.
 - [ ] **UI-171** [PARTIEL] Image distante avec proportions préservées.
-- [ ] **UI-172** Poignées de redimensionnement, alignement, légende et texte alternatif.
+- [ ] **UI-172** [PARTIEL] Poignées de redimensionnement, alignement, légende et texte alternatif.
 - [ ] **UI-173** Visionneuse d’image avec fermer, zoom et navigation pertinente.
 - [ ] **UI-174** Uploader avec glisser-déposer, progression, erreurs et annulation.
 - [ ] **UI-175** Carte fichier : icône, nom, taille, menu et téléchargement.
@@ -494,3 +494,7 @@ Références locales : `ref/` (ignoré par Git) contient les captures du centre 
 
 Écarts encore visibles : bouton Partager et commentaires (hors périmètre), onglets « Importer une image » et « Lien » du sélecteur d’icône, filtres de recherche Créé par/Espace/Dans la page/Date, présentation « Lié à cette page » des backlinks, statut d’enregistrement local à la place de « Modifiée il y a… ».
 
+
+## Rendu des images et sélection — 31 octobre 2026
+
+UI-172, UI-171 : les images seules deviennent un bloc figure centré sur la colonne de contenu (`720px`), avec légende en `figcaption` gris (14px, placeholder « Écrire une légende… ») et sélection par contour bleu `#2383e2` en surimpression (`image-outline`) — le contour se porte sur une couche réelle car les `<img>` remplacées avalent les bordures et ombres internes (test minimal : bordure peinte, ombre interne jamais) et ombres internes. La poignée de redimensionnement affiche bordure pointillée rouge `rgba(212,76,71,0.5)` pendant le déplacement et la largeur est rangée en pourcentage lors du relâchement. Mesures : résultat capture `test-results/` dans les scénarios (image sélectionnée = 423 pixels de contour exactement `rgb(35,131,226)` sur `test-results/probe-zoom.png`). Restent les variantes d'alignement de la référence et la comparaison complète clair/sombre sans couverture.
