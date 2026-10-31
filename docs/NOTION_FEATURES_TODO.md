@@ -99,7 +99,7 @@ Références : [S01](NOTION_REFERENCE.md#s01), [S04](NOTION_REFERENCE.md#s04), [
 - [ ] **FN-070** [PARTIEL] Listes dépliantes : terminer sélection, édition du résumé et interactions imbriquées.
 - [x] **FN-071** Titres dépliants H1/H2/H3.
 - [ ] **FN-072** [PARTIEL] Blocs de code : compléter langues, coloration syntaxique, copie et retour à la ligne.
-- [ ] **FN-073** Équations mathématiques en bloc et en ligne avec édition et erreurs lisibles.
+- [x] **FN-073** Équations mathématiques en bloc et en ligne avec édition et erreurs lisibles.
 - [ ] **FN-074** [PARTIEL] Tableaux simples : compléter en-têtes, déplacements et sélection des cellules.
 - [ ] **FN-075** [PARTIEL] Colonnes de contenu avec création par dépôt latéral.
 - [ ] **FN-076** Redimensionnement, réorganisation et suppression des colonnes.
@@ -642,4 +642,12 @@ Preuves : [raccourcis](../engine/document/shortcuts.ts), [catalogue](../engine/o
 - Médias : import dans `attachments/` (50 Mo, empreinte, types sûrs servis en ligne, le reste en téléchargement), images locales (FN-114), vidéo (YouTube sans cookie, Vimeo, fichiers), audio, PDF, fichier, intégration isolée, signet web avec aperçu lu côté serveur (adresses locales et privées refusées). Aucun contenu externe ne se charge avant un clic (FN-128).
 
 Restent de la liste : `/math`, `/bread`, `/button`, notifications de rappel, glisser-déposer de fichiers et collage d’images (FN-105, FN-106, FN-115).
+
+## Avancement — équations, fil d’Ariane, boutons, collage
+
+- FN-073 : équations en bloc (`$$ … $$`) et en ligne (`$…$`, règle de Pandoc pour ne pas confondre les montants), rendues par KaTeX chargé à la demande ; `/math`, `/equation`, saisie `$$x^2$$` ; éditeur TeX avec aperçu, ⌘↵ ou « Terminé », formule invalide affichée en rouge.
+- FN-080 : `::breadcrumb`. FN-082 (partiel) : `:::button[…]` avec l’action « Insérer des blocs » ; les autres actions de Notion (ajouter une page à une base, modifier des pages, ouvrir une page) restent à faire avec les bases de données.
+- FN-105, FN-106, FN-115 : dépôt de fichiers et collage de captures.
+
+Liste demandée terminée : sélection multiple, indentation, `/date`, `/reminder`, `/link`, `/moveto`, `/math`, `/bread`, `/button`, `/video`, `/audio`, `/file`, `/pdf`, `/book`, `/embed`.
 

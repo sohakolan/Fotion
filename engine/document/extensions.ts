@@ -20,8 +20,9 @@ import { LinkToPage } from './link-to-page';
 import { mediaNodes } from './media';
 import { Breadcrumb } from './breadcrumb';
 import { ButtonBlock } from './button';
+import { BlockMath, InlineMath } from './math';
 import { DirectiveBlock } from './directive-block';
 
 export function documentExtensions(getPage: (id: string) => Pick<Page, 'title' | 'icon' | 'trashed'> | undefined = () => undefined) {
-  return [StarterKit.configure({ link: { openOnClick: false }, dropcursor: false, codeBlock: false }), Markdown.configure({ markedOptions: { gfm: true } }), TaskList, TaskItem.configure({ nested: true }), TableKit.configure({ table: false }), tableExtension(), Image, TableOfContents, Callout, Toggle, ToggleSummary, TextColor, CodeBlock, PageMention.configure({ getPage }), NotionShortcuts, Columns, Column, Indent, DateMention, LinkToPage, ...mediaNodes, Breadcrumb, ButtonBlock, DirectiveBlock];
+  return [StarterKit.configure({ link: { openOnClick: false }, dropcursor: false, codeBlock: false }), Markdown.configure({ markedOptions: { gfm: true } }), TaskList, TaskItem.configure({ nested: true }), TableKit.configure({ table: false }), tableExtension(), Image, TableOfContents, Callout, Toggle, ToggleSummary, TextColor, CodeBlock, PageMention.configure({ getPage }), NotionShortcuts, Columns, Column, Indent, DateMention, LinkToPage, ...mediaNodes, Breadcrumb, ButtonBlock, BlockMath, InlineMath, DirectiveBlock];
 }

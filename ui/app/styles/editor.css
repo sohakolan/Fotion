@@ -1809,3 +1809,67 @@ h3) {
   padding: 4px 8px;
   border-left: 2px solid var(--line);
 }
+
+/* Equations (KaTeX), with Notion's click-to-edit panel. */
+.prose .math-block {
+  position: relative;
+  margin: 4px 0;
+  padding: 8px 4px;
+  border-radius: var(--radius-sm);
+  text-align: center;
+  cursor: pointer;
+  overflow-x: auto;
+}
+
+.prose .math-inline {
+  position: relative;
+  padding: 0 2px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.prose .math-block:hover,
+.prose .math-inline:hover,
+.prose .math-editing {
+  background: var(--hover);
+}
+
+.prose .math-empty {
+  color: var(--muted);
+  font-size: var(--text-ui);
+}
+
+.math-editor {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  z-index: var(--z-menu);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: min(420px, 90vw);
+  padding: 8px;
+  text-align: left;
+  cursor: default;
+}
+
+.math-editor textarea {
+  width: 100%;
+  resize: vertical;
+  padding: 6px 8px;
+  border: 0;
+  border-radius: var(--radius);
+  background: var(--hover);
+  box-shadow: inset 0 0 0 1px var(--line);
+  font: var(--text-ui) / 1.5 var(--font-mono);
+  color: var(--text);
+}
+
+.math-editor .kit-button {
+  align-self: flex-end;
+}
+
+.math-preview {
+  min-height: 24px;
+  overflow-x: auto;
+}

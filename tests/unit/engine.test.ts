@@ -265,3 +265,15 @@ test('breadcrumb and button blocks round-trip, keeping the button label', () => 
   assert.equal(editor.getMarkdown(), source);
   editor.destroy();
 });
+
+test('block and inline equations use the standard $$ and $ Markdown syntax', () => {
+  const source = 'Aire $\\pi r^2$ d’un disque, mais 5 $ et 6 $ restent du texte.\n\n$$\n\\int_0^1 x^2\\,dx = \\frac{1}{3}\n$$\n\nFin';
+  const editor = new Editor({ extensions: documentExtensions(), content: source, contentType: 'markdown' });
+  const names: string[] = []; editor.state.doc.descendants(node => { if (node.type.name.endsWith('Math')) names.push(`${node.type.name}:${node.attrs.latex}`); });
+  assert.deepEqual(names, ['inlineMath:\\pi r^2', 'blockMath:\\int_0^1 x^2\\,dx = \\frac{1}{3}']);
+  assert.equal(editor.getMarkdown(), source);
+  editor.commands.setContent('', { contentType: 'markdown' }); editor.commands.setTextSelection(1);
+  typeText(editor, 'Soit $$x^2$$');
+  assert.equal(editor.getMarkdown().trim(), 'Soit $x^2$');
+  editor.destroy();
+});

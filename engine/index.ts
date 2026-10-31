@@ -15,6 +15,7 @@ export { LinkToPage } from './document/link-to-page';
 export { mediaNodes } from './document/media';
 export { Breadcrumb } from './document/breadcrumb';
 export { ButtonBlock } from './document/button';
+export { BlockMath, InlineMath } from './document/math';
 export { parseDatePhrase, dateSuggestions, formatDate, isDateValue, isoDay } from './operations/date-query';
 export { indentBlock, outdentBlock, handlesTab } from './operations/indentation';
 export { DirectiveBlock } from './document/directive-block';

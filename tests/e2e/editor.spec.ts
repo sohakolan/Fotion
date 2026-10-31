@@ -734,3 +734,23 @@ test('breadcrumb shows the page path and a button inserts its template', async (
   await page.locator('.prose .breadcrumb-step').first().click();
   await expect(page.getByLabel('Titre de la page', { exact: true })).toHaveValue(`Parent ${tag}`);
 });
+
+test('block and inline equations render with KaTeX and save as $$ and $', async ({ page }) => {
+  const created = await createDocument(page, 'Formules');
+  await page.locator('.prose > p').first().click(); await page.keyboard.press('ControlOrMeta+ArrowRight'); await page.keyboard.press('End');
+  await page.keyboard.press('Enter'); await page.keyboard.type('/math'); await page.keyboard.press('Enter');
+  const field = page.getByLabel('Équation TeX');
+  await expect(field).toBeFocused();
+  await field.fill('\\frac{a}{b} = c');
+  await expect(page.locator('.math-preview .katex')).toBeVisible();
+  await field.press('ControlOrMeta+Enter');
+  await expect(page.locator('.prose .math-block .math-output .katex')).toBeVisible();
+  await page.locator('.prose > p').first().click(); await page.keyboard.press('ControlOrMeta+ArrowRight'); await page.keyboard.press('End');
+  await page.keyboard.type(' avec $$x^2$$');
+  await expect(page.locator('.prose .math-inline .katex')).toBeVisible();
+  await page.screenshot({ path: test.info().outputPath('math.png') });
+  await expect(page.locator('.save-status')).toHaveText('Enregistré');
+  const content = (await (await page.request.get('/api/pages')).json()).find((p: { id: string }) => p.id === created.id).content as string;
+  expect(content).toContain('Formules avec $x^2$');
+  expect(content).toContain('$$\n\\frac{a}{b} = c\n$$');
+});

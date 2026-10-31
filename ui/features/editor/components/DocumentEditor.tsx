@@ -14,7 +14,7 @@ import SelectionRectangle from './SelectionRectangle';
 import MediaDialog, { upload, mediaKindOf, type MediaKind, type MediaResult } from './MediaDialog';
 import { Menu, MenuItem, MenuDivider, MenuSearch, EmojiPicker, Switch, modKey } from '../../../kit';
 import { blockAt, moveBlockTransaction, isListItem, caretPosition, BlockSelection, blockRange, type Block } from '../../../../engine';
-import { Bold, Italic, Underline, Strikethrough, Code, Link, ChevronDown, ChevronRight, Trash2, Copy, Type, Search, Check, Plus, ImagePlus, X, Repeat2, PaintRoller, AtSign, Smile, CalendarDays, AlarmClock, CornerUpRight, ArrowUpRight, Video, Music, FileType, Paperclip, Bookmark, Globe, ChevronsRight, MousePointerClick, Heading1, Heading2, Heading3, List, ListOrdered, SquareCheckBig, ListCollapse, FileText, MessageSquareText, Quote, Table, Minus, Image as ImageIcon, CodeXml, TableOfContents, Columns2, Columns3, Columns4 } from 'lucide-solid';
+import { Bold, Italic, Underline, Strikethrough, Code, Link, ChevronDown, ChevronRight, Trash2, Copy, Type, Search, Check, Plus, ImagePlus, X, Repeat2, PaintRoller, AtSign, Smile, CalendarDays, AlarmClock, CornerUpRight, ArrowUpRight, Video, Music, FileType, Paperclip, Bookmark, Globe, ChevronsRight, MousePointerClick, Sigma, Radical, Heading1, Heading2, Heading3, List, ListOrdered, SquareCheckBig, ListCollapse, FileText, MessageSquareText, Quote, Table, Minus, Image as ImageIcon, CodeXml, TableOfContents, Columns2, Columns3, Columns4 } from 'lucide-solid';
 
 
 const blockActions: Record<string, { icon: () => JSX.Element; action: (chain: ChainedCommands) => ChainedCommands }> = {
@@ -28,6 +28,7 @@ const blockActions: Record<string, { icon: () => JSX.Element; action: (chain: Ch
   toggle: { icon: () => <ListCollapse size={18}/>, action: c => c.insertContent({ type: 'toggle', content: [{ type: 'toggleSummary', content: [{ type: 'text', text: 'Liste dépliante' }] }, { type: 'paragraph' }] }) },
   page: { icon: () => <FileText size={18}/>, action: c => c },
   link: { icon: () => <ArrowUpRight size={18}/>, action: c => c },
+  math: { icon: () => <Sigma size={18}/>, action: c => c.insertContent({ type: 'blockMath', attrs: { latex: '' } }) },
   button: { icon: () => <MousePointerClick size={18}/>, action: c => c.insertContent({ type: 'button', attrs: { label: 'Nouvelle tâche', attributes: {} }, content: [{ type: 'taskList', content: [{ type: 'taskItem', attrs: { checked: false }, content: [{ type: 'paragraph' }] }] }] }) },
   breadcrumb: { icon: () => <ChevronsRight size={18}/>, action: c => c.insertContent({ type: 'breadcrumb', attrs: { attributes: {} } }) },
   callout: { icon: () => <MessageSquareText size={18}/>, action: c => c.wrapIn('callout') },
@@ -51,7 +52,7 @@ function derivedAction(command: SlashCommand): { icon: () => JSX.Element; action
   if (command.id.startsWith('turn-')) return { icon: blockActions[command.id.slice(5)]?.icon ?? (() => <Repeat2 size={18}/>), action: blockActions[command.id.slice(5)]?.action ?? (c => c) };
   const color = command.id.match(/^(color|background)-(\w+)$/);
   if (color) return { icon: () => <span class="slash-color" data-fotion-color={color[1] === 'color' ? color[2] : 'default'} data-fotion-background={color[1] === 'background' ? color[2] : 'default'}>A</span>, action: c => c };
-  const icons: Record<string, () => JSX.Element> = { moveto: () => <CornerUpRight size={18}/>, date: () => <CalendarDays size={18}/>, reminder: () => <AlarmClock size={18}/>, mention: () => <AtSign size={18}/>, emoji: () => <Smile size={18}/>, duplicate: () => <Copy size={18}/>, delete: () => <Trash2 size={18}/> };
+  const icons: Record<string, () => JSX.Element> = { inlineEquation: () => <Radical size={18}/>, moveto: () => <CornerUpRight size={18}/>, date: () => <CalendarDays size={18}/>, reminder: () => <AlarmClock size={18}/>, mention: () => <AtSign size={18}/>, emoji: () => <Smile size={18}/>, duplicate: () => <Copy size={18}/>, delete: () => <Trash2 size={18}/> };
   return { icon: icons[command.id] ?? (() => <Type size={18}/>), action: c => c };
 }
 const mediaKinds: MediaKind[] = ['image', 'video', 'audio', 'pdf', 'file', 'bookmark', 'embed'];
@@ -187,6 +188,7 @@ export default function DocumentEditor(props: { content: string; onChange: (cont
   function runBlockCommand(id: string) {
     const block = blockAt(editor.state.doc, caretPosition(editor));
     if (id === 'mention') { editor.chain().focus().insertContent('@').run(); return; }
+    if (id === 'inlineEquation') { editor.chain().insertContent({ type: 'inlineMath', attrs: { latex: '' } }).run(); return; }
     if (id === 'date' || id === 'reminder') { editor.chain().focus().insertContent([{ type: 'dateMention', attrs: { date: id === 'date' ? isoDay(new Date()) : `${isoDay(new Date())}T09:00`, reminder: id === 'reminder' } }, { type: 'text', text: ' ' }]).run(); return; }
     if (id === 'emoji') { const coords = editor.view.coordsAtPos(editor.state.selection.from); setEmojiAt({ x: Math.max(8, Math.min(coords.left, window.innerWidth - 416)), y: Math.max(8, Math.min(coords.bottom + 8, window.innerHeight - 364)) }); return; }
     if (!block) return;
