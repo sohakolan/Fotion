@@ -47,6 +47,16 @@ test('image caption editing, selection outline and saving', async ({ page }, inf
   expect(box.width).toBeGreaterThan(400);
   expect(box.width).toBeLessThan(500);
   await expect(page.locator('.save-status')).toHaveText('Enregistré');
+  // The controls adapt to the dark theme like the rest of the surface.
+  await page.getByRole('button', { name: 'Paramètres', exact: true }).click();
+  await page.getByRole('combobox', { name: 'Apparence' }).selectOption('dark');
+  await page.getByRole('button', { name: 'Fermer la fenêtre', exact: true }).click();
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+  // Deselect whatever the earlier steps left highlighted so the shot shows the resting style.
+  await page.locator('.prose > p').last().click();
+  await image.hover();
+  await expect(page.getByRole('button', { name: 'Largeur moyenne' })).toBeVisible();
+  await page.screenshot({ path: info.outputPath('image-dark.png') });
   expect(errors).toEqual([]);
 });
 

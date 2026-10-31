@@ -117,13 +117,17 @@ export const ImageView = imageExtension().extend({
       const syncOverlay = () => { const selected = dom.classList.contains('ProseMirror-selectednode') || dom.classList.contains('image-selected'); overlay.hidden = !selected; };
       window.addEventListener('pointermove', onMove);
       window.addEventListener('pointerup', onUp);
+      // Notion flips the strip below the image when there is no room above, near the topbar or the title.
+      const placeControls = () => { if (dom.matches(':hover')) dom.classList.toggle('image-controls-below', dom.getBoundingClientRect().top < 120); };
+      dom.addEventListener('pointerenter', placeControls);
+      window.addEventListener('scroll', placeControls, true);
       return {
         dom, contentDOM: caption,
         update(updated) { if (updated.type.name !== 'image') return false; current = updated; image.src = (current.attrs.src as string) || ''; image.alt = (current.attrs.alt as string) || ''; refresh(); syncOverlay(); return true; },
         stopEvent: event => event.target instanceof Node && (handle.contains(event.target) || image.contains(event.target) || overlay.contains(event.target) || controls.contains(event.target)),
         // Only the caption stays live: any other mutation comes from this view itself and must not rebuild it.
         ignoreMutation: mutation => !caption.contains(mutation.target as Node) || mutation.target !== caption,
-        destroy() { overlayWatcher?.disconnect(); window.removeEventListener('pointermove', onMove); window.removeEventListener('pointerup', onUp); },
+        destroy() { overlayWatcher?.disconnect(); window.removeEventListener('pointermove', onMove); window.removeEventListener('pointerup', onUp); window.removeEventListener('scroll', placeControls, true); dom.removeEventListener('pointerenter', placeControls); },
       };
     };
   },
