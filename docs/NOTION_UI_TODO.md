@@ -502,3 +502,9 @@ UI-172, UI-171 : les images seules deviennent un bloc figure centré sur la colo
 ### Contrôles d'image en thème sombre — 31 octobre 2026
 
 UI-014, UI-172 : la rangée de contrôles s'appuie sur les tokens du thème (`--bg`, `--line`, `--hover`, `--blue`) et l'état pressé reste bleu `#2383e2` en sombre ; la légende reste en `var(--muted)` fond transparent. La rangée bascule dessous l'image quand celle-ci touche la barre supérieure à l'écran. Preuves : capture `image-dark.png` du scenario navigateur [images](../tests/e2e/image.spec.ts), élargi à la bascule du thème.
+
+### Captures clair/sombre systématiques — 31 octobre 2026
+
+UI-322, UI-315, UI-316, UI-317 : `scripts/capture-themes.ts` produit, pour chaque thème (clair/dark) et sans changer les données, la page ouverte sans couverture, la page de blocs riche avec couverture `sand` et icône, le menu / ouvert, l'image sélectionnée (contour), et la visionneuse en grand — dix captures dans `test-results/themes/{light,dark}-*.png` à 1440×960. Les modèles du thème pilotent fonds, menus et image, et la page reste lisible sur la couverture. Reste la SUPERPOSITION avec les captures Notion de `ref/` (UI-323), la validation humaine (UI-010) et les vues restantes (barre repliée, recherche, corbeille, erreurs vides, mobile).
+
+Preuves : [script de capture](../scripts/capture-themes.ts) (thème initial via localStorage, undo de la requête / pour garder des données propres), répertoire `test-results/themes/` (10 fichiers, générés à la date de ce document).
