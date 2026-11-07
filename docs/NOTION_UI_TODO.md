@@ -287,14 +287,14 @@ Références : [S08](NOTION_REFERENCE.md#s08), [S09](NOTION_REFERENCE.md#s09).
 
 Références : [S12](NOTION_REFERENCE.md#s12), [S13](NOTION_REFERENCE.md#s13), [S14](NOTION_REFERENCE.md#s14), [S26](NOTION_REFERENCE.md#s26).
 
-- [ ] **UI-204** En-tête de base : icône, titre, description et menu.
-- [ ] **UI-205** Onglets des vues, ajout, menu, renommage et réorganisation.
+- [ ] **UI-204** [PARTIEL] En-tête de base : icône, titre, description et menu.
+- [ ] **UI-205** [PARTIEL] Onglets des vues, ajout, menu, renommage et réorganisation.
 - [ ] **UI-206** Barre recherche, filtres, tri, groupement, propriétés et mise en page.
-- [ ] **UI-207** Bouton Nouvelle entrée et choix de modèle.
-- [ ] **UI-208** Panneau de propriétés : ajouter, masquer, réordonner, modifier et supprimer.
-- [ ] **UI-209** Cellule titre avec icône, ouverture de page et focus.
-- [ ] **UI-210** Cellules texte, nombre, cases, URL, fichiers et dates.
-- [ ] **UI-211** Pastilles select/multi-select/status : couleur, suppression et menus.
+- [ ] **UI-207** [PARTIEL] Bouton Nouvelle entrée et choix de modèle.
+- [ ] **UI-208** [PARTIEL] Panneau de propriétés : ajouter, masquer, réordonner, modifier et supprimer.
+- [ ] **UI-209** [PARTIEL] Cellule titre avec icône, ouverture de page et focus.
+- [ ] **UI-210** [PARTIEL] Cellules texte, nombre, cases, URL, fichiers et dates.
+- [ ] **UI-211** [PARTIEL] Pastilles select/multi-select/status : couleur, suppression et menus.
 - [ ] **UI-212** Sélecteurs de personnes et relations avec recherche.
 - [ ] **UI-213** Picker date : calendrier, heure, intervalle, fuseau et rappel.
 - [ ] **UI-214** Nombres formatés, progressions, rollups et valeurs calculées.
@@ -308,7 +308,7 @@ Références : [S12](NOTION_REFERENCE.md#s12), [S13](NOTION_REFERENCE.md#s13), [
 
 Références : [S13](NOTION_REFERENCE.md#s13), [S20](NOTION_REFERENCE.md#s20), [S21](NOTION_REFERENCE.md#s21), [S22](NOTION_REFERENCE.md#s22), [S23](NOTION_REFERENCE.md#s23).
 
-- [ ] **UI-220** Tableau : en-tête fixe, colonnes, poignée de ligne et insertion.
+- [ ] **UI-220** [PARTIEL] Tableau : en-tête fixe, colonnes, poignée de ligne et insertion.
 - [ ] **UI-221** Liste : densité, propriétés visibles et états des lignes.
 - [ ] **UI-222** Kanban : largeur des colonnes, en-tête, compteurs et bouton ajouter.
 - [ ] **UI-223** Kanban : cartes, contenu, drop targets, regroupements et colonnes repliées.
@@ -516,3 +516,5 @@ UI-156 : comparaison avec `ref/help-articles/code-blocks/en/00-Code_block.png` �
 ### Finesse des blocs de code: détection, tabulation et langages — 31 octobre 2026
 
 UI-156, FN-061 : après la comparaison avec la référence, le bloc de code reçoit (1) une bande réservée au survol (les 46 px du haut ne sont plus masqués par le sélecteur), (2) Tab/Maj+Tab qui ajoutent ou retirent deux espaces aux lignes touchées depuis l'intérieur du bloc ([opérations](../engine/operations/code-tab.ts), câblé dans les raccourcis Notion avant l'indenter léger), (3) la détection automatique du langage au premier bloc sans langue ([heuristiques signées](../engine/operations/language-detect.ts): javascript/typescript/python/sql/markdown/ini/yaml/css/json/diff/latex,qq, appliquées ~600 ms après la frappe, une seule fois, jamais en Markdown — attribut `autoLanguage` editor-only), (4) 14 langages supplémentaires du catalogue de highlight.js chargés à la demande ([grammaires différées](../ui/features/editor/lib/syntax-highlighting.ts) via [le chargeur paresseux](../ui/features/editor/lib/code-syntax.ts): Dart, Dockerfile, Elixir, Erlang, Gradle, Groovy, HTTP, Julia, Lisp, Nginx, OCaml, PowerShell, Protobuf, LaTeX, Propriétés, Vim) avec libellés complets. Preuves : [tests](../tests/unit/code-language.test.ts) (12 signatures de détection + Tab/Maj+Tab sans quitter le bloc), le paquet navigateur complet (35 pass).
+
+UI-204, UI-205, UI-207 à UI-211, UI-220 : vue tableau d’une base en ligne — titre éditable, onglet de vue unique, en-têtes avec icône de type (« Aa Nom » pour le titre), « + » pour ajouter une propriété (menu des types), menu de renommage, cellules éditables sur place, pastilles colorées avec les jetons `--tag-*` du kit (clair et sombre), bouton « Ouvrir » au survol de la cellule titre, ligne « + Nouvelle page ». Écarts connus avec Notion : pas de description ni de menu de base, pas de barre filtres/tri, sélecteurs de date et d’options natifs du navigateur (datalist), pas de redimensionnement de colonnes ni de poignée de ligne. Preuve : capture `database-table.png` du [scénario navigateur](../tests/e2e/database.spec.ts).

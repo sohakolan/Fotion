@@ -112,7 +112,7 @@ Format FotionMark : [vocabulaire v1](FOTIONMARK_TODO.md#06-vocabulaire-v1-exista
 - [ ] **FN-081** Blocs synchronisés avec origine, occurrences et désynchronisation.
 - [ ] **FN-082** [PARTIEL] Boutons de page avec actions configurables.
 - [ ] **FN-083** Modèles de blocs réutilisables selon les mécanismes de la référence.
-- [ ] **FN-084** Blocs de bases de données intégrées et vues liées.
+- [ ] **FN-084** [PARTIEL] Blocs de bases de données intégrées et vues liées : base en ligne créée par `/vue tableau` ; vues liées à faire.
 - [ ] **FN-085** [PARTIEL] Marque-pages web avec titre, description et aperçu.
 - [ ] **FN-086** [PARTIEL] Blocs embarqués : vidéo, audio, PDF et contenus externes compatibles.
 - [x] **FN-087** Bloc de fichier téléchargeable.
@@ -223,13 +223,13 @@ Références : [S12](NOTION_REFERENCE.md#s12), [S13](NOTION_REFERENCE.md#s13), [
 
 Format FotionMark : [format disque des bases](FOTIONMARK_TODO.md#format-disque) — FM-053 à FM-058 sont un préalable à toute interface de base.
 
-- [ ] **FN-166** Créer une base pleine page et une base intégrée.
-- [ ] **FN-167** Créer chaque ligne comme une page éditable avec propriétés et contenu.
+- [ ] **FN-166** [PARTIEL] Créer une base pleine page et une base intégrée.
+- [ ] **FN-167** [PARTIEL] Créer chaque ligne comme une page éditable avec propriétés et contenu.
 - [ ] **FN-168** Distinguer base de données, source de données et vue.
 - [ ] **FN-169** Relier une source existante sans dupliquer les données.
 - [ ] **FN-170** Gérer plusieurs sources lorsque la référence le permet.
 - [ ] **FN-171** Renommer, décrire, déplacer et dupliquer une base.
-- [ ] **FN-172** Créer, renommer, réordonner, masquer et supprimer des propriétés.
+- [ ] **FN-172** [PARTIEL] Créer, renommer, réordonner, masquer et supprimer des propriétés.
 - [ ] **FN-173** Changer le type d’une propriété avec aperçu de conversion et protection contre les pertes.
 - [ ] **FN-174** Créer, dupliquer, archiver et supprimer des entrées individuellement ou en lot.
 - [ ] **FN-175** Copier/coller des cellules et des plages de données.
@@ -237,7 +237,7 @@ Format FotionMark : [format disque des bases](FOTIONMARK_TODO.md#format-disque) 
 - [ ] **FN-177** Verrouiller la structure d’une base tout en permettant les éditions autorisées.
 - [ ] **FN-178** Ouvrir une ligne en aperçu centré, latéral ou pleine page.
 - [ ] **FN-179** Conserver les liens entre entrées lors d’une duplication/exportation.
-- [ ] **FN-180** Définir une représentation disque documentée pour schémas, vues et propriétés.
+- [x] **FN-180** Définir une représentation disque documentée pour schémas, vues et propriétés ([FotionMark](FOTIONMARK.md#bases-de-données), FM-053/FM-054/FM-069).
 - [ ] **FN-181** Reconstituer la base à partir du coffre sans dépendre d’un cache opaque.
 
 ## 10. Types de propriétés — P1/P2
@@ -246,15 +246,15 @@ Références : [S14](NOTION_REFERENCE.md#s14), [S19](NOTION_REFERENCE.md#s19).
 
 Format FotionMark : [écriture YAML de chaque type](FOTIONMARK_TODO.md#types-de-propriétés-écriture-yaml), FM-059 à FM-068.
 
-- [ ] **FN-182** Titre et texte riche.
+- [ ] **FN-182** [PARTIEL] Titre et texte riche.
 - [ ] **FN-183** Nombre et formats numériques, devise, pourcentage.
 - [ ] **FN-184** Affichage numérique en nombre, barre ou anneau selon la référence.
-- [ ] **FN-185** Sélection simple avec options ordonnées et colorées.
-- [ ] **FN-186** Sélection multiple avec création et fusion d’options.
-- [ ] **FN-187** Statut avec groupes et ordre des états.
-- [ ] **FN-188** Date simple, intervalle, heure, fuseau et rappel.
-- [ ] **FN-189** Case à cocher.
-- [ ] **FN-190** URL, e-mail et téléphone avec action adaptée.
+- [ ] **FN-185** [PARTIEL] Sélection simple avec options ordonnées et colorées.
+- [ ] **FN-186** [PARTIEL] Sélection multiple avec création et fusion d’options.
+- [ ] **FN-187** [PARTIEL] Statut avec groupes et ordre des états.
+- [ ] **FN-188** [PARTIEL] Date simple, intervalle, heure, fuseau et rappel.
+- [ ] **FN-189** [PARTIEL] Case à cocher.
+- [ ] **FN-190** [PARTIEL] URL, e-mail et téléphone avec action adaptée.
 - [ ] **FN-191** Fichiers et médias multiples.
 - [ ] **FN-192** Personne et groupe — nécessite le périmètre collaboration.
 - [ ] **FN-193** Relation vers une ou plusieurs pages.
@@ -274,7 +274,7 @@ Références : [S13](NOTION_REFERENCE.md#s13), [S20](NOTION_REFERENCE.md#s20), [
 Format FotionMark : [directive `::database-view`](FOTIONMARK_TODO.md#vues), FM-069 à FM-075 (disposition, filtres, tris, groupes, calculs).
 
 - [ ] **FN-202** Créer, nommer, dupliquer, réordonner et supprimer une vue.
-- [ ] **FN-203** Vue tableau : colonnes redimensionnables, cellules éditables, pied de calcul.
+- [ ] **FN-203** [PARTIEL] Vue tableau : colonnes redimensionnables, cellules éditables, pied de calcul.
 - [ ] **FN-204** Vue tableau : visibilité des propriétés et retour à la ligne.
 - [ ] **FN-205** Vue liste : propriétés affichées, icônes et densité.
 - [ ] **FN-206** Vue Kanban : groupes, sous-groupes, colonnes vides et déplacement des cartes.
@@ -417,7 +417,7 @@ Format FotionMark : [interpréteur et aller-retour](FOTIONMARK_TODO.md#03-interp
 - [ ] **FN-309** Surveiller les modifications, renommages et suppressions effectués par Obsidian.
 - [ ] **FN-310** Conserver espaces, échappements et constructions Markdown non supportées sans les réécrire silencieusement.
 - [ ] **FN-311** Garantir l’aller-retour de chaque bloc avant de le déclarer disponible.
-- [ ] **FN-312** [PARTIEL] Décider le format persistant des colonnes, blocs synchronisés et bases de données avant leur UI : colonnes faites (FM-043) ; blocs synchronisés FM-085, bases FM-053/FM-054/FM-069 à décider.
+- [ ] **FN-312** [PARTIEL] Décider le format persistant des colonnes, blocs synchronisés et bases de données avant leur UI : colonnes (FM-043) et bases (FM-053/FM-054/FM-069) faites ; blocs synchronisés FM-085 à décider.
 - [ ] **FN-313** Utiliser des fichiers d’assets locaux avec chemins relatifs et détection des orphelins.
 - [ ] **FN-314** Choisir le coffre depuis l’interface ; couvrir absence, lecture seule et permissions.
 - [ ] **FN-315** Prendre en charge les sous-dossiers physiques et liens internes du coffre.
@@ -694,3 +694,7 @@ Preuves : [classement et tri des récents](../engine/operations/slash-commands.t
 FN-118 progresse : un double-clic ouvre la visionneuse plein écran de la référence — fond sombre, image centrée, `Fermer l'aperçu` (bouton ×, Échap ou clic hors image) — avec `Télécharger` (attribut download ; téléchargement natif pour les pièces du coffre), `Remplacer` (rouvre le dialogue média déjà utilisé par l'insertion ; la source remplacée conserve alt, légende et largeur en une étape d'annulation) via la couche d'événements `fotion-replace-image` sous la configuration de l'éditeur. Le critère reste partiel : remplacer par un fichier importé local doit aussi couvrir les vidéos/audio, l'ouverture depuis la visionneuse des références externes reste dans un onglet classique, et aménagement image par image (zoom/repositionnement) reste ouvert (FN-119).
 
 Preuves : [visionneuse](../ui/features/editor/extensions/image-view.ts) (double-clic, barre des actions, Échap), [remplacement de source](../ui/features/editor/components/DocumentEditor.tsx) (`insertMedia` avec nœud remplacé), [parcours navigateur](../tests/e2e/image-lightbox.spec.ts) : image importée dans le coffre, ouverture, Échap, remplacement par un second fichier, source unique dans le Markdown sauvegardé, capture `lightbox.png`.
+
+### Bases de données v1 : vue tableau — 7 novembre 2026
+
+FN-166, FN-167, FN-084 : `/vue tableau` crée une base en ligne (une sous-page qui porte le schéma) et insère sa vue dans la page ; « + Nouvelle page » crée une ligne, qui est une vraie page ouvrable. Les lignes n’apparaissent pas dans l’arborescence de la barre latérale, comme dans Notion. FN-172 : ajout de propriété par type et renommage ; masquage, réordonnancement et suppression restent à faire. FN-182 à FN-190 : texte, nombre, sélection, sélection multiple, statut, date (jour), case à cocher, URL, e-mail et téléphone sont éditables dans les cellules ; une option nouvelle est ajoutée au schéma avec la couleur suivante de Notion. FN-203 : tableau sans redimensionnement ni pied de calcul. Format : [FotionMark — bases](FOTIONMARK.md#bases-de-données). Preuves : [scénario navigateur](../tests/e2e/database.spec.ts), tests unitaires FotionMark et coffre.

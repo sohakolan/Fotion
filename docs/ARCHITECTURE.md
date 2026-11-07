@@ -50,7 +50,7 @@ Les configurations restent à la racine. `public/` contient les ressources stati
 
 - **FotionMark** (`engine/fotionmark/`) : la surcouche Markdown et son interpréteur. Il n'importe que lui-même, aucun paquet externe ; le reste du moteur l'utilise (les blocs de `document/` lui demandent si une directive est valide). Spécification : [FOTIONMARK.md](FOTIONMARK.md).
 - **Moteur** : structures de documents, conversions, transactions, formats Markdown/HTML et index des pages. Il n'importe ni `ui/`, ni `server/`, ni Solid, ni Lucide. Les modèles ne dépendent pas des extensions d'éditeur. Le moteur ne connaît pas les menus, les modales, le stockage du navigateur ou les requêtes HTTP.
-- **Interface** : compose les fonctionnalités avec Solid, gère les interactions, applique les vues Tiptap et appelle les opérations du moteur. Elle importe le moteur uniquement par `engine/index.ts`. Elle n'importe jamais les fichiers du serveur.
+- **Interface** : compose les fonctionnalités avec Solid, gère les interactions, applique les vues Tiptap et appelle les opérations du moteur. Elle importe le moteur uniquement par `engine/index.ts`. `engine/fotionmark/index.ts` est un second point d’entrée public, autonome : le serveur s’en sert pour lire le format (schémas de bases) sans charger le schéma de l’éditeur. Elle n'importe jamais les fichiers du serveur.
 - **Serveur** : accède au disque et expose l'API locale. Il utilise les contrats publics du moteur, sans importer l'interface. La validation des entrées, les protections des chemins et la concurrence des écritures restent à la frontière du stockage.
 
 Le sens autorisé est `ui → engine` et `server → engine`. L'interface communique avec le serveur par HTTP. Aucune dépendance inverse n'est autorisée.

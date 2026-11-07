@@ -90,19 +90,19 @@ Le plus gros chantier de parité. **Aucune interface avant que FM-053 à FM-058 
 
 ### Format disque
 
-- [ ] **FM-053** [DÉCISION] Une base = une page `.md` dont l’en-tête porte `database:` (schéma des propriétés) ; chaque ligne = une page `.md` dont `parent` est la base et dont les valeurs sont des clés YAML de premier niveau. Le coffre étant plat, le « dossier de pages » de la spécification devient la relation `parent` (FN-166, FN-167, FN-181).
-- [ ] **FM-054** [DÉCISION] Schéma : liste ordonnée `{ id, name, type, options… }` ; l’`id` stable sert de clé YAML pour survivre aux renommages (FN-172).
-- [ ] **FM-055** Lecture d’une base depuis le coffre sans cache : schéma + lignes reconstruits à chaque chargement, cache seulement en mémoire et invalidé par version de fichier (FN-181).
-- [ ] **FM-056** Valeur inconnue, mal typée ou propriété supprimée : conservée dans le YAML de la ligne, signalée, jamais effacée (FN-201).
+- [x] **FM-053** [DÉCIDÉ 2026-11-07] Une base = une page `.md` dont l’en-tête porte `database:` (schéma des propriétés) ; chaque ligne = une page `.md` dont `parent` est la base et dont les valeurs sont des clés YAML de premier niveau. Le coffre étant plat, le « dossier de pages » de la spécification devient la relation `parent` (FN-166, FN-167, FN-181).
+- [x] **FM-054** [DÉCIDÉ 2026-11-07] Schéma : liste ordonnée `{ id, name, type, options… }` ; l’`id` stable sert de clé YAML pour survivre aux renommages (FN-172).
+- [ ] **FM-055** [PARTIEL] Lecture d’une base depuis le coffre sans cache : schéma + lignes reconstruits à chaque chargement, cache seulement en mémoire et invalidé par version de fichier (FN-181).
+- [ ] **FM-056** [PARTIEL] Valeur inconnue, mal typée ou propriété supprimée : conservée dans le YAML de la ligne, signalée, jamais effacée (FN-201).
 - [ ] **FM-057** Renommer une propriété ne réécrit aucune ligne ; changer son type affiche l’aperçu de conversion et garde l’ancienne valeur tant qu’elle n’est pas convertie (FN-173).
-- [ ] **FM-058** Une ligne reste un fichier Markdown ordinaire lisible et éditable dans Obsidian (propriétés YAML natives d’Obsidian quand les types coïncident).
+- [ ] **FM-058** [PARTIEL] Une ligne reste un fichier Markdown ordinaire lisible et éditable dans Obsidian (propriétés YAML natives d’Obsidian quand les types coïncident).
 
 ### Types de propriétés (écriture YAML)
 
-- [ ] **FM-059** `text`, `number` (format, devise, pourcentage), `checkbox`, `url`, `email`, `phone` (FN-182, FN-183, FN-189, FN-190).
-- [ ] **FM-060** `select`, `multi-select` : options ordonnées et colorées dans le schéma, valeurs par nom dans la ligne (FN-185, FN-186).
-- [ ] **FM-061** `status` : groupes « À faire / En cours / Terminé » et ordre des états (FN-187).
-- [ ] **FM-062** `date` : jour, heure, intervalle `start`/`end`, fuseau ; ISO 8601 uniquement (FN-188).
+- [ ] **FM-059** [PARTIEL] `text`, `number` (format, devise, pourcentage), `checkbox`, `url`, `email`, `phone` (FN-182, FN-183, FN-189, FN-190).
+- [ ] **FM-060** [PARTIEL] `select`, `multi-select` : options ordonnées et colorées dans le schéma, valeurs par nom dans la ligne (FN-185, FN-186).
+- [ ] **FM-061** [PARTIEL] `status` : groupes « À faire / En cours / Terminé » et ordre des états (FN-187).
+- [ ] **FM-062** [PARTIEL] `date` : jour, heure, intervalle `start`/`end`, fuseau ; ISO 8601 uniquement (FN-188).
 - [ ] **FM-063** `files` : liste de `attachments/…` ou d’URL (FN-191).
 - [ ] **FM-064** `created` / `edited` : lus depuis le fichier, jamais écrits par l’utilisateur (FN-196).
 - [ ] **FM-065** `unique-id` avec préfixe, compteur stocké dans le schéma (FN-198).
@@ -112,8 +112,8 @@ Le plus gros chantier de parité. **Aucune interface avant que FM-053 à FM-058 
 
 ### Vues
 
-- [ ] **FM-069** [DÉCISION] Vue = feuille `::database-view{src=<base> layout=table …}` dans une page ; la page de la base contient ses propres vues. Plusieurs vues d’une même base sans dupliquer les données (FN-084, FN-168, FN-169).
-- [ ] **FM-070** Attributs communs : `layout` (`table`, `board`, `list`, `gallery`, `calendar`, `timeline`, `chart`, `form`, `feed`, `map`), `title`, `properties` (liste ordonnée, visibles), `wrap`, `limit` (FN-202 à FN-205, FN-222).
+- [x] **FM-069** [DÉCIDÉ 2026-11-07] Vue = feuille `::database-view{src=<base> layout=table …}` dans une page ; la page de la base contient ses propres vues. Plusieurs vues d’une même base sans dupliquer les données (FN-084, FN-168, FN-169).
+- [ ] **FM-070** [PARTIEL] Attributs communs : `layout` (`table`, `board`, `list`, `gallery`, `calendar`, `timeline`, `chart`, `form`, `feed`, `map`), `title`, `properties` (liste ordonnée, visibles), `wrap`, `limit` (FN-202 à FN-205, FN-222).
 - [ ] **FM-071** Filtres : syntaxe d’expression d’une ligne (`status = "En cours" and due < today`) dans un attribut `filter`, avec groupes ET/OU (FN-216, FN-217).
 - [ ] **FM-072** Tris `sort="due:asc,priority:desc"` et groupes `groupBy`, `subGroupBy`, `hideEmpty` (FN-218 à FN-220).
 - [ ] **FM-073** Paramètres propres à chaque disposition : `cardSize`, `cover`, `dateProperty`, `scale`, `chartType`… déclarés en `enum` (FN-206 à FN-211).
@@ -165,8 +165,16 @@ Le plus gros chantier de parité. **Aucune interface avant que FM-053 à FM-058 
 
 ## Ordre de réalisation
 
-1. **Décisions de format** (FM-010, FM-053, FM-054, FM-069) : proposées dans la spécification, validées avant tout code.
+1. **Décisions de format** : FM-053, FM-054 et FM-069 décidées le 7 novembre 2026 ; restent FM-010, FM-085 et FM-079 : proposées dans la spécification, validées avant tout code.
 2. **Socle** : FM-021 (fixtures), FM-029/FM-030 (types `color`, `id`, `list`), FM-052.
 3. **Bases v1** : format disque, propriétés FM-059 à FM-063, vue `table` puis `board`, filtres et tris simples — interface livrée avec chaque étape.
 4. **Directives en ligne** et migration des mentions et dates.
 5. Blocs synchronisés, modèles, puis formules et automations.
+
+## Avancement — bases v1, vue tableau (7 novembre 2026)
+
+FM-053, FM-054, FM-069 : une base est une page dont l’en-tête porte `database: { properties: [...] }` ; chaque ligne est une page `.md` dont `parent` est la base et dont les valeurs sont des clés YAML nommées par l’`id` de la propriété ; les vues sont des feuilles `::database-view[nom]{src=…}`. Interpréteur : [`database/properties.ts`](../engine/fotionmark/database/properties.ts) (lecture du schéma, lecture/écriture typée des cellules, identifiants, édition du schéma sans perte) et [`blocks/database.ts`](../engine/fotionmark/blocks/database.ts). Coffre : `Page.database` et `Page.values` ; seules les valeurs modifiées sont validées, pour que les clés écrites par Obsidian n’empêchent jamais une sauvegarde.
+
+Restent pour ces cases : formats numériques (FM-059), suppression/réordonnancement des options (FM-060), groupes de statut visibles (FM-061), heures, intervalles et fuseaux (FM-062), dispositions autres que `table` (FM-070), signalement visible des problèmes de schéma (FM-056).
+
+Preuves : `tests/unit/fotionmark.test.ts` (schéma, cellules, directive), `tests/unit/vault.test.ts` (valeurs YAML, cellule vidée, clés étrangères, schéma refusé), `tests/unit/engine.test.ts` (aller-retour éditeur), [scénario navigateur](../tests/e2e/database.spec.ts) (création par `/vue tableau`, ligne, propriété date, étiquettes, rechargement, lignes absentes de la barre latérale).

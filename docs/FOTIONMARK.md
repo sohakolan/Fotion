@@ -18,6 +18,7 @@ engine/fotionmark/            Langage, autonome
   schema/validate.ts          validate / validateNode : diagnostics erreur ou avertissement
   blocks/<famille>.ts         Déclarations pures des blocs d’une famille
   blocks/index.ts             Registre : la seule liste des blocs connus
+  database/properties.ts      Bases : schéma des propriétés, lecture/écriture des valeurs
 engine/document/
   fotionmark-node.ts          fotionmarkNode(déclaration) : nœud d’éditeur généré
   <famille>.ts                Nœuds d’une famille + présentation (html)
@@ -79,6 +80,7 @@ Les déclarations ([`blocks/`](../engine/fotionmark/blocks/)) fixent pour chaque
 | `bookmark` | ligne | — | `url`, `title`, `description`, `image` (lu une fois à la création) |
 | `breadcrumb` | ligne | — | — · chemin calculé à l’affichage |
 | `button` | conteneur, libellé `[…]` | FotionMark (modèle inséré à chaque clic) | — |
+| `database-view` | ligne, libellé `[…]` = nom de la vue | — | `src` : `page` (la base ; absent = la page qui contient la vue), `layout` : `enum` `table` (défaut) |
 
 Le libellé `[…]` d’une directive est conservé par l’éditeur pour tous les blocs ; il ne peut contenir ni `]` ni saut de ligne.
 
@@ -101,9 +103,42 @@ const text = stringify(document);
 
 Nœuds : `markdown` (texte Markdown brut), `block` (conteneur et ses enfants), `leaf` (directive d’une ligne).
 
+## Bases de données
+
+Décidé le 7 novembre 2026. Une base n’est pas un bloc : c’est une **page** dont l’en-tête déclare le schéma, et ses **lignes sont des pages**.
+
+```markdown
+projets.md                                  lancement.md
+---                                         ---
+title: Projets                              title: Lancement
+database:                                   parent: projets.md
+  properties:                               status: En cours
+    - id: status                            due: 2026-11-20
+      name: Statut                          tags: [Urgent, Client]
+      type: status                          ---
+    - id: due
+      name: Échéance                        Contenu de la ligne…
+      type: date
+    - id: tags
+      name: Étiquettes
+      type: multi-select
+      options:
+        - { name: Urgent, color: red }
+---
+
+::database-view[Tableau]
+```
+
+- **Schéma** : `database.properties` est une liste ordonnée `{ id, name, type, options? }`. `id` (`[a-z][a-z0-9-]*`) est stable et ne se renomme jamais ; `name` est le libellé visible. Les clés propres à la page (`title`, `icon`, `parent`, `database`…) sont réservées. Types v1 : `text`, `number`, `select`, `multi-select`, `status`, `date`, `checkbox`, `url`, `email`, `phone`. Une option a un `name` et une `color` de la palette ; un statut sans options reçoit « Pas commencé / En cours / Terminé ».
+- **Lignes** : toute page dont `parent` est la base. Le titre de la ligne est son `title`. Chaque valeur est une clé YAML de premier niveau nommée par l’`id` de la propriété : chaîne, nombre, booléen, liste (sélection multiple) ou date ISO 8601. Une cellule vide n’écrit pas de clé.
+- **Vues** : `::database-view` dans la page de la base (base pleine page) ou dans n’importe quelle page avec `src` (base en ligne, vue liée). Plusieurs vues d’une même base ne dupliquent rien.
+- **Sans perte** : une propriété de type inconnu ou mal formée est ignorée par la vue, signalée, et conservée dans le fichier ; une valeur qui ne correspond pas à son type est affichée comme conservée et jamais réécrite tant que l’utilisateur ne la change pas. Les autres clés YAML d’une ligne (écrites par Obsidian, par exemple) restent intactes.
+
+API : `readDatabase`, `readCell`, `writeCell`, `addProperty`, `updateProperty`, `newPropertyId` dans [`database/properties.ts`](../engine/fotionmark/database/properties.ts).
+
 ## Feuille de route
 
-Prochains blocs, dans l’ordre : base de données (dossier de pages + vues : tableau, kanban, galerie, liste, calendrier, chronologie), intégrations (`::embed`, iframe isolée sans requête avant activation), HTML isolé, blocs synchronisés, boutons, dates et mentions en ligne. Les formats déjà présents avant FotionMark — listes dépliantes `<details>`, encadrés `> [!NOTE]`, couleurs `<span data-fotion-color>`, tableaux `data-fotion-table` — restent lus ; leur migration vers des directives sera proposée avec une lecture de l’ancien format.
+Prochains blocs, dans l’ordre : dispositions de vues (kanban, galerie, liste, calendrier, chronologie), filtres et tris, intégrations (`::embed`, iframe isolée sans requête avant activation), HTML isolé, blocs synchronisés, boutons, dates et mentions en ligne. Les formats déjà présents avant FotionMark — listes dépliantes `<details>`, encadrés `> [!NOTE]`, couleurs `<span data-fotion-color>`, tableaux `data-fotion-table` — restent lus ; leur migration vers des directives sera proposée avec une lecture de l’ancien format.
 
 ## Conventions
 
@@ -135,7 +170,7 @@ Ces règles s’appliquent à chaque nouvelle fonctionnalité Notion portée en 
 ### Données et présentation
 
 - Un bloc décrit une **configuration** (quelle vue, quel tri, quelle largeur), pas des données volumineuses.
-- Les données qui grandissent vivent dans des pages : une base de données est un dossier de pages `.md`, une ligne est une page et ses propriétés sont son en-tête YAML. Les modèles sont des pages d’un sous-dossier de la base. Les blocs y font référence (`src`), ils ne les recopient pas.
+- Les données qui grandissent vivent dans des pages : une base de données est une page dont les lignes sont ses pages enfants (`parent`), une ligne est une page et ses propriétés sont son en-tête YAML. Les modèles sont des pages d’un sous-dossier de la base. Les blocs y font référence (`src`), ils ne les recopient pas.
 - Le moteur produit un HTML sémantique (`data-fotionmark`, `data-attributes`, classe `fm-<bloc>`) sans style ; les styles et interactions sont dans `ui/`.
 
 ### Versions et compatibilité
