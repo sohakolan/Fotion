@@ -77,7 +77,6 @@ Les déclarations ([`blocks/`](../engine/fotionmark/blocks/)) fixent pour chaque
 | `file` | ligne | — | `src` : `source`, `name` : `string`, `size` : `number` (octets) |
 | `embed` | ligne | — | `url` : `url`, `height` : `number` (80 à 2000, défaut 400) |
 | `bookmark` | ligne | — | `url`, `title`, `description`, `image` (lu une fois à la création) |
-
 | `breadcrumb` | ligne | — | — · chemin calculé à l’affichage |
 | `button` | conteneur, libellé `[…]` | FotionMark (modèle inséré à chaque clic) | — |
 

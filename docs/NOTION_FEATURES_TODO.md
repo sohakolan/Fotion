@@ -88,6 +88,8 @@ Références : [S01](NOTION_REFERENCE.md#s01), [S03](NOTION_REFERENCE.md#s03), [
 
 Références : [S01](NOTION_REFERENCE.md#s01), [S04](NOTION_REFERENCE.md#s04), [S06](NOTION_REFERENCE.md#s06), [S07](NOTION_REFERENCE.md#s07).
 
+Format FotionMark : [vocabulaire v1](FOTIONMARK_TODO.md#06-vocabulaire-v1-existant--p0p1), [formats hérités](FOTIONMARK_TODO.md#05-formats-hérités--p1), [blocs synchronisés et boutons](FOTIONMARK_TODO.md#09-blocs-synchronisés-boutons-et-automations--p1p2).
+
 - [ ] **FN-062** [PARTIEL] Paragraphe de texte riche.
 - [ ] **FN-063** [PARTIEL] Titres H1, H2 et H3.
 - [ ] **FN-064** [PARTIEL] Listes à puces et listes numérotées.
@@ -170,6 +172,8 @@ Références : [S06](NOTION_REFERENCE.md#s06).
 
 Références : [S08](NOTION_REFERENCE.md#s08), [S09](NOTION_REFERENCE.md#s09), [S10](NOTION_REFERENCE.md#s10).
 
+Format FotionMark : [directives en ligne](FOTIONMARK_TODO.md#02-directives-en-ligne--p1) (mentions de pages et de dates, liens vers un bloc).
+
 - [ ] **FN-129** [PARTIEL] Créer un lien interne avec @, [[ et le menu de lien selon la référence.
 - [x] **FN-130** Créer une nouvelle page depuis une recherche de lien sans résultat.
 - [ ] **FN-131** [PARTIEL] Afficher les mentions entrantes et les backlinks d’une page.
@@ -217,6 +221,8 @@ Références : [S02](NOTION_REFERENCE.md#s02), [S03](NOTION_REFERENCE.md#s03), [
 
 Références : [S12](NOTION_REFERENCE.md#s12), [S13](NOTION_REFERENCE.md#s13), [S14](NOTION_REFERENCE.md#s14).
 
+Format FotionMark : [format disque des bases](FOTIONMARK_TODO.md#format-disque) — FM-053 à FM-058 sont un préalable à toute interface de base.
+
 - [ ] **FN-166** Créer une base pleine page et une base intégrée.
 - [ ] **FN-167** Créer chaque ligne comme une page éditable avec propriétés et contenu.
 - [ ] **FN-168** Distinguer base de données, source de données et vue.
@@ -237,6 +243,8 @@ Références : [S12](NOTION_REFERENCE.md#s12), [S13](NOTION_REFERENCE.md#s13), [
 ## 10. Types de propriétés — P1/P2
 
 Références : [S14](NOTION_REFERENCE.md#s14), [S19](NOTION_REFERENCE.md#s19).
+
+Format FotionMark : [écriture YAML de chaque type](FOTIONMARK_TODO.md#types-de-propriétés-écriture-yaml), FM-059 à FM-068.
 
 - [ ] **FN-182** Titre et texte riche.
 - [ ] **FN-183** Nombre et formats numériques, devise, pourcentage.
@@ -262,6 +270,8 @@ Références : [S14](NOTION_REFERENCE.md#s14), [S19](NOTION_REFERENCE.md#s19).
 ## 11. Vues de bases de données — P1/P2
 
 Références : [S13](NOTION_REFERENCE.md#s13), [S20](NOTION_REFERENCE.md#s20), [S21](NOTION_REFERENCE.md#s21), [S22](NOTION_REFERENCE.md#s22), [S23](NOTION_REFERENCE.md#s23).
+
+Format FotionMark : [directive `::database-view`](FOTIONMARK_TODO.md#vues), FM-069 à FM-075 (disposition, filtres, tris, groupes, calculs).
 
 - [ ] **FN-202** Créer, nommer, dupliquer, réordonner et supprimer une vue.
 - [ ] **FN-203** Vue tableau : colonnes redimensionnables, cellules éditables, pied de calcul.
@@ -292,6 +302,8 @@ Références : [S13](NOTION_REFERENCE.md#s13), [S20](NOTION_REFERENCE.md#s20), [
 
 Références : [S16](NOTION_REFERENCE.md#s16), [S17](NOTION_REFERENCE.md#s17), [S18](NOTION_REFERENCE.md#s18), [S24](NOTION_REFERENCE.md#s24).
 
+Format FotionMark : FM-066 (relations, rollups) et [formules](FOTIONMARK_TODO.md#08-formules--p2).
+
 - [ ] **FN-226** Relations unidirectionnelles et réciproques.
 - [ ] **FN-227** Limiter la cardinalité et supprimer un lien sans supprimer les pages.
 - [ ] **FN-228** Choisir les propriétés montrées dans le sélecteur de relation.
@@ -314,6 +326,8 @@ Références : [S16](NOTION_REFERENCE.md#s16), [S17](NOTION_REFERENCE.md#s17), [
 
 Références : [S25](NOTION_REFERENCE.md#s25), [S26](NOTION_REFERENCE.md#s26), [S27](NOTION_REFERENCE.md#s27).
 
+Format FotionMark : [modèles de base](FOTIONMARK_TODO.md#modèles), FM-076 à FM-078.
+
 - [ ] **FN-243** Créer et modifier des modèles de pages de base de données.
 - [ ] **FN-244** Préremplir propriétés, contenu, icône et couverture à partir d’un modèle.
 - [ ] **FN-245** Choisir un modèle par défaut pour une base ou une vue.
@@ -335,6 +349,8 @@ Références : [S25](NOTION_REFERENCE.md#s25), [S26](NOTION_REFERENCE.md#s26), [
 ## 14. Boutons, automations et formulaires — P2
 
 Références : [S28](NOTION_REFERENCE.md#s28), [S29](NOTION_REFERENCE.md#s29), [S30](NOTION_REFERENCE.md#s30), [S20](NOTION_REFERENCE.md#s20).
+
+Format FotionMark : FM-087 à FM-089.
 
 - [ ] **FN-260** Créer un bouton dans une page et dans une propriété de base.
 - [ ] **FN-261** Nommer le bouton, définir son icône et ordonner ses actions.
@@ -361,6 +377,8 @@ Références : [S28](NOTION_REFERENCE.md#s28), [S29](NOTION_REFERENCE.md#s29), [
 
 Références : [S15](NOTION_REFERENCE.md#s15), [S31](NOTION_REFERENCE.md#s31), [S32](NOTION_REFERENCE.md#s32), [S33](NOTION_REFERENCE.md#s33).
 
+Format FotionMark : [interopérabilité](FOTIONMARK_TODO.md#11-interopérabilité--p1) (export Markdown standard, import Notion).
+
 - [ ] **FN-280** [PARTIEL] Importer un fichier Markdown et conserver son contenu et ses propriétés prises en charge.
 - [ ] **FN-281** Importer plusieurs fichiers et un dossier avec pièces jointes et liens relatifs.
 - [ ] **FN-282** Importer un export Notion ZIP : Markdown/CSV, hiérarchie, identifiants et médias.
@@ -386,6 +404,7 @@ Références : [S15](NOTION_REFERENCE.md#s15), [S31](NOTION_REFERENCE.md#s31), [
 ## 16. Contrat Markdown et fiabilité locale — P0, adaptation Fotion
 
 Critères propres à Fotion : exigences de fiabilité/recette proposées, pas fonctionnalités attribuées à Notion.
+Format FotionMark : [interpréteur et aller-retour](FOTIONMARK_TODO.md#03-interpréteur-arbre-et-aller-retour--p0), [schéma et versions](FOTIONMARK_TODO.md#04-schéma-validation-et-versions--p0).
 
 - [x] **FN-301** Écrire réellement les pages sur disque en .md, avec un en-tête YAML.
 - [x] **FN-302** Préserver les propriétés YAML inconnues lors des sauvegardes testées.
@@ -398,7 +417,7 @@ Critères propres à Fotion : exigences de fiabilité/recette proposées, pas fo
 - [ ] **FN-309** Surveiller les modifications, renommages et suppressions effectués par Obsidian.
 - [ ] **FN-310** Conserver espaces, échappements et constructions Markdown non supportées sans les réécrire silencieusement.
 - [ ] **FN-311** Garantir l’aller-retour de chaque bloc avant de le déclarer disponible.
-- [ ] **FN-312** Décider le format persistant des colonnes, blocs synchronisés et bases de données avant leur UI.
+- [ ] **FN-312** [PARTIEL] Décider le format persistant des colonnes, blocs synchronisés et bases de données avant leur UI : colonnes faites (FM-043) ; blocs synchronisés FM-085, bases FM-053/FM-054/FM-069 à décider.
 - [ ] **FN-313** Utiliser des fichiers d’assets locaux avec chemins relatifs et détection des orphelins.
 - [ ] **FN-314** Choisir le coffre depuis l’interface ; couvrir absence, lecture seule et permissions.
 - [ ] **FN-315** Prendre en charge les sous-dossiers physiques et liens internes du coffre.

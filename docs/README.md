@@ -11,7 +11,8 @@ Objectif : une implémentation indépendante, open source et légère en TypeScr
 | --- | --- | ---: |
 | [Fonctionnalités](NOTION_FEATURES_TODO.md) | Pages, blocs, manipulation, bases, vues, propriétés, formules, médias, navigation, import/export, fiabilité et écosystème | 408 |
 | [Interface et interactions](NOTION_UI_TODO.md) | Écrans, composants, styles, menus, glisser-déposer, états, clavier, mobile, accessibilité et recette visuelle | 328 |
-| [FotionMark](FOTIONMARK.md) | Surcouche Markdown : directives, interpréteur, schéma et garanties d’aller-retour | v1 |
+| [FotionMark](FOTIONMARK.md) | Spécification de la surcouche Markdown : directives, interpréteur, schéma et garanties d’aller-retour | v1 |
+| [FotionMark — TODO](FOTIONMARK_TODO.md) | Langage : syntaxe, directives en ligne, formats hérités, bases de données, formules, blocs synchronisés, interopérabilité | 100 |
 | [Références](NOTION_REFERENCE.md) | Sources officielles et limites de la référence visuelle | 51 entrées |
 
 Inventaire aussi complet que possible des familles de fonctionnalités publiques au **30 octobre 2026**, complété par nos critères de recette. Il ne prétend pas documenter tous les détails internes, expérimentations ou variantes commerciales de Notion. Les produits adjacents et fonctions différées sont recensés pour rendre les limites explicites.
@@ -33,22 +34,25 @@ Les identifiants `FN-…` et `UI-…` sont stables et peuvent être repris dans 
 1. Fixer la référence visuelle : version datée de Notion, plateforme bureau/web, langue et thème. Créer des pages de démonstration sans données personnelles, identiques des deux côtés.
 2. Finir les sections P0 : cadre, barre latérale, titres, canevas, menus, sélection, formatage et drag-and-drop. Vérifier séparément le déplacement des pages, blocs, éléments de liste et, à terme, colonnes.
 3. Stabiliser le contrat Markdown : aller-retour, blocs inconnus, fichiers joints, conflits et récupération. Aucun changement visuel ne doit compromettre une sauvegarde.
-4. Compléter les blocs et la navigation P1 : colonnes, médias locaux, liens, backlinks, recherche, modèles et historique accessible.
-5. Introduire les bases avec un modèle de données documenté : propriétés, vues, filtres, tris, relations et formules. Livrer les fonctions et leurs états UI ensemble.
-6. Traiter P2 selon les besoins réels. Réouvrir explicitement le périmètre avant de développer collaboration, IA, cloud ou produits adjacents.
+4. Faire avancer FotionMark en parallèle de l’interface : décisions de format, fixtures, puis vocabulaire nécessaire à chaque étape ([liste dédiée](FOTIONMARK_TODO.md)).
+5. Compléter les blocs et la navigation P1 : colonnes, médias locaux, liens, backlinks, recherche, modèles et historique accessible.
+6. Introduire les bases avec un modèle de données documenté : propriétés, vues, filtres, tris, relations et formules. Livrer les fonctions et leurs états UI ensemble.
+7. Traiter P2 selon les besoins réels. Réouvrir explicitement le périmètre avant de développer collaboration, IA, cloud ou produits adjacents.
 
 ## Correspondance entre fonction et interface
 
-| Travail | Checklist fonctionnelle | Checklist UI |
-| --- | --- | --- |
-| Pages et navigation | Sections 01, 07, 08 | Sections 03 à 06, 13, 14 |
-| Éditeur et déplacements | Sections 02 à 05 | Sections 07 à 11 |
-| Médias | Section 06 | Section 12 |
-| Bases et projets | Sections 09 à 12 | Sections 15, 16 |
-| Modèles et automations | Sections 13, 14 | Section 17 |
-| Données et récupération | Sections 15, 16 | Sections 18, 21 |
-| Fonctions différées | Sections 17 à 22 | Sections 19, 20 |
-| Recette transversale | Toutes les sections actives | Sections 01, 02, 21 à 23 |
+| Travail | Checklist fonctionnelle | Checklist UI | FotionMark |
+| --- | --- | --- | --- |
+| Pages et navigation | Sections 01, 07, 08 | Sections 03 à 06, 13, 14 | 02 (mentions, liens de bloc) |
+| Éditeur et déplacements | Sections 02 à 05 | Sections 07 à 11 | 01, 03, 05, 06 |
+| Médias | Section 06 | Section 12 | 06, 10 |
+| Bases et projets | Sections 09 à 12 | Sections 15, 16 | 07, 08 |
+| Modèles et automations | Sections 13, 14 | Section 17 | 07 (modèles), 09 |
+| Données et récupération | Sections 15, 16 | Sections 18, 21 | 03, 04, 11, 12 |
+| Fonctions différées | Sections 17 à 22 | Sections 19, 20 | — |
+| Recette transversale | Toutes les sections actives | Sections 01, 02, 21 à 23 | 12 |
+
+Toute fonctionnalité qui doit être **enregistrée** passe d’abord par FotionMark : le format est décidé et testé (aller-retour, conservation des erreurs) avant que l’interface soit construite. Une case `FN-…` qui stocke des données n’est cochée que si ses critères `FM-…` le sont aussi.
 
 ## Contrat local et différences assumées
 
