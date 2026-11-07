@@ -273,6 +273,14 @@ test('link-to-page blocks round-trip as FotionMark and invalid targets are prese
   editor.destroy();
 });
 
+test('database views round-trip as FotionMark, keeping their label and invalid layouts', () => {
+  const source = '# Projets\n\n::database-view[Toutes les tâches]{src=projets.md}\n\n::database-view\n\n::database-view{layout=galaxy}';
+  const editor = new Editor({ extensions: documentExtensions(), content: source, contentType: 'markdown' });
+  assert.deepEqual(editor.state.doc.content.content.map(node => node.type.name), ['heading', 'database-view', 'database-view', 'directiveBlock']);
+  assert.equal(editor.getMarkdown(), source);
+  editor.destroy();
+});
+
 test('media blocks round-trip as FotionMark and reject unsafe sources', () => {
   const source = '::video{src=attachments/abc123def456-film.mp4}\n\n::audio{src="https://exemple.fr/son.mp3"}\n\n::file{src=attachments/abc123def456-rapport.docx name=rapport.docx size=2048}\n\n::embed{url="https://exemple.fr/carte" height=500}\n\n::bookmark{url="https://exemple.fr" title="Exemple de site" description="Un site."}\n\n::video{src=javascript:alert(1)}';
   const editor = new Editor({ extensions: documentExtensions(), content: source, contentType: 'markdown' });

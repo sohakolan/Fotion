@@ -32,7 +32,7 @@ export function readValue(type: AttributeType, text: string): Value | undefined 
     case 'url': return /^(https?:\/\/|mailto:)[^\s]+$/i.test(text) ? text : undefined;
     case 'page': return /^[^/\\:\x00-\x1f]{1,220}\.md$/.test(text) && !text.startsWith('.') ? text : undefined;
     case 'source': return /^https?:\/\/[^\s]+$/i.test(text) || /^attachments\/[^/\\\s.][^/\\\s]{0,199}$/.test(text) ? text : undefined;
-    case 'date': return /^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2}(:\d{2})?(Z|[+-]\d{2}:\d{2})?)?$/.test(text) && !Number.isNaN(Date.parse(text)) ? text : undefined;
+    case 'date': return /^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2}(:\d{2})?(Z|[+-]\d{2}:\d{2})?)?$/.test(text) && !Number.isNaN(Date.parse(text)) && new Date(`${text.slice(0, 10)}T00:00:00Z`).toISOString().startsWith(text.slice(0, 10)) ? text : undefined;
   }
 }
 

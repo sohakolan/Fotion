@@ -16,7 +16,7 @@ const patterns = [
   /^ui\/features\/[a-z][a-z-]*\/(?:lib|extensions)\/[a-z][a-z-]*\.ts$/,
   /^engine\/index\.ts$/,
   /^engine\/(?:document|models|pages|operations)\/[a-z][a-z-]*\.ts$/,
-  /^engine\/fotionmark\/(?:index|(?:syntax|tree|schema|blocks)\/[a-z][a-z-]*)\.ts$/,
+  /^engine\/fotionmark\/(?:index|(?:syntax|tree|schema|blocks|database)\/[a-z][a-z-]*)\.ts$/,
   /^server\/(?:http|storage)\/[a-z][a-z-]*\.ts$/,
 ];
 function allowed(from, to) {
@@ -29,7 +29,8 @@ function allowed(from, to) {
     if (from.startsWith('engine/operations/')) return /^engine\/(models|operations)\//.test(to);
     return true;
   }
-  if (to.startsWith('engine/')) return to === 'engine/index.ts';
+  // FotionMark has its own public entry: the server reads the format without loading the editor schema.
+  if (to.startsWith('engine/')) return to === 'engine/index.ts' || to === 'engine/fotionmark/index.ts';
   if (from.startsWith('server/storage/')) return to.startsWith('server/storage/');
   if (from.startsWith('server/http/')) return to.startsWith('server/');
   if (!to.startsWith('ui/')) return false;

@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { parseDirective, parseAttributes, serializeAttributes, serializeContainer, serializeLeaf, directiveStart, parse, stringify, validate, readAttributes, writeAttributes, defineBlock, createRegistry } from '../../engine/fotionmark';
+import { parseDirective, parseAttributes, serializeAttributes, serializeContainer, serializeLeaf, directiveStart, parse, stringify, validate, readAttributes, writeAttributes, defineBlock, createRegistry, readDatabase, readCell, writeCell, newPropertyId, updateProperty, addProperty, newDatabase, reservedKeys, type Property } from '../../engine/fotionmark';
 
 test('attributes accept bare, quoted and escaped values and round-trip', () => {
   const attributes = parseAttributes('{width=50% title="Deux mots" note=\'a "b"\' flag}');
@@ -65,4 +65,47 @@ test('block declarations and registries reject inconsistent definitions', () => 
   assert.throws(() => createRegistry([leaf, leaf]));
   assert.throws(() => createRegistry([defineBlock({ name: 'enfant', form: 'leaf', version: 1, description: '', attributes: {}, parent: 'absent' })]));
   assert.deepEqual(validate(parse('::note{id=Mauvais}\n::note{id=bon-1 inconnu=x}').children, createRegistry([leaf])).map(d => [d.severity, d.message]), [['error', 'Identifiant de bloc invalide : Mauvais'], ['warning', 'Attribut inconnu conservé : inconnu']]);
+});
+
+test('database schemas read known properties, report the rest and keep it when edited', () => {
+  const raw = { properties: [{ id: 'status', name: 'Statut', type: 'status' }, { id: 'tags', name: 'Étiquettes', type: 'multi-select', options: [{ name: 'Urgent', color: 'red' }, { color: 'blue' }] }, { id: 'title', type: 'text' }, { id: 'map', type: 'place', zoom: 4 }, { id: 'status', type: 'text' }], view: 'kept' };
+  const reading = readDatabase(raw)!;
+  assert.deepEqual(reading.properties.map(p => [p.id, p.type, p.options.map(o => o.name)]), [['status', 'status', ['Pas commencé', 'En cours', 'Terminé']], ['tags', 'multi-select', ['Urgent']]]);
+  assert.equal(reading.problems.length, 3);
+  assert.equal(readDatabase({ title: 'pas une base' }), undefined);
+  const renamed = updateProperty(raw, 'tags', { name: 'Labels' });
+  assert.equal(renamed.view, 'kept');
+  assert.deepEqual((renamed.properties as object[])[3], { id: 'map', type: 'place', zoom: 4 });
+  assert.equal(((renamed.properties as { name: string }[])[1]).name, 'Labels');
+  const added = addProperty(newDatabase(), { id: newPropertyId('Échéance', ['tags']), name: 'Échéance', type: 'date' });
+  assert.deepEqual(added.properties, [{ id: 'tags', name: 'Étiquettes', type: 'multi-select' }, { id: 'echeance', name: 'Échéance', type: 'date' }]);
+  assert.equal(newPropertyId('Titre', []), 'titre');
+  assert.equal(newPropertyId('Échéance', ['echeance']), 'echeance-2');
+  assert.equal(newPropertyId('2026', []), 'propriete');
+  assert.ok(!reservedKeys.includes(newPropertyId('parent', []) as never));
+});
+
+test('database cells read typed values, keep mismatches undefined and write YAML values', () => {
+  const property = (type: Property['type']): Property => ({ id: 'x', name: 'X', type, options: [] });
+  assert.equal(readCell(property('number'), 12.5), 12.5);
+  assert.equal(readCell(property('number'), 'douze'), undefined);
+  assert.equal(readCell(property('text'), undefined), null);
+  assert.equal(readCell(property('text'), 42), '42');
+  assert.deepEqual(readCell(property('multi-select'), 'Seul'), ['Seul']);
+  assert.equal(readCell(property('date'), '2026-02-30'), undefined);
+  assert.equal(readCell(property('checkbox'), 'oui'), undefined);
+  assert.equal(writeCell(property('number'), '3,5'), 3.5);
+  assert.equal(writeCell(property('number'), ''), undefined);
+  assert.equal(writeCell(property('checkbox'), false), undefined);
+  assert.equal(writeCell(property('checkbox'), true), true);
+  assert.deepEqual(writeCell(property('multi-select'), ' a, b ,a,, '), ['a', 'b']);
+  assert.equal(writeCell(property('date'), '2026-11-07'), '2026-11-07');
+  assert.equal(writeCell(property('date'), 'demain'), undefined);
+  assert.equal(writeCell(property('select'), '  En cours '), 'En cours');
+});
+
+test('database views are leaf directives with an optional source and a table layout', () => {
+  const document = parse('::database-view[Tableau]{src=projets.md}\n::database-view\n::database-view{layout=galaxy}');
+  assert.deepEqual(validate(document.children).map(d => d.severity), ['error']);
+  assert.equal(stringify(document), '::database-view[Tableau]{src=projets.md}\n::database-view\n::database-view{layout=galaxy}');
 });

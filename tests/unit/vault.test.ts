@@ -186,3 +186,27 @@ test('link previews refuse local and private addresses', async () => {
   for (const url of ['file:///etc/passwd', 'http://localhost:5175', 'http://127.0.0.1/', 'http://192.168.1.10/', 'http://[::1]/', 'http://printer.local/', 'pas une url'])
     await assert.rejects(linkPreview(url), (e: VaultError) => e.status === 400, url);
 });
+test('database rows store values as YAML keys, empty cells remove them and foreign keys keep saving', t => {
+  const vault = fixture(t);
+  const base = vault.create({ ...blank, title: 'Projets', content: '::database-view', database: { properties: [{ id: 'due', name: 'Échéance', type: 'date' }] } });
+  assert.deepEqual(vault.read(base.id).database, { properties: [{ id: 'due', name: 'Échéance', type: 'date' }] });
+  const row = vault.create({ ...blank, title: 'Lancement', parent: base.id });
+  const filled = vault.write(row.id, { ...row, values: { due: '2026-11-20', tags: ['a', 'b'] } }, row.version);
+  const meta = decode(readFileSync(join(vault.root, row.id), 'utf8')).meta;
+  assert.equal(meta.due, '2026-11-20');
+  assert.deepEqual(filled.values, { due: '2026-11-20', tags: ['a', 'b'] });
+  const emptied = vault.write(row.id, { ...filled, values: { tags: ['a', 'b'] } }, filled.version);
+  assert.equal(decode(readFileSync(join(vault.root, row.id), 'utf8')).meta.due, undefined);
+  assert.throws(() => vault.write(row.id, { ...emptied, values: { title: 'x' } }, emptied.version), VaultError);
+  assert.throws(() => vault.write(row.id, { ...emptied, values: { 'mauvaise clé': 1 } }, emptied.version), VaultError);
+  assert.throws(() => vault.write(row.id, { ...emptied, values: { deep: { a: { b: 1 } } } }, emptied.version), VaultError);
+  assert.throws(() => vault.write(base.id, { ...vault.read(base.id), database: { properties: [{ id: 'parent', type: 'text' }] } }, vault.read(base.id).version), VaultError);
+  // A key Fotion would refuse to create, written by another tool, does not block later edits.
+  const foreign = vault.import('Obsidian.md', '---\nMon tag: [x]\nnested: { a: { b: 1 } }\n---\n\nTexte\n');
+  const edited = vault.write(foreign.id, { ...foreign, content: 'Texte modifié' }, foreign.version);
+  assert.deepEqual(decode(readFileSync(join(vault.root, edited.id), 'utf8')).meta.nested, { a: { b: 1 } });
+  // Without `values`, an older client keeps every key as it was.
+  const { values: _ignored, ...older } = vault.read(row.id);
+  vault.write(row.id, older, older.version);
+  assert.deepEqual(decode(readFileSync(join(vault.root, row.id), 'utf8')).meta.tags, ['a', 'b']);
+});

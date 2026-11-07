@@ -12,6 +12,7 @@ export { Columns, Column } from './document/columns';
 export { Indent } from './document/indent';
 export { DateMention } from './document/date-mention';
 export { LinkToPage } from './document/link-to-page';
+export { DatabaseView } from './document/database';
 export { mediaNodes } from './document/media';
 export { Breadcrumb } from './document/breadcrumb';
 export { ButtonBlock } from './document/button';

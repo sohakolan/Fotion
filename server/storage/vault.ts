@@ -3,6 +3,7 @@ import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync, rename
 import { resolve, join } from 'node:path';
 import { parse, stringify } from 'yaml';
 import type { Page, PageEdit, PageVersion, PageSnapshot } from '../../engine/index.ts';
+import * as FotionMark from '../../engine/fotionmark/index.ts';
 import { seeds } from './seed.ts';
 
 export class VaultError extends Error {
@@ -17,9 +18,17 @@ export function decode(raw: string) {
   return { meta: meta || {}, content: match ? raw.slice(match[0].length).replace(/^\r?\n/, '') : raw };
 }
 
+const reserved = new Set<string>(FotionMark.reservedKeys);
+const isRecord = (value: unknown): value is Record<string, unknown> => !!value && typeof value === 'object' && !Array.isArray(value);
+/** A YAML value a row may hold: scalars, lists of scalars, or one level of such an object (date ranges). */
+const plainValue = (value: unknown, depth = 0): boolean => value === null || ['string', 'number', 'boolean'].includes(typeof value) && (typeof value !== 'number' || Number.isFinite(value)) && (typeof value !== 'string' || value.length <= 10_000)
+  || Array.isArray(value) && value.length <= 500 && value.every(item => plainValue(item, 2))
+  || depth === 0 && isRecord(value) && Object.keys(value).length <= 20 && Object.values(value).every(item => plainValue(item, 1));
+
 function pageFromRaw(id: string, raw: string, updated: string): Page {
   const { meta, content } = decode(raw);
-  return { id, fullWidth: meta.fullWidth === true, smallText: meta.smallText === true, locked: meta.locked === true, backlinks: ['expanded', 'off'].includes(meta.backlinks) ? meta.backlinks : 'popover', font: ['serif', 'mono'].includes(meta.font) ? meta.font : 'default', order: typeof meta.order === 'number' && Number.isFinite(meta.order) ? meta.order : 0, title: typeof meta.title === 'string' ? meta.title : id.slice(0, -3), icon: typeof meta.icon === 'string' ? meta.icon : '📄', parent: typeof meta.parent === 'string' ? meta.parent : null, favorite: meta.favorite === true, cover: typeof meta.cover === 'string' ? meta.cover : '', trashed: meta.trashed === true, content, version: digest(raw), updated };
+  const values = Object.fromEntries(Object.entries(meta).filter(([key]) => !reserved.has(key)));
+  return { id, fullWidth: meta.fullWidth === true, smallText: meta.smallText === true, locked: meta.locked === true, backlinks: ['expanded', 'off'].includes(meta.backlinks) ? meta.backlinks : 'popover', font: ['serif', 'mono'].includes(meta.font) ? meta.font : 'default', order: typeof meta.order === 'number' && Number.isFinite(meta.order) ? meta.order : 0, title: typeof meta.title === 'string' ? meta.title : id.slice(0, -3), icon: typeof meta.icon === 'string' ? meta.icon : '📄', parent: typeof meta.parent === 'string' ? meta.parent : null, favorite: meta.favorite === true, cover: typeof meta.cover === 'string' ? meta.cover : '', trashed: meta.trashed === true, content, version: digest(raw), updated, values, ...(isRecord(meta.database) ? { database: meta.database } : {}) };
 }
 
 export class Vault {
@@ -87,6 +96,7 @@ export class Vault {
     const v = value as PageEdit;
     if ((v.font !== undefined && !['default', 'serif', 'mono'].includes(v.font)) || (v.fullWidth !== undefined && typeof v.fullWidth !== 'boolean') || (v.smallText !== undefined && typeof v.smallText !== 'boolean') || (v.locked !== undefined && typeof v.locked !== 'boolean') || (v.backlinks !== undefined && !['expanded', 'popover', 'off'].includes(v.backlinks))) throw new VaultError(400, 'Présentation de page invalide.');
     if (v.order !== undefined && (typeof v.order !== 'number' || !Number.isFinite(v.order))) throw new VaultError(400, 'Ordre de page invalide.');
+    if ((v.values !== undefined && !isRecord(v.values)) || (v.database !== undefined && !isRecord(v.database))) throw new VaultError(400, 'Propriétés de page invalides.');
     if (typeof v.title !== 'string' || v.title.length > 300 || typeof v.content !== 'string' || v.content.length > 2_000_000 || typeof v.icon !== 'string' || v.icon.length > 40 || typeof v.cover !== 'string' || !['', 'landscape', 'sand', 'blue', 'sage', 'rose'].includes(v.cover) || typeof v.favorite !== 'boolean' || typeof v.trashed !== 'boolean' || !(v.parent === null || typeof v.parent === 'string')) throw new VaultError(400, 'Propriétés de page invalides.');
   }
   write(id: string, value: unknown, version: string | null) {
@@ -103,8 +113,16 @@ export class Vault {
         parent = this.read(parent).parent;
       }
     }
-    const meta = raw === null ? {} : decode(raw).meta;
-    const { content, title, icon, parent, favorite, cover, trashed, order, fullWidth, smallText, font, locked, backlinks } = value;
+    const stored = raw === null ? {} : decode(raw).meta;
+    const { content, title, icon, parent, favorite, cover, trashed, order, fullWidth, smallText, font, locked, backlinks, database, values } = value;
+    // Sent values replace every non-reserved key (an emptied cell removes its key); without them, keys stay as they were.
+    const meta = values === undefined ? stored : { ...Object.fromEntries(Object.entries(stored).filter(([key]) => reserved.has(key))), ...values };
+    // Only what changes is checked: keys written by Obsidian or by hand keep saving even if Fotion would not create them.
+    const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
+    const changed = Object.entries(values ?? {}).filter(([key, item]) => !same(stored[key], item));
+    if (changed.length > 200 || changed.some(([key, item]) => reserved.has(key) || !/^[A-Za-z_][\w-]{0,63}$/.test(key) || !plainValue(item))) throw new VaultError(400, 'Valeurs de propriétés invalides.');
+    if (database !== undefined && !same(stored.database, database) && (JSON.stringify(database).length > 100_000 || FotionMark.readDatabase(database)?.problems.length !== 0)) throw new VaultError(400, 'Schéma de base de données invalide.');
+    if (database !== undefined) meta.database = database;
     const properties = { title, icon, parent, favorite, cover, trashed, ...(order !== undefined ? { order } : {}), ...(fullWidth !== undefined ? { fullWidth } : {}), ...(smallText !== undefined ? { smallText } : {}), ...(font !== undefined ? { font } : {}), ...(locked !== undefined ? { locked } : {}), ...(backlinks !== undefined ? { backlinks } : {}) };
     const output = `---\n${stringify({ ...meta, ...properties })}---\n\n${content}`;
     if (raw !== null) this.backup(id, raw, version!);
