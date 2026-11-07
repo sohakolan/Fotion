@@ -9,10 +9,29 @@ const groupable = (property: Property) => property.type === 'select' || property
 const titleProperty: Property = { id: 'title', name: 'Nom', type: 'text', options: [] };
 const operatorLabels: Record<FotionMark.Operator, string> = { '=': 'Est', '!=': 'N’est pas', '<': 'Inférieur à', '>': 'Supérieur à', '<=': 'Inférieur ou égal à', '>=': 'Supérieur ou égal à', contains: 'Contient', 'not contains': 'Ne contient pas', 'is empty': 'Est vide', 'is not empty': 'N’est pas vide' };
 const dateLabels: Partial<Record<FotionMark.Operator, string>> = { '<': 'Est avant', '>': 'Est après', '<=': 'Est le ou avant', '>=': 'Est le ou après' };
+/** Notion's small dropdown inside a menu: the current choice with ⌄, the choices listed under it, ✓ on the chosen one. */
 const select = (label: string, choices: readonly (readonly [string, string])[], value: string, onChange: (value: string) => void) => {
-  const box = el('select', 'database-menu-select'); box.setAttribute('aria-label', label);
-  for (const [id, text] of choices) { const option = el('option', '', text); option.value = id; box.append(option); }
-  box.value = value; box.addEventListener('change', () => onChange(box.value)); return box;
+  const wrap = el('div', 'database-dropdown'), trigger = el('button', 'database-dropdown-trigger'); trigger.type = 'button';
+  trigger.setAttribute('aria-label', label); trigger.setAttribute('aria-haspopup', 'listbox'); trigger.setAttribute('aria-expanded', 'false');
+  trigger.append(el('span', 'database-dropdown-value', choices.find(([id]) => id === value)?.[1] ?? value), el('span', 'database-dropdown-caret', '⌄'));
+  const list = el('div', 'database-dropdown-list'); list.setAttribute('role', 'listbox'); list.setAttribute('aria-label', label); list.hidden = true;
+  const toggle = (open: boolean) => { list.hidden = !open; trigger.setAttribute('aria-expanded', String(open)); if (open) list.querySelector<HTMLElement>('[aria-selected="true"], button')?.focus(); };
+  for (const [id, text] of choices) {
+    const option = el('button', 'kit-menu-item database-dropdown-option', text); option.type = 'button'; option.setAttribute('role', 'option'); option.setAttribute('aria-selected', String(id === value));
+    if (id === value) option.append(el('span', 'database-menu-check', '✓'));
+    option.addEventListener('click', () => { toggle(false); if (id !== value) onChange(id); });
+    list.append(option);
+  }
+  trigger.addEventListener('click', () => toggle(list.hidden === true));
+  wrap.addEventListener('focusout', event => { if (!wrap.contains(event.relatedTarget as globalThis.Node)) toggle(false); });
+  wrap.addEventListener('keydown', event => {
+    if (event.key === 'Escape' && !list.hidden) { event.stopPropagation(); toggle(false); trigger.focus(); }
+    if ((event.key === 'ArrowDown' || event.key === 'ArrowUp') && !list.hidden) {
+      event.preventDefault(); const items = [...list.children] as HTMLElement[], at = items.indexOf(document.activeElement as HTMLElement);
+      items[(at + (event.key === 'ArrowDown' ? 1 : -1) + items.length) % items.length]?.focus();
+    }
+  });
+  wrap.append(trigger, list); return wrap;
 };
 
 /**

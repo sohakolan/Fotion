@@ -164,15 +164,23 @@ test('a view filters, sorts and searches its rows and writes them in the directi
   await view.getByRole('button', { name: 'Trier' }).click();
   await page.locator('.sort-menu').getByRole('button', { name: 'Nom' }).click();
   await values().toEqual(['Abricot', 'Banane', 'Cerise']);
-  await page.locator('.sort-menu').getByLabel('Ordre du tri').selectOption('desc');
+  await page.locator('.sort-menu').getByRole('button', { name: 'Ordre du tri' }).click();
+  await page.locator('.sort-menu').getByRole('option', { name: 'Décroissant' }).click();
   await values().toEqual(['Cerise', 'Banane', 'Abricot']);
   await page.keyboard.press('Escape');
   await expect(view.locator('.database-sort-chip')).toHaveText('↓ Nom');
 
   await view.getByRole('button', { name: 'Filtrer' }).click();
   await page.locator('.filter-menu').getByRole('button', { name: 'Étiquettes' }).click();
-  await page.locator('.filter-rule-menu').getByLabel('Valeur du filtre').selectOption('Rouge');
+  await page.locator('.filter-rule-menu').getByRole('button', { name: 'Valeur du filtre' }).click();
+  await page.locator('.filter-rule-menu').getByRole('option', { name: 'Rouge' }).click();
   await values().toEqual(['Cerise']);
+  // Escape closes the open dropdown first, then the menu.
+  await page.locator('.filter-rule-menu').getByRole('button', { name: 'Valeur du filtre' }).click();
+  await expect(page.locator('.filter-rule-menu').getByRole('listbox')).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(page.locator('.filter-rule-menu').getByRole('listbox')).toBeHidden();
+  await expect(page.locator('.filter-rule-menu')).toBeVisible();
   await page.keyboard.press('Escape');
   await expect(view.locator('.database-filter-chip')).toHaveText('Étiquettes: Rouge');
 

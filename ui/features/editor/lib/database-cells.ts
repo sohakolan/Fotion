@@ -26,13 +26,15 @@ export const databaseOf = (row: Page | undefined, pages: Page[]) => { const pare
 let popover: HTMLElement | undefined;
 export function closePopover() { popover?.remove(); popover = undefined; }
 let listening = false;
+// Escape first closes a dropdown open inside the menu, then the menu.
+const openDropdown = (target: EventTarget | null) => !!(target as Element | null)?.closest?.('.database-dropdown')?.querySelector(':scope > .database-dropdown-list:not([hidden])');
 export function openPopover(anchor: HTMLElement, className: string, build: (box: HTMLElement) => void) {
   closePopover();
   // Registered on first use, so the module also loads without a DOM (unit tests of the editor schema).
   if (!listening) {
     listening = true;
     document.addEventListener('pointerdown', event => { if (popover && !popover.contains(event.target as globalThis.Node)) closePopover(); }, true);
-    document.addEventListener('keydown', event => { if (popover && event.key === 'Escape') { event.stopPropagation(); closePopover(); } }, true);
+    document.addEventListener('keydown', event => { if (popover && event.key === 'Escape' && !openDropdown(event.target)) { event.stopPropagation(); closePopover(); } }, true);
   }
   const box = el('div', `database-menu popover kit-menu ${className}`);
   build(box);
