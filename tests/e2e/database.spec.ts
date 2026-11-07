@@ -199,6 +199,18 @@ test('a view filters, sorts and searches its rows and writes them in the directi
   await page.keyboard.press('Escape');
   await expect(view.locator('.database-filter-chip')).toHaveText('Étiquettes: Rouge');
 
+  // The view menu hides a property in this view only; the directive lists the visible ones.
+  await view.getByRole('button', { name: 'Options de la vue' }).click();
+  await page.locator('.view-menu').getByRole('menuitemcheckbox', { name: 'Étiquettes' }).click();
+  await expect(page.locator('.view-menu').getByRole('menuitemcheckbox', { name: 'Étiquettes' })).toHaveAttribute('aria-checked', 'false');
+  await page.keyboard.press('Escape');
+  await expect(view.locator('th')).toHaveText(['AaNom', '+']);
+  await values().toEqual(['Cerise']);
+  await view.getByRole('button', { name: 'Options de la vue' }).click();
+  await page.locator('.view-menu').getByRole('menuitemcheckbox', { name: 'Étiquettes' }).click();
+  await page.keyboard.press('Escape');
+  await expect(view.locator('th')).toHaveText(['AaNom', '☰Étiquettes', '+']);
+
   // A row created under the filter takes its value and stays visible.
   await view.getByRole('button', { name: '+ Nouvelle page' }).click();
   await expect(names).toHaveCount(2);

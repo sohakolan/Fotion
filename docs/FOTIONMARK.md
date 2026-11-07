@@ -80,7 +80,7 @@ Les déclarations ([`blocks/`](../engine/fotionmark/blocks/)) fixent pour chaque
 | `bookmark` | ligne | — | `url`, `title`, `description`, `image` (lu une fois à la création) |
 | `breadcrumb` | ligne | — | — · chemin calculé à l’affichage |
 | `button` | conteneur, libellé `[…]` | FotionMark (modèle inséré à chaque clic) | — |
-| `database-view` | ligne, libellé `[…]` = nom de la vue | — | `src` : `page` (la base ; absent = la page qui contient la vue), `layout` : `enum` `table` (défaut), `board` ; `groupBy` : `string` (identifiant d’une propriété Sélection ou Statut, défaut : la première) ; `filter` : `string` (expression, voir « Filtres et tris ») ; `sort` : `string` (`id:asc,id:desc`) |
+| `database-view` | ligne, libellé `[…]` = nom de la vue | — | `src` : `page` (la base ; absent = la page qui contient la vue), `layout` : `enum` `table` (défaut), `board` ; `groupBy` : `string` (identifiant d’une propriété Sélection ou Statut, défaut : la première) ; `filter` : `string` (expression, voir « Filtres et tris ») ; `sort` : `string` (`id:asc,id:desc`) ; `properties` : `string` (identifiants visibles dans l’ordre, `id,id` ; absent : toutes) |
 
 Le libellé `[…]` d’une directive est conservé par l’éditeur pour tous les blocs ; il ne peut contenir ni `]` ni saut de ligne.
 

@@ -710,3 +710,5 @@ FN-216 : bouton « Filtrer » → choix de la propriété → règle ouverte aus
 ### Bases de données : aperçu latéral d’une ligne — 7 novembre 2026
 
 FN-178 : « Ouvrir » (tableau) et le titre d’une carte (Kanban) ouvrent la ligne dans un panneau à droite, sous la barre du haut : titre, propriétés et contenu modifiables, « » » ferme, ⤢ « Ouvrir en pleine page », Échap ferme quand aucun menu n’est ouvert ; naviguer vers une autre page ferme l’aperçu. Restent l’aperçu centré et le choix du mode d’ouverture par vue. Preuve : capture `row-peek.png` du [scénario navigateur](../tests/e2e/database.spec.ts).
+
+Propriétés par vue (7 novembre 2026) : menu de la vue → « Propriétés », masquer ou réafficher une propriété dans cette vue seulement (FN-203 partiel). Reste le réordonnancement par glisser.

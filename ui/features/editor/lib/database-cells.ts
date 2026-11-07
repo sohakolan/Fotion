@@ -192,7 +192,7 @@ export function propertyMenu(anchor: HTMLElement, host: DatabaseHost, databaseId
 }
 
 /** « + » : choose a type; the property is named after it, like Notion. */
-export function addPropertyMenu(anchor: HTMLElement, host: DatabaseHost, databaseId: string) {
+export function addPropertyMenu(anchor: HTMLElement, host: DatabaseHost, databaseId: string, onAdded?: (id: string) => void) {
   openPopover(anchor, 'property-menu', box => {
     box.append(el('div', 'popover-heading', 'Type'));
     for (const type of FotionMark.propertyTypes) {
@@ -202,7 +202,9 @@ export function addPropertyMenu(anchor: HTMLElement, host: DatabaseHost, databas
         const taken = schemaOf(database), used = new Set(taken.map(p => p.name));
         let name = typeLabels[type];
         for (let n = 2; used.has(name); n++) name = `${typeLabels[type]} ${n}`;
-        host.update(database.id, { database: FotionMark.addProperty(database.database, { id: FotionMark.newPropertyId(name, taken.map(p => p.id)), name, type }) });
+        const id = FotionMark.newPropertyId(name, taken.map(p => p.id));
+        host.update(database.id, { database: FotionMark.addProperty(database.database, { id, name, type }) });
+        onAdded?.(id);
         closePopover();
       });
       button.setAttribute('aria-label', typeLabels[type]); box.append(button);

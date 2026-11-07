@@ -68,6 +68,15 @@ export const DatabaseView = EngineDatabaseView.extend<{ host: DatabaseHost }>({
             button.addEventListener('click', () => { closePopover(); setAttributes({ layout: id }); });
             box.append(button);
           }
+          box.append(el('div', 'popover-heading', 'Propriétés'));
+          for (const property of schemaOf(database)) {
+            const button = el('button', 'kit-menu-item'); button.type = 'button'; button.setAttribute('role', 'menuitemcheckbox');
+            const shown = visible(database).some(p => p.id === property.id); button.setAttribute('aria-checked', String(shown));
+            button.append(el('span', 'database-type-icon', typeIcons[property.type]), property.name, el('span', 'database-menu-check', shown ? '👁' : ''));
+            button.setAttribute('aria-label', property.name);
+            button.addEventListener('click', () => { toggleProperty(database, property.id); viewMenu(anchor, host.pages().find(p => p.id === database.id) ?? database); });
+            box.append(button);
+          }
           if (settings().layout !== 'board') return;
           box.append(el('div', 'popover-heading', 'Grouper par'));
           for (const property of schemaOf(database).filter(groupable)) {
@@ -79,6 +88,13 @@ export const DatabaseView = EngineDatabaseView.extend<{ host: DatabaseHost }>({
           }
         });
       }
+      /** `properties` lists the visible ids in order; without it every property shows, in schema order. */
+      const shownIds = () => (settings().properties as string | undefined)?.split(',').map(id => id.trim()).filter(Boolean);
+      const visible = (database: Page) => { const all = schemaOf(database), ids = shownIds(); return ids ? ids.flatMap(id => all.filter(p => p.id === id)) : all; };
+      const toggleProperty = (database: Page, id: string) => {
+        const ids = visible(database).map(p => p.id), next = ids.includes(id) ? ids.filter(i => i !== id) : [...ids, id];
+        setAttributes({ properties: next.length === schemaOf(database).length && schemaOf(database).every((p, i) => p.id === next[i]) ? undefined : next.join(',') || ' ' });
+      };
       const filters = () => FotionMark.parseFilter(settings().filter as string | undefined) ?? [];
       const sorts = () => FotionMark.parseSort(settings().sort as string | undefined);
       const propertyOf = (database: Page, id: string) => id === 'title' ? titleProperty : schemaOf(database).find(p => p.id === id);
@@ -228,7 +244,7 @@ export const DatabaseView = EngineDatabaseView.extend<{ host: DatabaseHost }>({
           th.append(button); head.append(th);
         }
         const add = el('th', 'database-head database-add'), plus = el('button', '', '+'); plus.type = 'button'; plus.setAttribute('aria-label', 'Ajouter une propriété');
-        plus.addEventListener('click', () => addPropertyMenu(plus, host, database.id)); add.append(plus); head.append(add);
+        plus.addEventListener('click', () => addPropertyMenu(plus, host, database.id, id => { const ids = shownIds(); if (ids) setAttributes({ properties: [...ids, id].join(',') }); })); add.append(plus); head.append(add);
         const thead = el('thead'), body = el('tbody'); thead.append(head);
         for (const row of rows) {
           const tr = el('tr'); tr.dataset.row = row.id;
@@ -297,7 +313,7 @@ export const DatabaseView = EngineDatabaseView.extend<{ host: DatabaseHost }>({
           dom.append(el('div', 'database-missing', database ? 'Cette page n’est pas une base de données.' : 'Base de données introuvable.'));
           return;
         }
-        const properties = schemaOf(database);
+        const properties = visible(database);
         const rows = host.pages().filter(row => row.parent === database.id && !row.trashed);
         if (database.id !== host.pageId()) {
           const title = el('input', 'database-title'); title.value = database.title; title.placeholder = 'Sans titre'; title.setAttribute('aria-label', 'Nom de la base de données');
@@ -313,7 +329,7 @@ export const DatabaseView = EngineDatabaseView.extend<{ host: DatabaseHost }>({
         tabs.append(tab);
         const content = el('div', 'database-content');
         const body = () => {
-          const shown = FotionMark.queryRows(rows, properties, { filter: filters(), sort: sorts(), search });
+          const shown = FotionMark.queryRows(rows, schemaOf(database), { filter: filters(), sort: sorts(), search });
           content.replaceChildren(layout[0] === 'board' ? board(database, properties, shown) : table(database, properties, shown));
         };
         const chips = toolbar(database, tabs, body);

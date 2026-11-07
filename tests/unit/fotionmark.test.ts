@@ -140,7 +140,7 @@ test('view filters and sorts parse, round-trip and select rows like Notion', () 
   assert.deepEqual(parseSort('due:desc, title'), [{ property: 'due', direction: 'desc' }, { property: 'title', direction: 'asc' }]);
   assert.equal(writeSort(parseSort('due:desc,title:asc')), 'due:desc,title:asc');
   assert.equal(leaf('database-view', { sort: 'due:asc', filter: writeFilter([{ property: 'status', op: '=', value: 'En "cours"' }]) }), '::database-view{sort=due:asc filter="status = \\"En \\\\\\"cours\\\\\\"\\""}');
-  assert.deepEqual(validate(parse('::database-view{sort=due:asc filter="status = x"}').children), []);
+  assert.deepEqual(validate(parse('::database-view{sort=due:asc filter="status = x" properties=status,due}').children), []);
 
   const properties: Property[] = [
     { id: 'status', name: 'Statut', type: 'status', options: [{ name: 'Pas commencé', color: 'gray' }, { name: 'En cours', color: 'blue' }, { name: 'Terminé', color: 'green' }] },
