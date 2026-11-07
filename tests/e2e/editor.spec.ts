@@ -737,7 +737,11 @@ test('breadcrumb shows the page path and a button inserts its template', async (
 
 test('block and inline equations render with KaTeX and save as $$ and $', async ({ page }) => {
   const created = await createDocument(page, 'Formules');
-  await page.locator('.prose > p').first().click(); await page.keyboard.press('ControlOrMeta+ArrowRight'); await page.keyboard.press('End');
+  await page.locator('.prose > p').first().click();
+  // ProseMirror re-applies its own selection 20 ms after focus; keys sent before that land at the start.
+  await expect(page.getByRole('textbox', { name: 'Contenu de la page' })).toBeFocused();
+  await page.waitForTimeout(50);
+  await page.keyboard.press('ControlOrMeta+ArrowRight'); await page.keyboard.press('End');
   await page.keyboard.press('Enter'); await page.keyboard.type('/math'); await page.keyboard.press('Enter');
   const field = page.getByLabel('Équation TeX');
   await expect(field).toBeFocused();
