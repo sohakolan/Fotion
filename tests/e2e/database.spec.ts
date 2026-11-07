@@ -152,6 +152,13 @@ test('a board groups cards by status and dragging a card changes its value', asy
   expect(row.values).toEqual({ status: 'En cours' });
 
   // The view menu switches the layout; the choice is written in the directive.
+  for (const [label, item] of [['Liste', '.database-list-item'], ['Galerie', '.database-gallery-item']]) {
+    await view.getByRole('button', { name: 'Options de la vue' }).click();
+    await page.locator('.view-menu').getByRole('button', { name: label }).click();
+    await expect(view.locator(item)).toHaveCount(1);
+    await expect(view.locator(item).locator('.database-status')).toHaveText('En cours');
+  }
+  await page.screenshot({ path: test.info().outputPath('database-gallery.png') });
   await view.getByRole('button', { name: 'Options de la vue' }).click();
   await page.locator('.view-menu').getByRole('button', { name: 'Tableau' }).click();
   await expect(view.locator('.database-table')).toBeVisible();

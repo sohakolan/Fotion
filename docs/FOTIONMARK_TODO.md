@@ -188,3 +188,5 @@ FM-070 : disposition `board` ; FM-072 : `groupBy` (Sélection ou Statut) ; les r
 FM-071 : attribut `filter` (règles jointes par `and`, dix opérateurs, `today`, `title`) ; restent `or` et les groupes imbriqués. FM-072 : attribut `sort` (multiple, prioritaire de gauche à droite, vides en dernier, options dans leur ordre). Une ligne créée sous un filtre reçoit les valeurs qu’il demande. Preuves : `tests/unit/fotionmark.test.ts` (analyse, aller-retour, échappement dans la directive, sélection et ordre des lignes), [scénario navigateur](../tests/e2e/database.spec.ts) (tri, filtre, directive écrite, ligne créée sous filtre, recherche).
 
 FM-070 (suite, 7 novembre 2026) : attribut `properties` — propriétés visibles d’une vue, dans l’ordre ; absent quand toutes sont visibles ; une propriété ajoutée depuis la vue y est ajoutée ; les filtres et la recherche portent aussi sur les propriétés masquées. Restent `wrap`, `limit` et le réordonnancement par glisser.
+
+FM-070 (suite) : dispositions `list` et `gallery` ajoutées à l’énumération (valeurs additives, aucune migration).

@@ -2183,3 +2183,17 @@ h3) {
 .database-dropdown-list { position: absolute; z-index: 2; top: 100%; left: 0; min-width: 100%; max-height: 240px; overflow-y: auto; margin-top: 4px; padding: 4px; display: flex; flex-direction: column; gap: 2px; border-radius: 7px; background: var(--panel); box-shadow: var(--shadow); }
 .database-dropdown-list[hidden] { display: none; }
 .database-dropdown-option { white-space: nowrap; }
+
+/* Database list and gallery layouts. */
+.database-list { display: flex; flex-direction: column; padding: 4px 0; }
+.database-list-item { display: flex; align-items: center; gap: 8px; min-height: 34px; padding: 0 4px; border-bottom: 1px solid var(--line); border-radius: 0; }
+.database-list-item:hover { background: var(--hover); }
+.database-list-item .database-card-title { flex: 1; min-width: 0; }
+.database-gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; padding: 12px 0; }
+.database-gallery-item { display: flex; flex-direction: column; overflow: hidden; border-radius: var(--radius-lg); box-shadow: var(--shadow-card, 0 0 0 1px var(--line), 0 2px 4px rgba(15, 15, 15, .04)); background: var(--panel); }
+.database-gallery-item:hover { background: var(--hover); }
+.database-gallery-preview { height: 120px; background: var(--sidebar); border-bottom: 1px solid var(--line); }
+.database-gallery-item .database-card-title { padding: 8px 10px 4px; }
+.database-gallery-item .database-item-values { padding: 0 10px 10px; }
+.database-item-values { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; font-size: 12px; color: var(--muted); }
+.database-gallery .database-new-row { grid-column: 1 / -1; }

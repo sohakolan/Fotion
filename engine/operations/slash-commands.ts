@@ -33,6 +33,8 @@ const catalogue: SlashCommand[] = [
   { id: 'embed', label: 'Intégration', description: 'Intégrez une page web dans un cadre isolé.', group: 'Médias', aliases: 'embed intégrer intégration iframe site' },
   { id: 'database', label: 'Vue tableau', description: 'Base de données en ligne : chaque ligne est une page.', group: 'Bases de données', aliases: 'database base de données bdd db table view vue tableau inline' },
   { id: 'databaseBoard', label: 'Vue kanban', description: 'Base de données en colonnes, regroupée par statut.', group: 'Bases de données', aliases: 'database board kanban base de données vue colonnes statut' },
+  { id: 'databaseList', label: 'Vue liste', description: 'Base de données en liste de pages.', group: 'Bases de données', aliases: 'database list liste base de données vue' },
+  { id: 'databaseGallery', label: 'Vue galerie', description: 'Base de données en grille de cartes.', group: 'Bases de données', aliases: 'database gallery galerie cartes base de données vue grille' },
   { id: 'math', label: 'Équation', description: 'Affichez une formule mathématique en LaTeX.', group: 'Avancés', aliases: 'math latex equation équation formule tex' },
   { id: 'button', label: 'Bouton', description: 'Insérez des blocs prédéfinis en un clic.', group: 'Avancés', aliases: 'button bouton template modèle' },
   { id: 'breadcrumb', label: 'Fil d’Ariane', description: 'Affichez le chemin de cette page.', group: 'Avancés', aliases: 'bread breadcrumb fil ariane chemin' },

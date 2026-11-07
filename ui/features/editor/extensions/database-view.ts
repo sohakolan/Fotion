@@ -4,7 +4,7 @@ import { el, schemaOf, typeIcons, pill, valueEditor, propertyMenu, addPropertyMe
 
 export type { DatabaseHost } from '../lib/database-cells';
 type Property = FotionMark.Property;
-const layouts = [['table', 'Tableau', '⊞'], ['board', 'Kanban', '▥']] as const;
+const layouts = [['table', 'Tableau', '⊞'], ['board', 'Kanban', '▥'], ['list', 'Liste', '☰'], ['gallery', 'Galerie', '▦']] as const;
 const groupable = (property: Property) => property.type === 'select' || property.type === 'status';
 const titleProperty: Property = { id: 'title', name: 'Nom', type: 'text', options: [] };
 const operatorLabels: Record<FotionMark.Operator, string> = { '=': 'Est', '!=': 'N’est pas', '<': 'Inférieur à', '>': 'Supérieur à', '<=': 'Inférieur ou égal à', '>=': 'Supérieur ou égal à', contains: 'Contient', 'not contains': 'Ne contient pas', 'is empty': 'Est vide', 'is not empty': 'N’est pas vide' };
@@ -304,6 +304,30 @@ export const DatabaseView = EngineDatabaseView.extend<{ host: DatabaseHost }>({
         return wrap;
       }
 
+      /** Notion's list and gallery: each page with its title (opens the peek) and its non-empty visible properties. */
+      function pages(database: Page, properties: Property[], rows: Page[], kind: 'list' | 'gallery') {
+        const wrap = el('div', `database-${kind}`);
+        for (const row of rows) {
+          const item = el('div', `database-${kind}-item`); item.dataset.row = row.id;
+          const title = el('button', 'database-card-title', row.title || 'Sans titre'); title.type = 'button';
+          title.prepend(el('span', 'database-card-icon', row.icon || '📄'));
+          title.addEventListener('click', () => host.open(row.id));
+          const values = el('div', 'database-item-values');
+          for (const property of properties) {
+            const value = FotionMark.readCell(property, row.values?.[property.id]);
+            if (value === null || value === undefined || (Array.isArray(value) && !value.length)) continue;
+            if (property.type === 'select' || property.type === 'multi-select' || property.type === 'status') FotionMark.optionNames(value).forEach(n => values.append(pill(property, n)));
+            else values.append(el('span', 'database-item-value', property.type === 'checkbox' ? `☑ ${property.name}` : String(value)));
+          }
+          if (kind === 'gallery') item.append(el('div', 'database-gallery-preview'));
+          item.append(title, values); wrap.append(item);
+        }
+        const button = el('button', 'database-new-row', '+ Nouvelle page'); button.type = 'button';
+        button.addEventListener('click', () => void newRow(database));
+        wrap.append(button);
+        return wrap;
+      }
+
       function render() {
         // A field being typed in is never replaced; the view re-renders when it loses focus.
         if (document.activeElement instanceof HTMLInputElement && dom.contains(document.activeElement)) return;
@@ -330,7 +354,7 @@ export const DatabaseView = EngineDatabaseView.extend<{ host: DatabaseHost }>({
         const content = el('div', 'database-content');
         const body = () => {
           const shown = FotionMark.queryRows(rows, schemaOf(database), { filter: filters(), sort: sorts(), search });
-          content.replaceChildren(layout[0] === 'board' ? board(database, properties, shown) : table(database, properties, shown));
+          content.replaceChildren(layout[0] === 'board' ? board(database, properties, shown) : layout[0] === 'table' ? table(database, properties, shown) : pages(database, properties, shown, layout[0]));
         };
         const chips = toolbar(database, tabs, body);
         dom.append(tabs); if (chips) dom.append(chips); dom.append(content); body();
