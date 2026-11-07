@@ -1,10 +1,19 @@
 import { test, expect, type Page } from '@playwright/test';
 
-const flag = 'data:image/svg+xml;base64,' + Buffer.from(`<svg xmlns="http://www.w3.org/2000/svg" width="480" height="270"><rect width="480" height="270" fill="#2f6f6a"/><text x="240" y="150" font-size="36" font-family="sans-serif" text-anchor="middle" fill="#fff">Visuel source</text></svg>`).toString('base64');
+const svgFlag = (fill: string) => 'data:image/svg+xml;base64,' + Buffer.from(`<svg xmlns="http://www.w3.org/2000/svg" width="480" height="270"><rect width="480" height="270" fill="${fill}"/><text x="240" y="150" font-size="36" font-family="sans-serif" text-anchor="middle" fill="#fff">Visuel source</text></svg>`).toString('base64');
+const flag = svgFlag('#2f6f6a');
+
+// Rasterizes an SVG data URL to PNG bytes in a throwaway tab, so the test owns its fixtures.
+async function pngOf(page: Page, src: string): Promise<Buffer> {
+  const tab = await page.context().newPage();
+  await tab.setContent(`<img src="${src}" style="display:block">`);
+  const png = await tab.locator('img').screenshot();
+  await tab.close();
+  return png;
+}
 
 async function attachRealImage(page: Page): Promise<string> {
-  const { readFileSync } = await import('node:fs');
-  const png = readFileSync('/tmp/flag.png');
+  const png = await pngOf(page, flag);
   const response = await page.request.post('/api/attachments', { headers: { 'X-File-Name': encodeURIComponent('drapeau.png'), 'Content-Type': 'application/octet-stream' }, data: png });
   expect(response.ok()).toBeTruthy();
   return ((await response.json()) as { path: string }).path;
@@ -43,7 +52,7 @@ test('the lightbox opens full-size with Télécharger and Remplacer', async ({ p
   const dialog = page.locator('.media-dialog');
   await expect(dialog).toBeVisible();
   // The replacement comes through the same vault import as a fresh image.
-  const replacedResponse = await page.context().request.post('/api/attachments', { headers: { 'X-File-Name': encodeURIComponent('remplacee.png'), 'Content-Type': 'application/octet-stream' }, data: (await import('node:fs')).readFileSync('/tmp/flag2.png') });
+  const replacedResponse = await page.context().request.post('/api/attachments', { headers: { 'X-File-Name': encodeURIComponent('remplacee.png'), 'Content-Type': 'application/octet-stream' }, data: await pngOf(page, svgFlag('#b86442')) });
   expect(replacedResponse.ok()).toBeTruthy();
   const replacement = ((await replacedResponse.json()) as { path: string }).path;
   await dialog.getByRole('tab', { name: /Intégrer un lien/ }).click();
