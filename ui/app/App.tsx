@@ -64,7 +64,8 @@ export default function App() {
   const [menuAnchor, setMenuAnchor] = createSignal({ x: 0, y: 0 });
   const visible = createMemo(() => pages().filter(p => !p.trashed).sort(byOrder));
   const roots = createMemo(() => visible().filter(p => !p.parent || !visible().some(parent => parent.id === p.parent)));
-  const children = (id: string) => visible().filter(p => p.parent === id);
+  // A database's rows are shown by its views, not as sub-pages in the sidebar (as in Notion).
+  const children = (id: string) => visible().some(p => p.id === id && p.database) ? [] : visible().filter(p => p.parent === id);
   const pageIndex = new PageIndex();
   const indexed = createMemo(() => { pageIndex.update(pages()); return pages(); });
   const searchResults = createMemo(() => pageIndex.search(indexed(), query()));
@@ -161,10 +162,10 @@ export default function App() {
     finally { setBusy(false); }
   }
   /** Creates a sub-page of the current page without leaving it (Notion's « Nouvelle sous-page » in the @-menu). */
-  async function createSubpage(title: string) {
-    const parent = activeId();
+  async function createSubpage(title: string, extra: Partial<PageEdit> = {}) {
+    const parent = extra.parent ?? activeId();
     try {
-      const page = await api<Page>('/api/pages', 'POST', { ...blank, title, parent, order: Math.max(0, ...visible().filter(p => p.parent === parent).map(p => p.order ?? 0)) + 1024 });
+      const page = await api<Page>('/api/pages', 'POST', { ...blank, title, ...extra, parent, order: Math.max(0, ...visible().filter(p => p.parent === parent).map(p => p.order ?? 0)) + 1024 });
       setPages(list => [...list, page]); setExpanded(s => new Set([...s, parent]));
       return page;
     } catch (e) { setError((e as Error).message); return undefined; }
@@ -390,7 +391,7 @@ export default function App() {
               <Show when={!locked()}><div class="page-customize"><button onClick={e => openAppearance('icon', e.currentTarget)}><Smile size={14}/>{active()?.icon ? 'Changer l’icône' : 'Ajouter une icône'}</button><button onClick={e => openAppearance('cover', e.currentTarget)}><ImagePlus size={14}/>{active()?.cover ? 'Changer la couverture' : 'Ajouter une couverture'}</button></div></Show>
               <PageTitle inputRef={element => { titleInput = element; }} readOnly={locked()} value={active()?.title || ''} font={font()} onChange={title => update({ title })} onEnter={() => editor()?.commands.focus('start')}/>
               <Show when={incoming().length && backlinksMode() !== 'off'}><div class="backlinks"><Show when={backlinksMode() === 'popover'}><button class="backlinks-toggle" aria-expanded={backlinksOpen()} onClick={() => setBacklinksOpen(!backlinksOpen())}><ArrowDownLeft size={14}/>{incoming().length} lien{incoming().length > 1 ? 's' : ''} entrant{incoming().length > 1 ? 's' : ''}</button></Show><Show when={backlinksMode() === 'expanded' || backlinksOpen()}><div class="backlinks-list" classList={{ "kit-menu": backlinksMode() === 'popover', "backlinks-popover": backlinksMode() === 'popover' }} role="list" aria-label="Lié à cette page"><div class="backlinks-label">Lié à cette page</div><For each={incoming()}>{page => <button role="listitem" onClick={() => void navigate(page.id)}><ArrowDownLeft size={14} class="backlink-arrow"/><span>{page.icon || '📄'}</span><span class="backlink-title">{page.title || 'Sans titre'}</span><Show when={parentPath(page)}><span class="backlink-parent">{parentPath(page)}</span></Show></button>}</For></div></Show></div></Show>
-              <Show when={editorKey().id ? editorKey() : undefined} keyed>{key => <DocumentEditor content={pages().find(p => p.id === key.id)?.content || ''} onChange={content => update({ content }, key.id)} onReady={setEditor} onCreatePage={() => void create(key.id)} onCreateSubpage={createSubpage} onMoveBlock={moveBlockTo} onError={setError} pageId={key.id} pages={visible()} onOpenPage={id => void navigate(id)} editable={!locked()}/>}</Show>
+              <Show when={editorKey().id ? editorKey() : undefined} keyed>{key => <DocumentEditor content={pages().find(p => p.id === key.id)?.content || ''} onChange={content => update({ content }, key.id)} onReady={setEditor} onCreatePage={() => void create(key.id)} onCreateSubpage={createSubpage} onUpdatePage={(id, patch) => update(patch, id)} onMoveBlock={moveBlockTo} onError={setError} pageId={key.id} pages={visible()} onOpenPage={id => void navigate(id)} editable={!locked()}/>}</Show>
               <Show when={children(activeId()).length || activeId() === 'bienvenue.md'}><div class="child-pages"><For each={activeId() === 'bienvenue.md' ? visible().filter(p => ['projets.md', 'notes.md', 'lectures.md'].includes(p.id)) : children(activeId())}>{page => <button onClick={() => void navigate(page.id)}><span>{page.icon}</span><span class="child-page-title">{page.title}</span><ArrowUpRight size={15}/></button>}</For></div></Show>
               <button class="new-subpage" onClick={() => void create(activeId())}><Plus size={15}/>Ajouter une sous-page</button>
 

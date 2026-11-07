@@ -339,7 +339,7 @@ test('slash menu filters, inserts below existing text and stays closed after esc
   await editor.click(); await page.keyboard.press('End');
   await page.keyboard.type(' /');
   const menu = page.locator('.slash-menu');
-  await expect(menu.locator('.slash-group')).toHaveText(['Blocs de base', 'Médias', 'Avancés', 'En ligne']);
+  await expect(menu.locator('.slash-group')).toHaveText(['Blocs de base', 'Médias', 'Bases de données', 'Avancés', 'En ligne']);
   await page.screenshot({ path: test.info().outputPath('slash-menu.png') });
   await page.keyboard.type('h2');
   await expect(menu.getByRole('option').first()).toContainText('Titre 2');

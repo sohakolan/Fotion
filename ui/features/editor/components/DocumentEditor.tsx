@@ -5,7 +5,7 @@ import { createSignal, createMemo, createEffect, onMount, onCleanup, Show, For, 
 import { Editor, type ChainedCommands } from '@tiptap/core';
 import Placeholder from '@tiptap/extension-placeholder';
 import { mentionQuery } from '../../../../engine';
-import type { Page } from '../../../../engine';
+import { FotionMark, type Page, type PageEdit } from '../../../../engine';
 import { normalizeSearch, pageIdFromHref, pageHref, dateSuggestions, formatDate, isoDay, isDateValue } from '../../../../engine';
 import { textColors, colorId, type ColorId } from '../../../../engine';
 import { editorExtensions } from '../extensions/editor-extensions';
@@ -15,7 +15,7 @@ import SelectionRectangle from './SelectionRectangle';
 import MediaDialog, { upload, mediaKindOf, type MediaKind, type MediaResult } from './MediaDialog';
 import { Menu, MenuItem, MenuDivider, MenuSearch, EmojiPicker, Switch, modKey } from '../../../kit';
 import { blockAt, moveBlockTransaction, isListItem, caretPosition, BlockSelection, blockRange, type Block } from '../../../../engine';
-import { Bold, Italic, Underline, Strikethrough, Code, Link, ChevronDown, ChevronRight, Trash2, Copy, Type, Search, Check, Plus, ImagePlus, X, Repeat2, PaintRoller, AtSign, Smile, CalendarDays, AlarmClock, CornerUpRight, ArrowUpRight, Video, Music, FileType, Paperclip, Bookmark, Globe, ChevronsRight, MousePointerClick, Sigma, Radical, Heading1, Heading2, Heading3, List, ListOrdered, SquareCheckBig, ListCollapse, FileText, MessageSquareText, Quote, Table, Minus, Image as ImageIcon, CodeXml, TableOfContents, Columns2, Columns3, Columns4 } from 'lucide-solid';
+import { Bold, Italic, Underline, Strikethrough, Code, Link, ChevronDown, ChevronRight, Trash2, Copy, Type, Search, Check, Plus, ImagePlus, X, Repeat2, PaintRoller, AtSign, Smile, CalendarDays, AlarmClock, CornerUpRight, ArrowUpRight, Video, Music, FileType, Paperclip, Bookmark, Globe, ChevronsRight, MousePointerClick, Sigma, Radical, Heading1, Heading2, Heading3, List, ListOrdered, SquareCheckBig, ListCollapse, FileText, MessageSquareText, Quote, Table, Minus, Image as ImageIcon, CodeXml, TableOfContents, Columns2, Columns3, Columns4 , Database as DatabaseIcon } from 'lucide-solid';
 
 
 const blockActions: Record<string, { icon: () => JSX.Element; action: (chain: ChainedCommands) => ChainedCommands }> = {
@@ -28,6 +28,7 @@ const blockActions: Record<string, { icon: () => JSX.Element; action: (chain: Ch
   taskList: { icon: () => <SquareCheckBig size={18}/>, action: c => c.toggleTaskList() },
   toggle: { icon: () => <ListCollapse size={18}/>, action: c => c.insertContent({ type: 'toggle', content: [{ type: 'toggleSummary', content: [{ type: 'text', text: 'Liste dépliante' }] }, { type: 'paragraph' }] }) },
   page: { icon: () => <FileText size={18}/>, action: c => c },
+  database: { icon: () => <DatabaseIcon size={18}/>, action: c => c },
   link: { icon: () => <ArrowUpRight size={18}/>, action: c => c },
   math: { icon: () => <Sigma size={18}/>, action: c => c.insertContent({ type: 'blockMath', attrs: { latex: '' } }) },
   button: { icon: () => <MousePointerClick size={18}/>, action: c => c.insertContent({ type: 'button', attrs: { label: 'Nouvelle tâche', attributes: {} }, content: [{ type: 'taskList', content: [{ type: 'taskItem', attrs: { checked: false }, content: [{ type: 'paragraph' }] }] }] }) },
@@ -60,7 +61,7 @@ const mediaKinds: MediaKind[] = ['image', 'video', 'audio', 'pdf', 'file', 'book
 type MentionOption = { kind: 'date'; date: string } | { kind: 'page'; page: Page } | { kind: 'new'; title: string };
 const blocks = slashCommands.map(command => ({ ...command, ...(blockActions[command.id] ?? derivedAction(command)) }));
 
-export default function DocumentEditor(props: { content: string; onChange: (content: string) => void; onReady: (editor: Editor | undefined) => void; onCreatePage: () => void; onCreateSubpage: (title: string) => Promise<Page | undefined>; onMoveBlock: (markdown: string, targetId: string) => Promise<boolean>; onError: (message: string) => void; pageId: string; pages: Page[]; onOpenPage: (id: string) => void; editable: boolean }) {
+export default function DocumentEditor(props: { content: string; onChange: (content: string) => void; onReady: (editor: Editor | undefined) => void; onCreatePage: () => void; onCreateSubpage: (title: string, extra?: Partial<PageEdit>) => Promise<Page | undefined>; onUpdatePage: (id: string, patch: Partial<PageEdit>) => void; onMoveBlock: (markdown: string, targetId: string) => Promise<boolean>; onError: (message: string) => void; pageId: string; pages: Page[]; onOpenPage: (id: string) => void; editable: boolean }) {
   let element!: HTMLDivElement;
   let editor!: Editor;
   const [ready, setReady] = createSignal(false);
@@ -205,6 +206,11 @@ export default function DocumentEditor(props: { content: string; onChange: (cont
     item.action(chain).run();
     continueBelowBlock();
     if (item.id === 'page') props.onCreatePage();
+    // Notion's inline database: a child page holds the schema and rows; this page shows a view of it.
+    if (item.id === 'database') {
+      const pos = editor.state.selection.from;
+      void props.onCreateSubpage('', { database: FotionMark.newDatabase() }).then(page => { if (page) { insertBlockHere(pos, { type: 'database-view', attrs: { attributes: { src: page.id }, label: null } }); continueBelowBlock(); } });
+    }
     if (item.id === 'link') { const block = blockAt(editor.state.doc, editor.state.selection.from); if (block) openPagePicker('link', block.pos); }
     if (mediaKinds.includes(item.id as MediaKind)) setMediaDraft({ kind: item.id as MediaKind, pos: editor.state.selection.from });
   };
@@ -390,7 +396,7 @@ export default function DocumentEditor(props: { content: string; onChange: (cont
     } catch { /* Ignore invalid preferences without affecting the document. */ }
     editor = new Editor({
       element,
-      extensions: [...editorExtensions(id => props.pages.find(page => page.id === id), trail), Placeholder.configure({ placeholder: 'Appuyez sur « / » pour les commandes…' })],
+      extensions: [...editorExtensions(id => props.pages.find(page => page.id === id), trail, { pageId: () => props.pageId, pages: () => props.pages, update: props.onUpdatePage, createRow: database => props.onCreateSubpage('', { parent: database }), open: props.onOpenPage }), Placeholder.configure({ placeholder: 'Appuyez sur « / » pour les commandes…' })],
       content: props.content,
       editable: props.editable,
       contentType: 'markdown',

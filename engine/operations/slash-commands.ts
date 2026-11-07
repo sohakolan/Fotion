@@ -1,6 +1,6 @@
 import { textColors } from '../models/palette';
 
-export type SlashGroup = 'Blocs de base' | 'Médias' | 'En ligne' | 'Avancés' | 'Actions' | 'Couleurs';
+export type SlashGroup = 'Blocs de base' | 'Médias' | 'Bases de données' | 'En ligne' | 'Avancés' | 'Actions' | 'Couleurs';
 /** `hidden` commands (actions, colours) only appear once the user types, as in Notion. */
 export interface SlashCommand { id: string; label: string; description: string; group: SlashGroup; aliases: string; shortcut?: string; hidden?: boolean }
 
@@ -31,6 +31,7 @@ const catalogue: SlashCommand[] = [
   { id: 'pdf', label: 'PDF', description: 'Affichez un document PDF dans la page.', group: 'Médias', aliases: 'pdf document' },
   { id: 'bookmark', label: 'Signet web', description: 'Ajoutez un lien avec son titre et sa description.', group: 'Médias', aliases: 'book bookmark signet lien web' },
   { id: 'embed', label: 'Intégration', description: 'Intégrez une page web dans un cadre isolé.', group: 'Médias', aliases: 'embed intégrer intégration iframe site' },
+  { id: 'database', label: 'Vue tableau', description: 'Base de données en ligne : chaque ligne est une page.', group: 'Bases de données', aliases: 'database base de données bdd db table view vue tableau inline' },
   { id: 'math', label: 'Équation', description: 'Affichez une formule mathématique en LaTeX.', group: 'Avancés', aliases: 'math latex equation équation formule tex' },
   { id: 'button', label: 'Bouton', description: 'Insérez des blocs prédéfinis en un clic.', group: 'Avancés', aliases: 'button bouton template modèle' },
   { id: 'breadcrumb', label: 'Fil d’Ariane', description: 'Affichez le chemin de cette page.', group: 'Avancés', aliases: 'bread breadcrumb fil ariane chemin' },
