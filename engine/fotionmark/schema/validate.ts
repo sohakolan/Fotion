@@ -1,6 +1,6 @@
-import type { FotionNode, BlockNode } from '../tree/document';
-import type { Registry } from './registry';
-import { readValue } from './attributes';
+import type { FotionNode, BlockNode } from '../tree/document.ts';
+import type { Registry } from './registry.ts';
+import { readValue } from './attributes.ts';
 
 export interface Diagnostic { severity: 'error' | 'warning'; path: string; message: string }
 const blockId = /^[a-z0-9][a-z0-9-]{0,63}$/;

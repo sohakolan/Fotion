@@ -1,4 +1,4 @@
-import { defineBlock } from '../schema/define-block';
+import { defineBlock } from '../schema/define-block.ts';
 
 /** Notion's breadcrumb block: the path from the workspace to the page holding it, computed when shown. */
 export const breadcrumb = defineBlock({

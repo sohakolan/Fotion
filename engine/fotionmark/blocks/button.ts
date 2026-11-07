@@ -1,4 +1,4 @@
-import { defineBlock } from '../schema/define-block';
+import { defineBlock } from '../schema/define-block.ts';
 
 /**
  * Notion's button block, « Insérer des blocs » action: the label is the button text, the body is the

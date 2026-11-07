@@ -1,4 +1,4 @@
-import type { BlockDefinition } from './define-block';
+import type { BlockDefinition } from './define-block.ts';
 
 export type Registry = ReadonlyMap<string, BlockDefinition>;
 

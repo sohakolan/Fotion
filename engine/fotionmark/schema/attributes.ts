@@ -1,4 +1,4 @@
-import type { Attributes } from '../syntax/directives';
+import type { Attributes } from '../syntax/directives.ts';
 
 /**
  * Typed attribute declarations. Files store strings; blocks read typed values.

@@ -1,4 +1,4 @@
-import { defineBlock } from '../schema/define-block';
+import { defineBlock } from '../schema/define-block.ts';
 
 /**
  * A view of a database (docs/FOTIONMARK.md, « Bases de données »). Without `src` it shows the database of

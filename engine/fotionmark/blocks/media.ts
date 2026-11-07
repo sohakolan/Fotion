@@ -1,4 +1,4 @@
-import { defineBlock } from '../schema/define-block';
+import { defineBlock } from '../schema/define-block.ts';
 
 /** Notion's media blocks. `src` is a web address or a file imported into the vault (`attachments/…`). */
 export const video = defineBlock({ name: 'video', form: 'leaf', version: 1, description: 'Vidéo importée ou intégrée (YouTube, Vimeo…).', attributes: { src: { type: 'source' } } });

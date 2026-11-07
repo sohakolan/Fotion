@@ -1,4 +1,4 @@
-import { readCell, type CellValue, type Property } from './properties';
+import { readCell, type CellValue, type Property } from './properties.ts';
 
 /**
  * Filters and sorts of a database view (docs/FOTIONMARK.md, « Filtres et tris »), stored as directive attributes:

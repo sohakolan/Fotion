@@ -1,4 +1,4 @@
-import { readValue } from '../schema/attributes';
+import { readValue } from '../schema/attributes.ts';
 
 /**
  * FotionMark databases (docs/FOTIONMARK.md, « Bases de données »).

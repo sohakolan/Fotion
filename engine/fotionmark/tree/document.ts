@@ -1,4 +1,4 @@
-import { parseDirective, serializeContainer, serializeLeaf, type Attributes } from '../syntax/directives';
+import { parseDirective, serializeContainer, serializeLeaf, type Attributes } from '../syntax/directives.ts';
 
 /** FotionMark tree: plain Markdown is kept as text, FotionMark blocks become nodes. */
 export interface MarkdownNode { type: 'markdown'; text: string }

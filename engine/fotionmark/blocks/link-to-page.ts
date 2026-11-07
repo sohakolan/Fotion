@@ -1,4 +1,4 @@
-import { defineBlock } from '../schema/define-block';
+import { defineBlock } from '../schema/define-block.ts';
 
 /** Notion's « Link to page » block: a full-width link to another page of the vault. */
 export const linkToPage = defineBlock({

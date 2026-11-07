@@ -90,6 +90,8 @@ for (const file of files) {
         const base = relative(root, resolve(dirname(resolve(root, file)), name));
         const target = [base, `${base}.ts`, `${base}.tsx`, `${base}/index.ts`].find(path => files.includes(path));
         if (!target || !allowed(file, target)) errors.push(`${file} → ${name}: import local interdit ou introuvable`);
+        // The server loads FotionMark through Vite's config loader, which will require explicit extensions.
+        if (file.startsWith('engine/fotionmark/') && !name.endsWith('.ts')) errors.push(`${file} → ${name}: écrire l’extension .ts dans FotionMark`);
       } else if (file.startsWith('engine/fotionmark/')) {
         errors.push(`${file} → ${name}: FotionMark reste sans dépendance externe`);
       } else if ((file.startsWith('ui/') || file.startsWith('engine/')) && (name.startsWith('node:') || builtinModules.includes(name))) {

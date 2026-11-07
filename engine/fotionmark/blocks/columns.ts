@@ -1,4 +1,4 @@
-import { defineBlock } from '../schema/define-block';
+import { defineBlock } from '../schema/define-block.ts';
 
 /** Notion columns: `::::columns` holding 2 to 5 `:::column` blocks. */
 export const columns = defineBlock({

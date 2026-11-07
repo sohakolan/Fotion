@@ -1,4 +1,4 @@
-import type { AttributeTypes } from './attributes';
+import type { AttributeTypes } from './attributes.ts';
 
 /** Content model of a container: plain FotionMark, or only some blocks. */
 export type Content = { kind: 'markdown' } | { kind: 'blocks'; blocks: readonly string[]; min?: number; max?: number };
