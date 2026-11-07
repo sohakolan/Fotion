@@ -109,3 +109,8 @@
     font-size: 12px;
   }
 }
+
+/* Notion's side peek: the row opens beside the page, full height under the top bar. */
+.peek { position: fixed; z-index: 40; top: 45px; right: 0; bottom: 0; width: min(600px, 100%); overflow-y: auto; background: var(--bg); box-shadow: var(--shadow); }
+.peek-bar { position: sticky; top: 0; z-index: 1; display: flex; gap: 2px; padding: 6px 8px; background: var(--bg); }
+.peek .peek-document { width: auto; max-width: none; margin: 0; padding: 24px 48px 96px; }

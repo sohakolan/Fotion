@@ -1,5 +1,5 @@
 import { createSignal, createMemo, createEffect, onMount, onCleanup, For, Show } from 'solid-js';
-import { Search, House, ChevronDown, ChevronRight, ChevronsLeft, PanelLeft, Plus, Settings, Trash2, Star, MoreHorizontal, LockKeyhole, Check, ArrowUpRight, X, Download, Copy, Undo2, FolderOpen, Upload, Smile, ImagePlus, RefreshCw, ArrowLeft, ArrowRight, CircleHelp, CheckCheck, SquarePen, Pencil, FileText, CornerUpRight, GripVertical, Link, Clock, ArrowDownLeft, SlidersHorizontal } from 'lucide-solid';
+import { Search, House, ChevronDown, ChevronRight, ChevronsLeft, PanelLeft, Plus, Settings, Trash2, Star, MoreHorizontal, LockKeyhole, Check, ArrowUpRight, X, Download, Copy, Undo2, FolderOpen, Upload, Smile, ImagePlus, RefreshCw, ArrowLeft, ArrowRight, CircleHelp, CheckCheck, SquarePen, Pencil, FileText, CornerUpRight, GripVertical, Link, Clock, ArrowDownLeft, SlidersHorizontal, ChevronsRight, Maximize2 } from 'lucide-solid';
 import type { Editor } from '@tiptap/core';
 import { PageTitle } from '../features/pages';
 import { PageIndex, normalizeSearch } from '../../engine';
@@ -27,6 +27,9 @@ async function api<T>(path: string, method = 'GET', body?: unknown): Promise<T> 
 export default function App() {
   const [pages, setPages] = createSignal<Page[]>([]);
   const [activeId, setActiveId] = createSignal('');
+  /** Notion's side peek: a database row opened beside the page it belongs to. */
+  const [peekId, setPeekId] = createSignal('');
+  const peek = () => pages().find(p => p.id === peekId() && !p.trashed);
   const [loading, setLoading] = createSignal(true);
   const [sidebar, setSidebar] = createSignal(window.innerWidth > 760);
   const [expanded, setExpanded] = createSignal(new Set<string>(['projets.md']));
@@ -133,7 +136,7 @@ export default function App() {
     if (!target || target.trashed) { toast(target?.trashed ? 'Cette page est dans la corbeille.' : 'Cette page est introuvable dans le coffre.'); return; }
     if (id === activeId()) { setModal(null); return; }
     if (!(await flush())) return;
-    setActiveId(id); setBacklinksOpen(false); setMenu(null); setModal(null);
+    setActiveId(id); setPeekId(''); setBacklinksOpen(false); setMenu(null); setModal(null);
     localStorage.setItem('fotion-active', id); showPageUrl(id);
     if (record) {
       const next = [...history().slice(0, historyIndex() + 1), id];
@@ -392,7 +395,7 @@ export default function App() {
               <PageTitle inputRef={element => { titleInput = element; }} readOnly={locked()} value={active()?.title || ''} font={font()} onChange={title => update({ title })} onEnter={() => editor()?.commands.focus('start')}/>
               <Show when={active()}>{page => <PageProperties page={page()} pages={visible()} onUpdate={(id, patch) => update(patch, id)} onCreateRow={(database, values) => createSubpage('', { parent: database, ...(values ? { values } : {}) })} onOpen={id => void navigate(id)}/>}</Show>
               <Show when={incoming().length && backlinksMode() !== 'off'}><div class="backlinks"><Show when={backlinksMode() === 'popover'}><button class="backlinks-toggle" aria-expanded={backlinksOpen()} onClick={() => setBacklinksOpen(!backlinksOpen())}><ArrowDownLeft size={14}/>{incoming().length} lien{incoming().length > 1 ? 's' : ''} entrant{incoming().length > 1 ? 's' : ''}</button></Show><Show when={backlinksMode() === 'expanded' || backlinksOpen()}><div class="backlinks-list" classList={{ "kit-menu": backlinksMode() === 'popover', "backlinks-popover": backlinksMode() === 'popover' }} role="list" aria-label="Lié à cette page"><div class="backlinks-label">Lié à cette page</div><For each={incoming()}>{page => <button role="listitem" onClick={() => void navigate(page.id)}><ArrowDownLeft size={14} class="backlink-arrow"/><span>{page.icon || '📄'}</span><span class="backlink-title">{page.title || 'Sans titre'}</span><Show when={parentPath(page)}><span class="backlink-parent">{parentPath(page)}</span></Show></button>}</For></div></Show></div></Show>
-              <Show when={editorKey().id ? editorKey() : undefined} keyed>{key => <DocumentEditor content={pages().find(p => p.id === key.id)?.content || ''} onChange={content => update({ content }, key.id)} onReady={setEditor} onCreatePage={() => void create(key.id)} onCreateSubpage={createSubpage} onUpdatePage={(id, patch) => update(patch, id)} onMoveBlock={moveBlockTo} onError={setError} pageId={key.id} pages={visible()} onOpenPage={id => void navigate(id)} editable={!locked()}/>}</Show>
+              <Show when={editorKey().id ? editorKey() : undefined} keyed>{key => <DocumentEditor content={pages().find(p => p.id === key.id)?.content || ''} onChange={content => update({ content }, key.id)} onReady={setEditor} onCreatePage={() => void create(key.id)} onCreateSubpage={createSubpage} onUpdatePage={(id, patch) => update(patch, id)} onMoveBlock={moveBlockTo} onError={setError} pageId={key.id} pages={visible()} onOpenPage={id => void navigate(id)} onPeekPage={setPeekId} editable={!locked()}/>}</Show>
               <Show when={children(activeId()).length || activeId() === 'bienvenue.md'}><div class="child-pages"><For each={activeId() === 'bienvenue.md' ? visible().filter(p => ['projets.md', 'notes.md', 'lectures.md'].includes(p.id)) : children(activeId())}>{page => <button onClick={() => void navigate(page.id)}><span>{page.icon}</span><span class="child-page-title">{page.title}</span><ArrowUpRight size={15}/></button>}</For></div></Show>
               <button class="new-subpage" onClick={() => void create(activeId())}><Plus size={15}/>Ajouter une sous-page</button>
 
@@ -400,6 +403,17 @@ export default function App() {
           </Show>
         </Show>
       </div>
+      <Show when={peek() ? peekId() : undefined} keyed>{id => <aside class="peek" aria-label="Aperçu de la page" onKeyDown={event => { if (event.key === 'Escape' && !document.querySelector('.database-menu, .slash-menu, .kit-menu')) setPeekId(''); }}>
+        <div class="peek-bar">
+          <button class="icon-button" aria-label="Fermer l’aperçu" title="Fermer l’aperçu" onClick={() => setPeekId('')}><ChevronsRight size={18}/></button>
+          <button class="icon-button" aria-label="Ouvrir en pleine page" title="Ouvrir en pleine page" onClick={() => { setPeekId(''); void navigate(id); }}><Maximize2 size={15}/></button>
+        </div>
+        <article class="document peek-document">
+          <PageTitle inputRef={() => undefined} readOnly={!!peek()?.locked} value={peek()?.title || ''} font={peek()?.font || 'default'} onChange={title => update({ title }, id)} onEnter={() => undefined}/>
+          <PageProperties page={peek()!} pages={visible()} onUpdate={(id, patch) => update(patch, id)} onCreateRow={(database, values) => createSubpage('', { parent: database, ...(values ? { values } : {}) })} onOpen={setPeekId}/>
+          <DocumentEditor content={peek()?.content || ''} onChange={content => update({ content }, id)} onReady={() => undefined} onCreatePage={() => void create(id)} onCreateSubpage={(title, extra) => createSubpage(title, { parent: id, ...extra })} onUpdatePage={(id, patch) => update(patch, id)} onMoveBlock={moveBlockTo} onError={setError} pageId={id} pages={visible()} onOpenPage={id => { setPeekId(''); void navigate(id); }} onPeekPage={setPeekId} editable={!peek()?.locked}/>
+        </article>
+      </aside>}</Show>
       <button class="help-button" aria-label="Afficher l’aide" onClick={() => setModal('help')}>?</button>
     </main>
     <Show when={menu()}><div class="dismiss-layer" onClick={() => setMenu(null)}/></Show>

@@ -706,3 +706,7 @@ FN-206 : `/vue kanban` crée une base avec une propriété Statut (Pas commencé
 ### Bases de données : filtres, tris et recherche — 7 novembre 2026
 
 FN-216 : bouton « Filtrer » → choix de la propriété → règle ouverte aussitôt (condition selon le type, valeur : option, date, nombre, texte, coché) ; pastilles de filtre sous les onglets, « + Filtre », « Supprimer le filtre » ; une nouvelle ligne reçoit la valeur filtrée et reste visible. FN-218 : « Trier » → propriété, Croissant/Décroissant, plusieurs tris, pastille « ↓ Nom » ou « 2 tris ». Recherche de vue (loupe), non enregistrée. Écarts restants : pas de réordonnancement des tris par glisser, filtres « Moi », relatifs (« la semaine dernière ») et groupes ET/OU (FN-217). Format : [FotionMark, « Filtres et tris »](FOTIONMARK.md#bases-de-données).
+
+### Bases de données : aperçu latéral d’une ligne — 7 novembre 2026
+
+FN-178 : « Ouvrir » (tableau) et le titre d’une carte (Kanban) ouvrent la ligne dans un panneau à droite, sous la barre du haut : titre, propriétés et contenu modifiables, « » » ferme, ⤢ « Ouvrir en pleine page », Échap ferme quand aucun menu n’est ouvert ; naviguer vers une autre page ferme l’aperçu. Restent l’aperçu centré et le choix du mode d’ouverture par vue. Preuve : capture `row-peek.png` du [scénario navigateur](../tests/e2e/database.spec.ts).

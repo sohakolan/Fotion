@@ -62,7 +62,7 @@ const mediaKinds: MediaKind[] = ['image', 'video', 'audio', 'pdf', 'file', 'book
 type MentionOption = { kind: 'date'; date: string } | { kind: 'page'; page: Page } | { kind: 'new'; title: string };
 const blocks = slashCommands.map(command => ({ ...command, ...(blockActions[command.id] ?? derivedAction(command)) }));
 
-export default function DocumentEditor(props: { content: string; onChange: (content: string) => void; onReady: (editor: Editor | undefined) => void; onCreatePage: () => void; onCreateSubpage: (title: string, extra?: Partial<PageEdit>) => Promise<Page | undefined>; onUpdatePage: (id: string, patch: Partial<PageEdit>) => void; onMoveBlock: (markdown: string, targetId: string) => Promise<boolean>; onError: (message: string) => void; pageId: string; pages: Page[]; onOpenPage: (id: string) => void; editable: boolean }) {
+export default function DocumentEditor(props: { content: string; onChange: (content: string) => void; onReady: (editor: Editor | undefined) => void; onCreatePage: () => void; onCreateSubpage: (title: string, extra?: Partial<PageEdit>) => Promise<Page | undefined>; onUpdatePage: (id: string, patch: Partial<PageEdit>) => void; onMoveBlock: (markdown: string, targetId: string) => Promise<boolean>; onError: (message: string) => void; pageId: string; pages: Page[]; onOpenPage: (id: string) => void; onPeekPage?: (id: string) => void; editable: boolean }) {
   let element!: HTMLDivElement;
   let editor!: Editor;
   const [ready, setReady] = createSignal(false);
@@ -397,7 +397,7 @@ export default function DocumentEditor(props: { content: string; onChange: (cont
     } catch { /* Ignore invalid preferences without affecting the document. */ }
     editor = new Editor({
       element,
-      extensions: [...editorExtensions(id => props.pages.find(page => page.id === id), trail, { pageId: () => props.pageId, pages: () => props.pages, update: props.onUpdatePage, createRow: (database, values) => props.onCreateSubpage('', { parent: database, ...(values ? { values } : {}) }), open: props.onOpenPage }), Placeholder.configure({ placeholder: 'Appuyez sur « / » pour les commandes…' })],
+      extensions: [...editorExtensions(id => props.pages.find(page => page.id === id), trail, { pageId: () => props.pageId, pages: () => props.pages, update: props.onUpdatePage, createRow: (database, values) => props.onCreateSubpage('', { parent: database, ...(values ? { values } : {}) }), open: id => (props.onPeekPage ?? props.onOpenPage)(id) }), Placeholder.configure({ placeholder: 'Appuyez sur « / » pour les commandes…' })],
       content: props.content,
       editable: props.editable,
       contentType: 'markdown',

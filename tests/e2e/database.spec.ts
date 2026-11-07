@@ -100,10 +100,25 @@ test('property menu converts a type, deletes a property, and an open row lists i
   await page.locator('.property-menu').getByRole('button', { name: 'Supprimer la propriété' }).click();
   await expect(view.locator('th')).toHaveText(['AaNom', '⌄Priorité', '+']);
 
-  // Opening the row shows Notion's property list under its title, editable there too.
+  // « Ouvrir » shows the row in Notion's side peek: title, properties (editable there too) and content.
   await view.locator('.database-cell-title').hover();
   await view.getByRole('button', { name: 'Ouvrir' }).click();
+  const peek = page.getByRole('complementary', { name: 'Aperçu de la page' });
+  await expect(peek.getByLabel('Titre de la page', { exact: true })).toHaveValue('Ligne A');
+  await peek.getByLabel('Titre de la page', { exact: true }).fill('Ligne A1');
+  await expect(view.getByLabel('Nom de la ligne')).toHaveValue('Ligne A1');
+  await peek.getByLabel('Titre de la page', { exact: true }).fill('Ligne A');
+  await peek.getByRole('textbox', { name: 'Contenu de la page' }).click();
+  await page.keyboard.type('Notes de la ligne');
+  await page.screenshot({ path: test.info().outputPath('row-peek.png') });
+  await page.keyboard.press('Escape');
+  await expect(peek).toHaveCount(0);
+  await view.locator('.database-cell-title').hover();
+  await view.getByRole('button', { name: 'Ouvrir' }).click();
+  await peek.getByRole('button', { name: 'Ouvrir en pleine page' }).click();
+  await expect(peek).toHaveCount(0);
   await expect(page.getByLabel('Titre de la page', { exact: true })).toHaveValue('Ligne A');
+  await expect(page.getByRole('textbox', { name: 'Contenu de la page' })).toContainText('Notes de la ligne');
   const properties = page.locator('.page-properties');
   await expect(properties.locator('.page-property-label')).toHaveText(['Priorité']);
   await properties.getByLabel('Priorité de Ligne A').click();
