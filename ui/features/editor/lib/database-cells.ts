@@ -120,6 +120,49 @@ export function optionPicker(anchor: HTMLElement, target: Target) {
   });
 }
 
+/** `2026-11-20` → « 20 novembre 2026 », as Notion shows a date property. */
+export const formatDay = (iso: string) => new Date(`${iso.slice(0, 10)}T00:00:00`).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+const localToday = () => new Date().toLocaleDateString('sv-SE');
+const monthNames = (month: string) => new Date(`${month}-01T00:00:00`).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+
+/** Notion's date menu: typed date, month grid (Monday first, today and the chosen day marked), « Effacer ». */
+export function datePicker(anchor: HTMLElement, target: Target) {
+  openPopover(anchor, 'date-picker', box => {
+    const current = () => { const { row, property } = fresh(target); const value = property && FotionMark.readCell(property, row?.values?.[property.id]); return typeof value === 'string' ? value.slice(0, 10) : ''; };
+    const set = (day: string) => { const { database, row, property } = fresh(target); if (database && row && property) store(target.host, database, row, property, FotionMark.writeCell(property, day)); };
+    let month = (current() || localToday()).slice(0, 7);
+    const field = el('input', 'database-menu-input'); field.setAttribute('aria-label', 'Date'); field.placeholder = 'AAAA-MM-JJ'; field.value = current();
+    field.addEventListener('keydown', event => {
+      if (event.key !== 'Enter') return;
+      event.preventDefault();
+      const { property } = fresh(target); const day = field.value.trim();
+      if (!day) { set(''); closePopover(); return; }
+      if (property && FotionMark.writeCell(property, day) !== undefined) { set(day); closePopover(); } else field.setAttribute('aria-invalid', 'true');
+    });
+    const head = el('div', 'date-picker-head'), grid = el('div', 'date-picker-grid');
+    const step = (delta: number) => { const [y, m] = month.split('-').map(Number); month = new Date(Date.UTC(y, m - 1 + delta, 1)).toISOString().slice(0, 7); draw(); };
+    function draw() {
+      const navigation = (label: string, text: string, action: () => void) => { const b = el('button', 'date-picker-nav', text); b.type = 'button'; b.setAttribute('aria-label', label); b.addEventListener('click', action); return b; };
+      head.replaceChildren(el('span', 'date-picker-month', monthNames(month)), navigation('Aujourd’hui', 'Aujourd’hui', () => { month = localToday().slice(0, 7); draw(); }), navigation('Mois précédent', '‹', () => step(-1)), navigation('Mois suivant', '›', () => step(1)));
+      grid.replaceChildren(...['lu', 'ma', 'me', 'je', 've', 'sa', 'di'].map(day => el('span', 'date-picker-weekday', day)));
+      const [y, m] = month.split('-').map(Number), first = new Date(Date.UTC(y, m - 1, 1)), start = Date.UTC(y, m - 1, 1 - (first.getUTCDay() + 6) % 7);
+      const chosen = current(), today = localToday();
+      for (let i = 0; i < 42; i++) {
+        const day = new Date(start + i * 86_400_000).toISOString().slice(0, 10);
+        const button = el('button', 'date-picker-day', String(Number(day.slice(8)))); button.type = 'button';
+        button.setAttribute('aria-label', formatDay(day));
+        button.classList.toggle('outside', day.slice(0, 7) !== month); button.classList.toggle('today', day === today);
+        if (day === chosen) button.setAttribute('aria-pressed', 'true');
+        button.addEventListener('click', () => { set(day); closePopover(); });
+        grid.append(button);
+      }
+    }
+    const clear = el('button', 'kit-menu-item', 'Effacer'); clear.type = 'button';
+    clear.addEventListener('click', () => { set(''); closePopover(); });
+    box.append(field, head, grid, el('div', 'popover-divider'), clear); draw();
+  });
+}
+
 /** The editor of one value, for a table cell, a board card or the properties of an open row. */
 export function valueEditor(host: DatabaseHost, database: Page, row: Page, property: Property, options: { placeholder?: string } = {}) {
   const stored = row.values?.[property.id], value = FotionMark.readCell(property, stored);
@@ -140,12 +183,17 @@ export function valueEditor(host: DatabaseHost, database: Page, row: Page, prope
     tags.addEventListener('click', () => optionPicker(tags, { host, database: database.id, row: row.id, property: property.id }));
     return tags;
   }
+  if (property.type === 'date') {
+    const button = el('button', 'database-value database-date', typeof value === 'string' ? formatDay(value) : ''); button.type = 'button'; button.setAttribute('aria-label', label);
+    if (value === null && options.placeholder) button.append(el('span', 'database-empty', options.placeholder));
+    button.addEventListener('click', () => datePicker(button, { host, database: database.id, row: row.id, property: property.id }));
+    return button;
+  }
   const input = el('input', 'database-value database-input');
   input.setAttribute('aria-label', label);
   if (options.placeholder) input.placeholder = options.placeholder;
   const shown = value === null ? '' : String(value);
   input.value = shown;
-  if (property.type === 'date') input.type = 'date';
   if (property.type === 'number') input.inputMode = 'decimal';
   if (property.type === 'email') input.type = 'email';
   if (property.type === 'url') input.type = 'url';

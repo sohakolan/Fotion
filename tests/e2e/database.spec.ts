@@ -39,8 +39,21 @@ test('an inline table database stores rows as pages and survives a reload', asyn
   await view.getByRole('button', { name: 'Ajouter une propriété' }).click();
   await page.locator('.database-menu').getByRole('button', { name: 'Date' }).click();
   await expect(view.locator('th')).toHaveText(['AaNom', '☰Étiquettes', '▦Date', '+']);
-  await view.getByLabel('Date de Lancement').fill('2026-11-20');
-  await view.getByLabel('Date de Lancement').press('Enter');
+  // Notion's date menu: a typed date, or a day picked in the month grid.
+  await view.getByLabel('Date de Lancement').click();
+  const dates = page.locator('.date-picker');
+  await dates.getByLabel('Date', { exact: true }).fill('2026-11-02'); await page.keyboard.press('Enter');
+  await expect(view.getByLabel('Date de Lancement')).toHaveText('2 novembre 2026');
+  await view.getByLabel('Date de Lancement').click();
+  await expect(dates.locator('.date-picker-month')).toHaveText('novembre 2026');
+  await expect(dates.locator('[aria-pressed="true"]')).toHaveText('2');
+  await dates.getByRole('button', { name: 'Mois suivant' }).click();
+  await expect(dates.locator('.date-picker-month')).toHaveText('décembre 2026');
+  await page.screenshot({ path: test.info().outputPath('date-picker.png') });
+  await dates.getByRole('button', { name: 'Mois précédent' }).click();
+  await dates.getByRole('button', { name: '20 novembre 2026' }).click();
+  await expect(dates).toHaveCount(0);
+  await expect(view.getByLabel('Date de Lancement')).toHaveText('20 novembre 2026');
 
   // Notion's option menu: type to create, Enter to add, × to remove.
   await view.getByLabel('Étiquettes de Lancement').click();
@@ -71,7 +84,7 @@ test('an inline table database stores rows as pages and survives a reload', asyn
 
   await page.reload();
   await expect(view.getByLabel('Nom de la ligne')).toHaveValue('Lancement');
-  await expect(view.getByLabel('Date de Lancement')).toHaveValue('2026-11-20');
+  await expect(view.getByLabel('Date de Lancement')).toHaveText('20 novembre 2026');
   await expect(view.locator('.database-cell .database-tag')).toHaveText(['Urgent', 'Client']);
   // Rows belong to the view, not to the sidebar tree.
   await expect(page.getByRole('complementary', { name: 'Navigation principale' }).getByText('Lancement')).toHaveCount(0);

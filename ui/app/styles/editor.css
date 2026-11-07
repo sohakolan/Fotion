@@ -2202,3 +2202,19 @@ h3) {
 .database-readonly :is(.database-new-row, .database-add, .database-column-add, .page-property-add, .database-chip-add) { display: none; }
 .database-readonly button:disabled { cursor: default; opacity: 1; }
 .database-readonly .database-tool:disabled { opacity: .4; }
+
+/* Notion's date menu for date properties. */
+.date-picker { width: 280px; }
+.database-date { width: 100%; height: 100%; min-height: 32px; padding: 0 8px; text-align: left; color: var(--text); font-size: 14px; white-space: nowrap; }
+.date-picker-head { display: flex; align-items: center; gap: 2px; padding: 6px 6px 2px; }
+.date-picker-month { flex: 1; font-weight: 500; font-size: 14px; white-space: nowrap; }
+.date-picker-month::first-letter { text-transform: uppercase; }
+.date-picker-nav { height: 24px; min-width: 24px; padding: 0 6px; border-radius: var(--radius); color: var(--muted); font-size: 13px; }
+.date-picker-nav:hover { background: var(--hover); }
+.date-picker-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px; padding: 4px 6px; }
+.date-picker-weekday { text-align: center; color: var(--muted); font-size: 12px; line-height: 28px; }
+.date-picker-day { height: 28px; border-radius: var(--radius); color: var(--text); font-size: 13px; }
+.date-picker-day:hover { background: var(--hover); }
+.date-picker-day.outside { color: var(--muted); }
+.date-picker-day.today { color: #fff; background: #eb5757; border-radius: 50%; }
+.date-picker-day[aria-pressed="true"] { color: #fff; background: #2383e2; }
