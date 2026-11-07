@@ -287,9 +287,9 @@ Format FotionMark : [directive `::database-view`](FOTIONMARK_TODO.md#vues), FM-0
 - [ ] **FN-213** Vue fil : cartes empilées, contenu et réactions selon droits disponibles.
 - [ ] **FN-214** Vue carte : propriété de lieu, marqueurs, regroupement et ouverture d’une entrée.
 - [ ] **FN-215** Mode tableau de bord et composition de vues lorsque disponible dans la version retenue — à confirmer visuellement.
-- [ ] **FN-216** Filtres simples par propriété et opérateur.
+- [ ] **FN-216** [PARTIEL] Filtres simples par propriété et opérateur.
 - [ ] **FN-217** Groupes de filtres imbriqués ET/OU.
-- [ ] **FN-218** Tri multiple avec priorité et direction.
+- [ ] **FN-218** [PARTIEL] Tri multiple avec priorité et direction.
 - [ ] **FN-219** Groupement et sous-groupement avec ordre manuel ou calculé.
 - [ ] **FN-220** Masquer les groupes vides et déplier/replier les groupes.
 - [ ] **FN-221** Rechercher uniquement dans la vue courante.
@@ -702,3 +702,7 @@ FN-166, FN-167, FN-084 : `/vue tableau` crée une base en ligne (une sous-page q
 ### Bases de données : Kanban, menus de propriété et fiche de ligne — 7 novembre 2026
 
 FN-206 : `/vue kanban` crée une base avec une propriété Statut (Pas commencé / En cours / Terminé) ; une colonne par option, « Sans … » en tête quand des cartes n’ont pas de valeur, compteur, « + Nouvelle page » par colonne (la ligne reçoit la valeur de la colonne), glisser une carte vers une autre colonne change sa valeur. Le menu de la vue bascule entre Tableau et Kanban et choisit le regroupement. FN-172, FN-173 : menu de propriété (renommer, changer le type avec conversion des valeurs, supprimer). FN-178 : une ligne s’ouvre en pleine page avec ses propriétés sous le titre, éditables comme dans le tableau ; aperçu centré et latéral restent à faire. Le fil d’Ariane affiche « Sans titre » pour une page sans titre. Preuves : [scénarios navigateur](../tests/e2e/database.spec.ts).
+
+### Bases de données : filtres, tris et recherche — 7 novembre 2026
+
+FN-216 : bouton « Filtrer » → choix de la propriété → règle ouverte aussitôt (condition selon le type, valeur : option, date, nombre, texte, coché) ; pastilles de filtre sous les onglets, « + Filtre », « Supprimer le filtre » ; une nouvelle ligne reçoit la valeur filtrée et reste visible. FN-218 : « Trier » → propriété, Croissant/Décroissant, plusieurs tris, pastille « ↓ Nom » ou « 2 tris ». Recherche de vue (loupe), non enregistrée. Écarts restants : menus déroulants natifs du navigateur dans les menus de règle, pas de réordonnancement des tris par glisser, filtres « Moi », relatifs (« la semaine dernière ») et groupes ET/OU (FN-217). Format : [FotionMark, « Filtres et tris »](FOTIONMARK.md#bases-de-données).

@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { parseDirective, parseAttributes, serializeAttributes, serializeContainer, serializeLeaf, directiveStart, parse, stringify, validate, readAttributes, writeAttributes, defineBlock, createRegistry, readDatabase, readCell, writeCell, newPropertyId, updateProperty, addProperty, newDatabase, reservedKeys, convertValue, optionNames, removeProperty, type Property } from '../../engine/fotionmark';
+import { parseDirective, parseAttributes, serializeAttributes, serializeContainer, serializeLeaf, directiveStart, parse, stringify, validate, readAttributes, writeAttributes, defineBlock, createRegistry, readDatabase, readCell, writeCell, newPropertyId, updateProperty, addProperty, newDatabase, reservedKeys, convertValue, optionNames, removeProperty, parseFilter, writeFilter, parseSort, writeSort, queryRows, serializeLeaf as leaf, type Property } from '../../engine/fotionmark';
 
 test('attributes accept bare, quoted and escaped values and round-trip', () => {
   const attributes = parseAttributes('{width=50% title="Deux mots" note=\'a "b"\' flag}');
@@ -127,4 +127,45 @@ test('property type changes convert values like Notion and refuse what cannot co
   const raw = { properties: [{ id: 'a', type: 'text' }, { id: 'b', type: 'date' }], other: 1 };
   assert.deepEqual(removeProperty(raw, 'a'), { properties: [{ id: 'b', type: 'date' }], other: 1 });
   assert.deepEqual(validate(parse('::database-view{layout=board groupBy=status}').children), []);
+});
+
+test('view filters and sorts parse, round-trip and select rows like Notion', () => {
+  const filter = 'status = "En cours" and due < today and tags contains Urgent and note is empty';
+  const rules = parseFilter(filter)!;
+  assert.deepEqual(rules, [{ property: 'status', op: '=', value: 'En cours' }, { property: 'due', op: '<', value: 'today' }, { property: 'tags', op: 'contains', value: 'Urgent' }, { property: 'note', op: 'is empty' }]);
+  assert.equal(writeFilter(rules), filter);
+  assert.equal(parseFilter('status ='), undefined);
+  assert.equal(parseFilter('status = a or b = c'), undefined);
+  assert.deepEqual(parseFilter(''), []);
+  assert.deepEqual(parseSort('due:desc, title'), [{ property: 'due', direction: 'desc' }, { property: 'title', direction: 'asc' }]);
+  assert.equal(writeSort(parseSort('due:desc,title:asc')), 'due:desc,title:asc');
+  assert.equal(leaf('database-view', { sort: 'due:asc', filter: writeFilter([{ property: 'status', op: '=', value: 'En "cours"' }]) }), '::database-view{sort=due:asc filter="status = \\"En \\\\\\"cours\\\\\\"\\""}');
+  assert.deepEqual(validate(parse('::database-view{sort=due:asc filter="status = x"}').children), []);
+
+  const properties: Property[] = [
+    { id: 'status', name: 'Statut', type: 'status', options: [{ name: 'Pas commencé', color: 'gray' }, { name: 'En cours', color: 'blue' }, { name: 'Terminé', color: 'green' }] },
+    { id: 'due', name: 'Échéance', type: 'date', options: [] },
+    { id: 'points', name: 'Points', type: 'number', options: [] },
+    { id: 'tags', name: 'Étiquettes', type: 'multi-select', options: [] },
+  ];
+  const rows = [
+    { title: 'Alpha', values: { status: 'Terminé', due: '2026-11-01', points: 3, tags: ['Urgent'] } },
+    { title: 'Béta', values: { status: 'En cours', due: '2026-11-20', points: 1 } },
+    { title: 'Gamma', values: { status: 'Pas commencé', points: 'beaucoup' } },
+    { title: 'Delta', values: { status: 'En cours', due: '2026-11-03', tags: ['urgent', 'Client'] } },
+  ];
+  const titles = (view: Parameters<typeof queryRows>[2]) => queryRows(rows, properties, { today: '2026-11-07', ...view }).map(r => r.title);
+  assert.deepEqual(titles({ filter: parseFilter('status = "en cours"') }), ['Béta', 'Delta']);
+  assert.deepEqual(titles({ filter: parseFilter('due < today') }), ['Alpha', 'Delta']);
+  assert.deepEqual(titles({ filter: parseFilter('tags contains urgent') }), ['Alpha', 'Delta']);
+  assert.deepEqual(titles({ filter: parseFilter('due is empty') }), ['Gamma']);
+  assert.deepEqual(titles({ filter: parseFilter('points >= 1 and title contains a') }), ['Alpha', 'Béta']);
+  assert.deepEqual(titles({ filter: [{ property: 'status', op: '=', value: '' }] }), ['Alpha', 'Béta', 'Gamma', 'Delta']);
+  assert.deepEqual(titles({ filter: parseFilter('unknown = x') }), ['Alpha', 'Béta', 'Gamma', 'Delta']);
+  // Empty values last in both directions; select and status sort by option order.
+  assert.deepEqual(titles({ sort: parseSort('due:desc') }), ['Béta', 'Delta', 'Alpha', 'Gamma']);
+  assert.deepEqual(titles({ sort: parseSort('points:asc') }), ['Béta', 'Alpha', 'Gamma', 'Delta']);
+  assert.deepEqual(titles({ sort: parseSort('status:asc,title:desc') }), ['Gamma', 'Delta', 'Béta', 'Alpha']);
+  assert.deepEqual(titles({ search: 'client' }), ['Delta']);
+  assert.deepEqual(titles({ search: 'beta' }), ['Béta']);
 });

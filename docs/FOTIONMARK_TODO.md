@@ -114,7 +114,7 @@ Le plus gros chantier de parité. **Aucune interface avant que FM-053 à FM-058 
 
 - [x] **FM-069** [DÉCIDÉ 2026-11-07] Vue = feuille `::database-view{src=<base> layout=table …}` dans une page ; la page de la base contient ses propres vues. Plusieurs vues d’une même base sans dupliquer les données (FN-084, FN-168, FN-169).
 - [ ] **FM-070** [PARTIEL] Attributs communs : `layout` (`table`, `board`, `list`, `gallery`, `calendar`, `timeline`, `chart`, `form`, `feed`, `map`), `title`, `properties` (liste ordonnée, visibles), `wrap`, `limit` (FN-202 à FN-205, FN-222).
-- [ ] **FM-071** Filtres : syntaxe d’expression d’une ligne (`status = "En cours" and due < today`) dans un attribut `filter`, avec groupes ET/OU (FN-216, FN-217).
+- [ ] **FM-071** [PARTIEL] Filtres : syntaxe d’expression d’une ligne (`status = "En cours" and due < today`) dans un attribut `filter`, avec groupes ET/OU (FN-216, FN-217).
 - [ ] **FM-072** [PARTIEL] Tris `sort="due:asc,priority:desc"` et groupes `groupBy`, `subGroupBy`, `hideEmpty` (FN-218 à FN-220).
 - [ ] **FM-073** Paramètres propres à chaque disposition : `cardSize`, `cover`, `dateProperty`, `scale`, `chartType`… déclarés en `enum` (FN-206 à FN-211).
 - [ ] **FM-074** Largeur des colonnes et ordre manuel des cartes : `columnWidths` et ordre stocké dans le schéma, pas dans chaque ligne (FN-203, FN-219).
@@ -182,3 +182,7 @@ Preuves : `tests/unit/fotionmark.test.ts` (schéma, cellules, directive), `tests
 ## Avancement — Kanban, menus et fiche de ligne (7 novembre 2026)
 
 FM-070 : disposition `board` ; FM-072 : `groupBy` (Sélection ou Statut) ; les réglages sont écrits dans la directive, la valeur par défaut jamais. FM-057 : changement de type avec conversion (`convertValue`) — une valeur non convertible reste intacte ; renommer ne touche aucune ligne ; supprimer une propriété laisse ses valeurs dans les lignes. Restent l’aperçu de conversion avant validation (FM-057), `subGroupBy` et `hideEmpty` (FM-072). Preuves : `tests/unit/fotionmark.test.ts` (conversions, suppression, directive `board`), [scénarios navigateur](../tests/e2e/database.spec.ts).
+
+## Avancement — filtres, tris et recherche (7 novembre 2026)
+
+FM-071 : attribut `filter` (règles jointes par `and`, dix opérateurs, `today`, `title`) ; restent `or` et les groupes imbriqués. FM-072 : attribut `sort` (multiple, prioritaire de gauche à droite, vides en dernier, options dans leur ordre). Une ligne créée sous un filtre reçoit les valeurs qu’il demande. Preuves : `tests/unit/fotionmark.test.ts` (analyse, aller-retour, échappement dans la directive, sélection et ordre des lignes), [scénario navigateur](../tests/e2e/database.spec.ts) (tri, filtre, directive écrite, ligne créée sous filtre, recherche).

@@ -6,6 +6,14 @@ export type { DatabaseHost } from '../lib/database-cells';
 type Property = FotionMark.Property;
 const layouts = [['table', 'Tableau', '⊞'], ['board', 'Kanban', '▥']] as const;
 const groupable = (property: Property) => property.type === 'select' || property.type === 'status';
+const titleProperty: Property = { id: 'title', name: 'Nom', type: 'text', options: [] };
+const operatorLabels: Record<FotionMark.Operator, string> = { '=': 'Est', '!=': 'N’est pas', '<': 'Inférieur à', '>': 'Supérieur à', '<=': 'Inférieur ou égal à', '>=': 'Supérieur ou égal à', contains: 'Contient', 'not contains': 'Ne contient pas', 'is empty': 'Est vide', 'is not empty': 'N’est pas vide' };
+const dateLabels: Partial<Record<FotionMark.Operator, string>> = { '<': 'Est avant', '>': 'Est après', '<=': 'Est le ou avant', '>=': 'Est le ou après' };
+const select = (label: string, choices: readonly (readonly [string, string])[], value: string, onChange: (value: string) => void) => {
+  const box = el('select', 'database-menu-select'); box.setAttribute('aria-label', label);
+  for (const [id, text] of choices) { const option = el('option', '', text); option.value = id; box.append(option); }
+  box.value = value; box.addEventListener('change', () => onChange(box.value)); return box;
+};
 
 /**
  * Notion's database views (table, board). Rows are the pages whose parent is the database; values are their
@@ -21,11 +29,13 @@ export const DatabaseView = EngineDatabaseView.extend<{ host: DatabaseHost }>({
       const attributes = () => (current.attrs.attributes ?? {}) as Record<string, string>;
       const settings = () => FotionMark.readAttributes(FotionMark.blocks.get('database-view')!.attributes, attributes());
       const source = () => (settings().src as string | undefined) || host.pageId();
-      /** View settings live in the directive: `layout`, `groupBy`. Defaults are never written. */
+      /** Notion's view search is not saved: it lasts while the page is open. */
+      let search: string | undefined;
+      /** View settings live in the directive: `layout`, `groupBy`, `filter`, `sort`. Defaults are never written. */
       const setAttributes = (patch: Record<string, string | undefined>) => {
         const pos = getPos(); if (typeof pos !== 'number' || !editor.isEditable) return;
         const next = { ...attributes(), ...patch };
-        for (const [key, value] of Object.entries(next)) if (value === undefined || (key === 'layout' && value === 'table')) delete next[key];
+        for (const [key, value] of Object.entries(next)) if (!value || (key === 'layout' && value === 'table')) delete next[key];
         editor.view.dispatch(editor.state.tr.setNodeMarkup(pos, undefined, { ...current.attrs, attributes: next }));
       };
 
@@ -50,9 +60,136 @@ export const DatabaseView = EngineDatabaseView.extend<{ host: DatabaseHost }>({
           }
         });
       }
+      const filters = () => FotionMark.parseFilter(settings().filter as string | undefined) ?? [];
+      const sorts = () => FotionMark.parseSort(settings().sort as string | undefined);
+      const propertyOf = (database: Page, id: string) => id === 'title' ? titleProperty : schemaOf(database).find(p => p.id === id);
+      const choices = (database: Page) => [titleProperty, ...schemaOf(database)];
+      const setFilters = (rules: FotionMark.FilterRule[]) => setAttributes({ filter: FotionMark.writeFilter(rules) });
+      const setSorts = (rules: FotionMark.SortRule[]) => setAttributes({ sort: FotionMark.writeSort(rules) });
+      const propertyLabel = (property: Property) => { const label = el('span', 'database-menu-label'); label.append(el('span', 'database-type-icon', property.id === 'title' ? 'Aa' : typeIcons[property.type]), property.name); return label; };
+
+      /** Notion's « Trier » menu: one line per sort (property, direction, ×), then « + Ajouter un tri ». */
+      function sortMenu(anchor: HTMLElement, database: Page) {
+        openPopover(anchor, 'sort-menu', function draw(box) {
+          box.replaceChildren();
+          const rules = sorts();
+          rules.forEach((rule, index) => {
+            const line = el('div', 'database-rule');
+            const others = choices(database).filter(p => p.id === rule.property || !rules.some(r => r.property === p.id));
+            line.append(
+              select('Propriété du tri', others.map(p => [p.id, p.name] as const), rule.property, property => { rules[index] = { ...rule, property }; setSorts(rules); draw(box); }),
+              select('Ordre du tri', [['asc', 'Croissant'], ['desc', 'Décroissant']], rule.direction, direction => { rules[index] = { ...rule, direction: direction as 'asc' | 'desc' }; setSorts(rules); draw(box); }),
+            );
+            const remove = el('button', 'database-rule-remove', '×'); remove.type = 'button'; remove.setAttribute('aria-label', 'Supprimer le tri');
+            remove.addEventListener('click', () => { rules.splice(index, 1); setSorts(rules); if (rules.length) draw(box); else closePopover(); });
+            line.append(remove); box.append(line);
+          });
+          const free = choices(database).filter(p => !rules.some(r => r.property === p.id));
+          if (rules.length) { if (free.length) { const add = el('button', 'kit-menu-item', '+ Ajouter un tri'); add.type = 'button'; add.addEventListener('click', () => { setSorts([...rules, { property: free[0].id, direction: 'asc' }]); draw(box); }); box.append(add); } return; }
+          box.append(el('div', 'popover-heading', 'Trier par'));
+          for (const property of free) {
+            const button = el('button', 'kit-menu-item'); button.type = 'button'; button.append(propertyLabel(property)); button.setAttribute('aria-label', property.name);
+            button.addEventListener('click', () => { setSorts([{ property: property.id, direction: 'asc' }]); draw(box); });
+            box.append(button);
+          }
+        });
+      }
+
+      /** « Filtrer » : choose a property; the new rule opens at once, as in Notion. */
+      function addFilterMenu(anchor: HTMLElement, database: Page) {
+        openPopover(anchor, 'filter-menu', box => {
+          box.append(el('div', 'popover-heading', 'Filtrer par'));
+          for (const property of choices(database)) {
+            const button = el('button', 'kit-menu-item'); button.type = 'button'; button.append(propertyLabel(property)); button.setAttribute('aria-label', property.name);
+            button.addEventListener('click', () => {
+              const rules = [...filters(), { property: property.id, op: FotionMark.operatorsFor(property.id === 'title' ? 'title' : property.type)[0], ...(property.type === 'checkbox' ? { value: 'true' } : {}) }];
+              setFilters(rules);
+              requestAnimationFrame(() => { const chip = dom.querySelectorAll<HTMLElement>('.database-filter-chip')[rules.length - 1]; if (chip) filterMenu(chip, database, rules.length - 1); });
+            });
+            box.append(button);
+          }
+        });
+      }
+
+      /** One filter rule: operator, value, deletion. Changes apply as they are made. */
+      function filterMenu(anchor: HTMLElement, database: Page, index: number) {
+        openPopover(anchor, 'filter-rule-menu', box => {
+          const rule = filters()[index], property = rule && propertyOf(database, rule.property);
+          if (!rule || !property) return;
+          const change = (patch: Partial<FotionMark.FilterRule>) => { const rules = filters(); rules[index] = { ...rules[index], ...patch }; if (patch.op?.startsWith('is ')) delete rules[index].value; setFilters(rules); };
+          const head = el('div', 'database-rule');
+          const ops = FotionMark.operatorsFor(property.id === 'title' ? 'title' : property.type);
+          head.append(el('span', 'database-rule-name', property.name));
+          if (ops.length > 1) head.append(select('Condition du filtre', ops.map(op => [op, (property.type === 'date' && dateLabels[op]) || operatorLabels[op]] as const), rule.op, op => { change({ op: op as FotionMark.Operator }); value.hidden = op.startsWith('is '); }));
+          box.append(head);
+          let value: HTMLElement;
+          if (property.type === 'checkbox') value = select('Valeur du filtre', [['true', 'Coché'], ['false', 'Non coché']], rule.value ?? 'true', v => change({ value: v }));
+          else if (property.type === 'select' || property.type === 'status' || property.type === 'multi-select') value = select('Valeur du filtre', [['', 'Choisir une option'], ...property.options.map(o => [o.name, o.name] as const)], rule.value ?? '', v => change({ value: v }));
+          else {
+            const input = el('input', 'database-menu-input'); input.setAttribute('aria-label', 'Valeur du filtre'); input.placeholder = 'Saisir une valeur…';
+            if (property.type === 'date') input.type = 'date';
+            if (property.type === 'number') input.inputMode = 'decimal';
+            input.value = rule.value === 'today' ? new Date().toISOString().slice(0, 10) : rule.value ?? '';
+            input.addEventListener('input', () => change({ value: input.value }));
+            input.addEventListener('keydown', event => { if (event.key === 'Enter') closePopover(); });
+            value = input;
+          }
+          value.hidden = rule.op.startsWith('is ');
+          box.append(value, el('div', 'popover-divider'));
+          const remove = el('button', 'kit-menu-item database-menu-danger', 'Supprimer le filtre'); remove.type = 'button';
+          remove.addEventListener('click', () => { setFilters(filters().filter((_, i) => i !== index)); closePopover(); });
+          box.append(remove);
+        });
+      }
+
+      /** Toolbar right of the tabs (Filtrer, Trier, Rechercher) and, under it, the sort and filter chips. */
+      function toolbar(database: Page, tabs: HTMLElement, body: () => void) {
+        const tools = el('div', 'database-tools');
+        const button = (label: string, text: string, active: boolean, onClick: (anchor: HTMLElement) => void) => {
+          const b = el('button', `database-tool${active ? ' active' : ''}`, text); b.type = 'button'; b.setAttribute('aria-label', label);
+          b.addEventListener('click', () => onClick(b)); tools.append(b); return b;
+        };
+        button('Filtrer', 'Filtrer', filters().length > 0, anchor => addFilterMenu(anchor, database));
+        button('Trier', 'Trier', sorts().length > 0, anchor => sortMenu(anchor, database));
+        const field = el('input', 'database-search'); field.placeholder = 'Rechercher…'; field.setAttribute('aria-label', 'Rechercher dans la base');
+        field.value = search ?? ''; field.hidden = search === undefined;
+        field.addEventListener('input', () => { search = field.value; body(); });
+        field.addEventListener('keydown', event => { if (event.key === 'Escape') { search = undefined; field.hidden = true; body(); } });
+        field.addEventListener('blur', () => { if (!field.value) { search = undefined; field.hidden = true; } });
+        button('Rechercher', '⌕', !!search, () => { search ??= ''; field.hidden = false; field.focus(); });
+        tools.append(field); tabs.append(tools);
+        const rules = filters(), order = sorts();
+        if (!rules.length && !order.length) return undefined;
+        const chips = el('div', 'database-chips');
+        if (order.length) {
+          const chip = el('button', 'database-chip database-sort-chip'); chip.type = 'button';
+          const first = propertyOf(database, order[0].property);
+          chip.textContent = order.length > 1 ? `${order.length} tris` : `${order[0].direction === 'desc' ? '↓' : '↑'} ${first?.name ?? order[0].property}`;
+          chip.addEventListener('click', () => sortMenu(chip, database)); chips.append(chip);
+        }
+        rules.forEach((rule, index) => {
+          const property = propertyOf(database, rule.property);
+          const chip = el('button', `database-chip database-filter-chip${rule.value || rule.op.startsWith('is ') ? ' active' : ''}`); chip.type = 'button';
+          const condition = rule.op.startsWith('is ') ? `: ${operatorLabels[rule.op].toLocaleLowerCase()}` : rule.value ? `: ${property?.type === 'checkbox' ? (rule.value === 'true' ? 'coché' : 'non coché') : rule.value}` : '';
+          chip.textContent = `${property?.name ?? rule.property}${condition}`;
+          chip.addEventListener('click', () => filterMenu(chip, database, index)); chips.append(chip);
+        });
+        const add = el('button', 'database-chip database-chip-add', '+ Filtre'); add.type = 'button';
+        add.addEventListener('click', () => addFilterMenu(add, database)); chips.append(add);
+        return chips;
+      }
+      /** A new row created under a filter gets the values it asks for, so it stays visible (Notion does the same). */
+      const filterValues = (database: Page) => Object.fromEntries(filters().flatMap(rule => {
+        const property = propertyOf(database, rule.property);
+        if (!property || property.id === 'title' || !rule.value) return [];
+        if (rule.op === '=' && property.type !== 'date') return [[property.id, FotionMark.writeCell(property, property.type === 'checkbox' ? rule.value === 'true' : rule.value)]];
+        if (rule.op === 'contains' && property.type === 'multi-select') return [[property.id, [rule.value]]];
+        return [];
+      }).filter(([, value]) => value !== undefined));
       const groupBy = (database: Page) => { const properties = schemaOf(database).filter(groupable); return properties.find(p => p.id === settings().groupBy) ?? properties[0]; };
       const newRow = async (database: Page, values?: Record<string, unknown>) => {
-        const created = await host.createRow(database.id, values);
+        const merged = { ...filterValues(database), ...values };
+        const created = await host.createRow(database.id, Object.keys(merged).length ? merged : undefined);
         if (created) requestAnimationFrame(() => dom.querySelector<HTMLInputElement>(`[data-row="${CSS.escape(created.id)}"] .database-title-input`)?.focus());
       };
       const titleInput = (row: Page) => {
@@ -154,8 +291,14 @@ export const DatabaseView = EngineDatabaseView.extend<{ host: DatabaseHost }>({
         tab.append(el('span', 'database-type-icon', layout[2]), current.attrs.label || layout[1]);
         tab.setAttribute('aria-label', 'Options de la vue');
         tab.addEventListener('click', () => viewMenu(tab, database));
-        tabs.append(tab); dom.append(tabs);
-        dom.append(layout[0] === 'board' ? board(database, properties, rows) : table(database, properties, rows));
+        tabs.append(tab);
+        const content = el('div', 'database-content');
+        const body = () => {
+          const shown = FotionMark.queryRows(rows, properties, { filter: filters(), sort: sorts(), search });
+          content.replaceChildren(layout[0] === 'board' ? board(database, properties, shown) : table(database, properties, shown));
+        };
+        const chips = toolbar(database, tabs, body);
+        dom.append(tabs); if (chips) dom.append(chips); dom.append(content); body();
       }
       // Pages changed (saved, renamed, created): the editor marks those transactions.
       const changed = ({ transaction }: { transaction: Transaction }) => { if (transaction.getMeta('pageMentionsChanged')) render(); };
@@ -165,7 +308,7 @@ export const DatabaseView = EngineDatabaseView.extend<{ host: DatabaseHost }>({
         dom,
         update(updated) { if (updated.type !== current.type) return false; current = updated; render(); return true; },
         // Keys, clicks and card drags inside the view belong to its fields, not to the document.
-        stopEvent: event => !!(event.target as HTMLElement).closest?.('input, button, .database-card, .database-column'),
+        stopEvent: event => !!(event.target as HTMLElement).closest?.('input, button, select, .database-card, .database-column'),
         ignoreMutation: () => true,
         destroy() { editor.off('transaction', changed); dom.removeEventListener('focusout', refocusOut); closePopover(); },
       };

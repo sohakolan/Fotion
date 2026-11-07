@@ -289,7 +289,7 @@ Références : [S12](NOTION_REFERENCE.md#s12), [S13](NOTION_REFERENCE.md#s13), [
 
 - [ ] **UI-204** [PARTIEL] En-tête de base : icône, titre, description et menu.
 - [ ] **UI-205** [PARTIEL] Onglets des vues, ajout, menu, renommage et réorganisation.
-- [ ] **UI-206** Barre recherche, filtres, tri, groupement, propriétés et mise en page.
+- [ ] **UI-206** [PARTIEL] Barre recherche, filtres, tri, groupement, propriétés et mise en page.
 - [ ] **UI-207** [PARTIEL] Bouton Nouvelle entrée et choix de modèle.
 - [ ] **UI-208** [PARTIEL] Panneau de propriétés : ajouter, masquer, réordonner, modifier et supprimer.
 - [ ] **UI-209** [PARTIEL] Cellule titre avec icône, ouverture de page et focus.
@@ -321,8 +321,8 @@ Références : [S13](NOTION_REFERENCE.md#s13), [S20](NOTION_REFERENCE.md#s20), [
 - [ ] **UI-230** Formulaire : éditeur, aperçu, champs, erreurs et confirmation.
 - [ ] **UI-231** Fil : carte de page, contenu, pagination et commandes autorisées.
 - [ ] **UI-232** Carte : marqueurs, popup, zoom, recherche et état sans position.
-- [ ] **UI-233** Filtres avancés : groupes ET/OU, badges et menu des opérateurs.
-- [ ] **UI-234** Tri et groupement : ordre, sens, regroupement secondaire et suppression.
+- [ ] **UI-233** [PARTIEL] Filtres avancés : groupes ET/OU, badges et menu des opérateurs.
+- [ ] **UI-234** [PARTIEL] Tri et groupement : ordre, sens, regroupement secondaire et suppression.
 - [ ] **UI-235** Bases vides : démarrage manuel, modèle, import et source liée.
 
 ## 17. Modèles, wiki, boutons et automations — P2
@@ -520,3 +520,5 @@ UI-156, FN-061 : après la comparaison avec la référence, le bloc de code reç
 UI-204, UI-205, UI-207 à UI-211, UI-220 : vue tableau d’une base en ligne — titre éditable, onglet de vue unique, en-têtes avec icône de type (« Aa Nom » pour le titre), « + » pour ajouter une propriété (menu des types), menu de renommage, cellules éditables sur place, pastilles colorées avec les jetons `--tag-*` du kit (clair et sombre), bouton « Ouvrir » au survol de la cellule titre, ligne « + Nouvelle page ». Écarts connus avec Notion : pas de description ni de menu de base, pas de barre filtres/tri, sélecteurs de date et d’options natifs du navigateur (datalist), pas de redimensionnement de colonnes ni de poignée de ligne. Preuve : capture `database-table.png` du [scénario navigateur](../tests/e2e/database.spec.ts).
 
 UI-211 : menu d’options de Notion — options choisies avec ×, champ de recherche qui crée l’option (« Créer … » avec la couleur suivante), options du statut groupées (À faire / En cours / Terminé), Entrée, Retour arrière et Échap. UI-208 : menu de propriété (nom, liste des types cochée, suppression en rouge). UI-219 : propriétés sous le titre d’une ligne ouverte (icône de type, nom, valeur, « Vide », « + Ajouter une propriété ») ; restent les groupes, zones épinglées et le masquage. UI-222, UI-223 : colonnes de 260 px, en-tête pastille + compteur, cartes ombrées avec titre et étiquettes, cible de dépôt surlignée ; restent couvertures, colonnes repliées, menus de colonne. Preuves : captures `database-board.png` et `row-properties.png` du [scénario navigateur](../tests/e2e/database.spec.ts).
+
+UI-206, UI-233, UI-234 (7 novembre 2026) : boutons Filtrer, Trier et loupe à droite de l’onglet (bleus quand actifs), rangée de pastilles (tri, filtres, « + Filtre »), menus de règle. Écarts : listes déroulantes natives au lieu des menus Notion, pas de poignée de réordonnancement des tris, pas de groupes ET/OU. Preuve : capture `database-filters.png` du [scénario navigateur](../tests/e2e/database.spec.ts).

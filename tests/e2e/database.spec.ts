@@ -143,3 +143,51 @@ test('a board groups cards by status and dragging a card changes its value', asy
   await expect(page.locator('.save-status')).toHaveText('Enregistré');
   expect((await stored(page)).find(p => p.id === host.id)!.content).toContain(`::database-view{src=${database.id}}`);
 });
+
+test('a view filters, sorts and searches its rows and writes them in the directive', async ({ page }) => {
+  const host = await createDocument(page, 'Filtres');
+  await slash(page, '/vue tableau', 'Vue tableau');
+  const view = page.locator('.fm-database-view');
+  for (const name of ['Banane', 'Abricot', 'Cerise']) {
+    await view.getByRole('button', { name: '+ Nouvelle page' }).click();
+    const title = view.locator('.database-title-input:focus');
+    await expect(title).toHaveCount(1);
+    await title.fill(name); await title.press('Enter');
+    await expect(view.getByLabel('Nom de la ligne').last()).toHaveValue(name);
+  }
+  await view.getByLabel('Étiquettes de Cerise').click();
+  await page.locator('.option-picker').getByLabel('Rechercher ou créer une option').fill('Rouge'); await page.keyboard.press('Enter');
+  await page.keyboard.press('Escape');
+  const names = view.getByLabel('Nom de la ligne');
+  const values = () => expect.poll(() => names.evaluateAll(inputs => inputs.map(input => (input as HTMLInputElement).value)));
+
+  await view.getByRole('button', { name: 'Trier' }).click();
+  await page.locator('.sort-menu').getByRole('button', { name: 'Nom' }).click();
+  await values().toEqual(['Abricot', 'Banane', 'Cerise']);
+  await page.locator('.sort-menu').getByLabel('Ordre du tri').selectOption('desc');
+  await values().toEqual(['Cerise', 'Banane', 'Abricot']);
+  await page.keyboard.press('Escape');
+  await expect(view.locator('.database-sort-chip')).toHaveText('↓ Nom');
+
+  await view.getByRole('button', { name: 'Filtrer' }).click();
+  await page.locator('.filter-menu').getByRole('button', { name: 'Étiquettes' }).click();
+  await page.locator('.filter-rule-menu').getByLabel('Valeur du filtre').selectOption('Rouge');
+  await values().toEqual(['Cerise']);
+  await page.keyboard.press('Escape');
+  await expect(view.locator('.database-filter-chip')).toHaveText('Étiquettes: Rouge');
+
+  // A row created under the filter takes its value and stays visible.
+  await view.getByRole('button', { name: '+ Nouvelle page' }).click();
+  await expect(names).toHaveCount(2);
+  await expect(page.locator('.save-status')).toHaveText('Enregistré');
+  const content = (await stored(page)).find(p => p.id === host.id)!.content;
+  expect(content).toMatch(/::database-view\{src=\S+ sort=title:desc filter="tags contains Rouge"\}/);
+
+  await view.locator('.database-filter-chip').click();
+  await page.locator('.filter-rule-menu').getByRole('button', { name: 'Supprimer le filtre' }).click();
+  await expect(names).toHaveCount(4);
+  await view.getByRole('button', { name: 'Rechercher' }).click();
+  await view.getByLabel('Rechercher dans la base').fill('ban');
+  await values().toEqual(['Banane']);
+  await page.screenshot({ path: test.info().outputPath('database-filters.png') });
+});
