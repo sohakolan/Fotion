@@ -2197,3 +2197,8 @@ h3) {
 .database-gallery-item .database-item-values { padding: 0 10px 10px; }
 .database-item-values { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; font-size: 12px; color: var(--muted); }
 .database-gallery .database-new-row { grid-column: 1 / -1; }
+
+/* Locked page: database fields show their values without edit affordances. */
+.database-readonly :is(.database-new-row, .database-add, .database-column-add, .page-property-add, .database-chip-add) { display: none; }
+.database-readonly button:disabled { cursor: default; opacity: 1; }
+.database-readonly .database-tool:disabled { opacity: .4; }

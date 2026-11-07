@@ -230,3 +230,12 @@ export function renderProperties(container: HTMLElement, host: DatabaseHost, row
   add.addEventListener('click', () => addPropertyMenu(add, host, database.id));
   container.append(add);
 }
+
+/** A locked page: values and menus are shown, not edited; opening a row and searching still work. */
+export function freeze(container: HTMLElement) {
+  container.classList.add('database-readonly');
+  for (const field of container.querySelectorAll<HTMLInputElement | HTMLButtonElement>('input, button')) {
+    if (field.matches('.database-open, .database-card-title, .database-search, .database-tool[aria-label="Rechercher"]')) continue;
+    if (field instanceof HTMLInputElement && field.type !== 'checkbox') field.readOnly = true; else field.disabled = true;
+  }
+}

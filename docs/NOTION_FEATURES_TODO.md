@@ -714,3 +714,5 @@ FN-178 : « Ouvrir » (tableau) et le titre d’une carte (Kanban) ouvrent la li
 Propriétés par vue (7 novembre 2026) : menu de la vue → « Propriétés », masquer ou réafficher une propriété dans cette vue seulement (FN-203 partiel). Reste le réordonnancement par glisser.
 
 Vues liste et galerie (7 novembre 2026) : `/vue liste`, `/vue galerie`, ou « Options de la vue » → Disposition. Liste : une ligne par page, icône, titre, valeurs visibles non vides à droite. Galerie : grille de cartes (zone d’aperçu, titre, valeurs). Le titre ouvre l’aperçu latéral ; filtres, tris, recherche et propriétés visibles s’appliquent. Restent l’aperçu du contenu ou de la couverture dans la carte et la taille des cartes (FN-207, FN-208 partiels). Preuve : capture `database-gallery.png`.
+
+Page verrouillée (7 novembre 2026) : les vues de base et les propriétés sous le titre passent en lecture seule (champs non modifiables, « + Nouvelle page », « + » et « + Ajouter une propriété » masqués, glisser désactivé) ; « Ouvrir » et la recherche restent disponibles ; déverrouiller rend la main sans rechargement.

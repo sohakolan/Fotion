@@ -1,6 +1,6 @@
 import { DatabaseView as EngineDatabaseView, FotionMark, type Page } from '../../../../engine';
 import type { Transaction } from '@tiptap/pm/state';
-import { el, schemaOf, typeIcons, pill, valueEditor, propertyMenu, addPropertyMenu, openPopover, closePopover, store, type DatabaseHost } from '../lib/database-cells';
+import { el, freeze, schemaOf, typeIcons, pill, valueEditor, propertyMenu, addPropertyMenu, openPopover, closePopover, store, type DatabaseHost } from '../lib/database-cells';
 
 export type { DatabaseHost } from '../lib/database-cells';
 type Property = FotionMark.Property;
@@ -42,7 +42,7 @@ export const DatabaseView = EngineDatabaseView.extend<{ host: DatabaseHost }>({
   addOptions: () => ({ host: { pageId: () => '', pages: () => [], update: () => undefined, createRow: async () => undefined, open: () => undefined } }),
   addNodeView() {
     const host = this.options.host;
-    return ({ node, editor, getPos }) => {
+    return ({ node, editor, getPos, view }) => {
       let current = node;
       const dom = el('div', 'fm-database-view'); dom.contentEditable = 'false';
       const attributes = () => (current.attrs.attributes ?? {}) as Record<string, string>;
@@ -329,6 +329,7 @@ export const DatabaseView = EngineDatabaseView.extend<{ host: DatabaseHost }>({
       }
 
       function render() {
+        dom.classList.remove('database-readonly');
         // A field being typed in is never replaced; the view re-renders when it loses focus.
         if (document.activeElement instanceof HTMLInputElement && dom.contains(document.activeElement)) return;
         dom.replaceChildren();
@@ -355,13 +356,17 @@ export const DatabaseView = EngineDatabaseView.extend<{ host: DatabaseHost }>({
         const body = () => {
           const shown = FotionMark.queryRows(rows, schemaOf(database), { filter: filters(), sort: sorts(), search });
           content.replaceChildren(layout[0] === 'board' ? board(database, properties, shown) : layout[0] === 'table' ? table(database, properties, shown) : pages(database, properties, shown, layout[0]));
+          if (!editor.isEditable) freeze(content);
         };
         const chips = toolbar(database, tabs, body);
         dom.append(tabs); if (chips) dom.append(chips); dom.append(content); body();
+        if (!editor.isEditable) freeze(dom);
       }
       // Pages changed (saved, renamed, created): the editor marks those transactions.
       const changed = ({ transaction }: { transaction: Transaction }) => { if (transaction.getMeta('pageMentionsChanged')) render(); };
       const refocusOut = (event: FocusEvent) => { if (!dom.contains(event.relatedTarget as globalThis.Node)) requestAnimationFrame(render); };
+      // Locking the page toggles contenteditable on the editor; the view follows.
+      const lock = new MutationObserver(() => render()); lock.observe(view.dom, { attributes: true, attributeFilter: ['contenteditable'] });
       editor.on('transaction', changed); dom.addEventListener('focusout', refocusOut); render();
       return {
         dom,
@@ -369,7 +374,7 @@ export const DatabaseView = EngineDatabaseView.extend<{ host: DatabaseHost }>({
         // Keys, clicks and card drags inside the view belong to its fields, not to the document.
         stopEvent: event => !!(event.target as HTMLElement).closest?.('input, button, select, .database-card, .database-column'),
         ignoreMutation: () => true,
-        destroy() { editor.off('transaction', changed); dom.removeEventListener('focusout', refocusOut); closePopover(); },
+        destroy() { lock.disconnect(); editor.off('transaction', changed); dom.removeEventListener('focusout', refocusOut); closePopover(); },
       };
     };
   },

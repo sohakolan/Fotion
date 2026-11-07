@@ -164,6 +164,18 @@ test('a board groups cards by status and dragging a card changes its value', asy
   await expect(view.locator('.database-table')).toBeVisible();
   await expect(page.locator('.save-status')).toHaveText('Enregistré');
   expect((await stored(page)).find(p => p.id === host.id)!.content).toContain(`::database-view{src=${database.id}}`);
+
+  // A locked page shows the view without editing it; unlocking gives the fields back.
+  await page.getByRole('button', { name: 'Options de la page' }).click();
+  await page.getByRole('menuitemcheckbox', { name: 'Verrouiller la page' }).click();
+  await page.keyboard.press('Escape');
+  await expect(view.getByRole('button', { name: '+ Nouvelle page' })).toBeHidden();
+  await expect(view.getByLabel('Nom de la ligne')).toHaveAttribute('readonly', '');
+  await expect(view.getByLabel(/^Statut de/)).toBeDisabled();
+  await expect(view.getByRole('button', { name: 'Ouvrir' })).toBeEnabled();
+  await page.locator('.locked-indicator').click();
+  await expect(view.getByLabel(/^Statut de/)).toBeEnabled();
+  await expect(view.getByRole('button', { name: '+ Nouvelle page' })).toBeVisible();
 });
 
 test('a view filters, sorts and searches its rows and writes them in the directive', async ({ page }) => {
