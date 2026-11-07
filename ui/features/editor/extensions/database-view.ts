@@ -1,176 +1,161 @@
-import { DatabaseView as EngineDatabaseView, FotionMark, type Page, type PageEdit } from '../../../../engine';
+import { DatabaseView as EngineDatabaseView, FotionMark, type Page } from '../../../../engine';
 import type { Transaction } from '@tiptap/pm/state';
+import { el, schemaOf, typeIcons, pill, valueEditor, propertyMenu, addPropertyMenu, openPopover, closePopover, store, type DatabaseHost } from '../lib/database-cells';
 
+export type { DatabaseHost } from '../lib/database-cells';
 type Property = FotionMark.Property;
-/** What the table needs from the application: pages, saving and navigation. */
-export interface DatabaseHost {
-  pageId: () => string;
-  pages: () => Page[];
-  update: (id: string, patch: Partial<PageEdit>) => void;
-  createRow: (database: string) => Promise<Page | undefined>;
-  open: (id: string) => void;
-}
-
-const typeLabels: Record<FotionMark.PropertyType, string> = { text: 'Texte', number: 'Nombre', select: 'Sélection', 'multi-select': 'Sélection multiple', status: 'Statut', date: 'Date', checkbox: 'Case à cocher', url: 'URL', email: 'E-mail', phone: 'Téléphone' };
-const typeIcons: Record<FotionMark.PropertyType, string> = { text: '≡', number: '#', select: '⌄', 'multi-select': '☰', status: '◔', date: '▦', checkbox: '☑', url: '🔗', email: '@', phone: '☏' };
-const el = <K extends keyof HTMLElementTagNameMap>(tag: K, className = '', text = '') => { const node = document.createElement(tag); if (className) node.className = className; if (text) node.textContent = text; return node; };
+const layouts = [['table', 'Tableau', '⊞'], ['board', 'Kanban', '▥']] as const;
+const groupable = (property: Property) => property.type === 'select' || property.type === 'status';
 
 /**
- * Notion's table view. Rows are the pages whose parent is the database; values are their front matter keys.
- * The view never holds data of its own: every change goes through the host, which saves the page files.
+ * Notion's database views (table, board). Rows are the pages whose parent is the database; values are their
+ * front matter keys. The view holds no data: every change goes through the host, which saves the page files.
  */
 export const DatabaseView = EngineDatabaseView.extend<{ host: DatabaseHost }>({
   addOptions: () => ({ host: { pageId: () => '', pages: () => [], update: () => undefined, createRow: async () => undefined, open: () => undefined } }),
   addNodeView() {
     const host = this.options.host;
-    return ({ node, editor }) => {
+    return ({ node, editor, getPos }) => {
       let current = node;
       const dom = el('div', 'fm-database-view'); dom.contentEditable = 'false';
-      let menu: HTMLElement | undefined;
-      const closeMenu = () => { menu?.remove(); menu = undefined; };
-      const source = () => (current.attrs.attributes?.src as string | undefined) || host.pageId();
-      const database = () => host.pages().find(page => page.id === source());
-      const schema = (page: Page) => FotionMark.readDatabase(page.database)?.properties ?? [];
-      const saveSchema = (page: Page, next: Record<string, unknown>) => host.update(page.id, { database: next });
+      const attributes = () => (current.attrs.attributes ?? {}) as Record<string, string>;
+      const settings = () => FotionMark.readAttributes(FotionMark.blocks.get('database-view')!.attributes, attributes());
+      const source = () => (settings().src as string | undefined) || host.pageId();
+      /** View settings live in the directive: `layout`, `groupBy`. Defaults are never written. */
+      const setAttributes = (patch: Record<string, string | undefined>) => {
+        const pos = getPos(); if (typeof pos !== 'number' || !editor.isEditable) return;
+        const next = { ...attributes(), ...patch };
+        for (const [key, value] of Object.entries(next)) if (value === undefined || (key === 'layout' && value === 'table')) delete next[key];
+        editor.view.dispatch(editor.state.tr.setNodeMarkup(pos, undefined, { ...current.attrs, attributes: next }));
+      };
 
-      function openMenu(anchor: HTMLElement, build: (box: HTMLElement) => void) {
-        closeMenu();
-        menu = el('div', 'database-menu popover kit-menu');
-        build(menu);
-        const box = anchor.getBoundingClientRect();
-        Object.assign(menu.style, { position: 'fixed', left: `${Math.min(box.left, window.innerWidth - 248)}px`, top: `${box.bottom + 4}px` });
-        document.body.append(menu);
-        menu.querySelector<HTMLElement>('input, button')?.focus();
-      }
-      const outside = (event: PointerEvent) => { if (menu && !menu.contains(event.target as globalThis.Node)) closeMenu(); };
-      document.addEventListener('pointerdown', outside, true);
-
-      function propertyMenu(anchor: HTMLElement, page: Page, property: Property) {
-        openMenu(anchor, box => {
-          const name = el('input', 'database-menu-input'); name.value = property.name; name.setAttribute('aria-label', 'Nom de la propriété');
-          const rename = () => { const value = name.value.trim(); if (value && value !== property.name) saveSchema(page, FotionMark.updateProperty(page.database, property.id, { name: value })); };
-          name.addEventListener('keydown', event => { if (event.key === 'Enter') { rename(); closeMenu(); } if (event.key === 'Escape') closeMenu(); });
-          name.addEventListener('blur', rename);
-          box.append(name, el('div', 'popover-heading', `Type : ${typeLabels[property.type]}`));
-        });
-      }
-      function addPropertyMenu(anchor: HTMLElement, page: Page) {
-        openMenu(anchor, box => {
-          box.append(el('div', 'popover-heading', 'Type'));
-          for (const type of FotionMark.propertyTypes) {
-            const item = el('button', 'kit-menu-item'); item.type = 'button';
-            item.append(el('span', 'database-type-icon', typeIcons[type]), document.createTextNode(typeLabels[type]));
-            item.addEventListener('click', () => {
-              const taken = schema(page);
-              const used = new Set(taken.map(p => p.name));
-              let name = typeLabels[type];
-              for (let n = 2; used.has(name); n++) name = `${typeLabels[type]} ${n}`;
-              saveSchema(page, FotionMark.addProperty(page.database, { id: FotionMark.newPropertyId(name, taken.map(p => p.id)), name, type }));
-              closeMenu();
-            });
-            box.append(item);
+      function viewMenu(anchor: HTMLElement, database: Page) {
+        openPopover(anchor, 'view-menu', box => {
+          box.append(el('div', 'popover-heading', 'Disposition'));
+          for (const [id, label, icon] of layouts) {
+            const button = el('button', 'kit-menu-item'); button.type = 'button';
+            button.append(el('span', 'database-type-icon', icon), label);
+            if (settings().layout === id) button.append(el('span', 'database-menu-check', '✓'));
+            button.addEventListener('click', () => { closePopover(); setAttributes({ layout: id }); });
+            box.append(button);
+          }
+          if (settings().layout !== 'board') return;
+          box.append(el('div', 'popover-heading', 'Grouper par'));
+          for (const property of schemaOf(database).filter(groupable)) {
+            const button = el('button', 'kit-menu-item'); button.type = 'button';
+            button.append(el('span', 'database-type-icon', typeIcons[property.type]), property.name);
+            if (groupBy(database)?.id === property.id) button.append(el('span', 'database-menu-check', '✓'));
+            button.addEventListener('click', () => { closePopover(); setAttributes({ groupBy: property.id }); });
+            box.append(button);
           }
         });
       }
+      const groupBy = (database: Page) => { const properties = schemaOf(database).filter(groupable); return properties.find(p => p.id === settings().groupBy) ?? properties[0]; };
+      const newRow = async (database: Page, values?: Record<string, unknown>) => {
+        const created = await host.createRow(database.id, values);
+        if (created) requestAnimationFrame(() => dom.querySelector<HTMLInputElement>(`[data-row="${CSS.escape(created.id)}"] .database-title-input`)?.focus());
+      };
+      const titleInput = (row: Page) => {
+        const title = el('input', 'database-input database-title-input'); title.value = row.title; title.placeholder = 'Sans titre'; title.setAttribute('aria-label', 'Nom de la ligne');
+        title.addEventListener('change', () => host.update(row.id, { title: title.value }));
+        title.addEventListener('keydown', event => { if (event.key === 'Enter') title.blur(); });
+        return title;
+      };
 
-      /** Writes one cell; a new select option is added to the schema with the next Notion colour. */
-      function commit(page: Page, row: Page, property: Property, input: string | boolean) {
-        const stored = FotionMark.writeCell(property, input);
-        const values = { ...(row.values ?? {}) };
-        if (stored === undefined) delete values[property.id]; else values[property.id] = stored;
-        if (JSON.stringify(values) === JSON.stringify(row.values ?? {})) return;
-        if (['select', 'status', 'multi-select'].includes(property.type)) {
-          const names = Array.isArray(stored) ? stored as string[] : typeof stored === 'string' ? [stored] : [];
-          const options = [...property.options];
-          for (const name of names) if (!options.some(option => option.name === name)) options.push({ name, color: FotionMark.nextOptionColor(options) });
-          if (options.length !== property.options.length) saveSchema(page, FotionMark.updateProperty(page.database, property.id, { options }));
+      function table(database: Page, properties: Property[], rows: Page[]) {
+        const scroll = el('div', 'database-scroll'), table = el('table', 'database-table'), head = el('tr');
+        const nameHead = el('th', 'database-head'); nameHead.append(el('span', 'database-type-icon', 'Aa'), 'Nom'); head.append(nameHead);
+        for (const property of properties) {
+          const th = el('th', 'database-head'), button = el('button'); button.type = 'button';
+          button.append(el('span', 'database-type-icon', typeIcons[property.type]), property.name);
+          button.addEventListener('click', () => propertyMenu(button, host, database.id, property.id));
+          th.append(button); head.append(th);
         }
-        host.update(row.id, { values });
+        const add = el('th', 'database-head database-add'), plus = el('button', '', '+'); plus.type = 'button'; plus.setAttribute('aria-label', 'Ajouter une propriété');
+        plus.addEventListener('click', () => addPropertyMenu(plus, host, database.id)); add.append(plus); head.append(add);
+        const thead = el('thead'), body = el('tbody'); thead.append(head);
+        for (const row of rows) {
+          const tr = el('tr'); tr.dataset.row = row.id;
+          const titleCell = el('td', 'database-cell database-cell-title');
+          const open = el('button', 'database-open', 'Ouvrir'); open.type = 'button'; open.addEventListener('click', () => host.open(row.id));
+          titleCell.append(titleInput(row), open); tr.append(titleCell);
+          for (const property of properties) { const td = el('td', `database-cell database-cell-${property.type}`); td.append(valueEditor(host, database, row, property)); tr.append(td); }
+          tr.append(el('td', 'database-cell')); body.append(tr);
+        }
+        table.append(thead, body); scroll.append(table);
+        const button = el('button', 'database-new-row', '+ Nouvelle page'); button.type = 'button';
+        button.addEventListener('click', () => void newRow(database));
+        scroll.append(button);
+        return scroll;
       }
-      function pill(property: Property, name: string) {
-        const color = property.options.find(option => option.name === name)?.color ?? 'default';
-        const tag = el('span', 'database-tag', name); tag.dataset.color = color; return tag;
-      }
-      function cell(page: Page, row: Page, property: Property) {
-        const td = el('td', `database-cell database-cell-${property.type}`);
-        const value = FotionMark.readCell(property, row.values?.[property.id]);
-        if (value === undefined) { td.classList.add('database-cell-invalid'); td.textContent = String(row.values?.[property.id]); td.title = 'Valeur conservée : elle ne correspond pas au type de la propriété.'; return td; }
-        const label = `${property.name} de ${row.title || 'Sans titre'}`;
-        if (property.type === 'checkbox') {
-          const box = el('input'); box.type = 'checkbox'; box.checked = value === true; box.setAttribute('aria-label', label);
-          box.addEventListener('change', () => commit(page, row, property, box.checked));
-          td.append(box); return td;
+
+      /** Notion's board: one column per option (« Sans … » first), cards dragged between columns change the value. */
+      function board(database: Page, properties: Property[], rows: Page[]) {
+        const group = groupBy(database);
+        const wrap = el('div', 'database-board');
+        if (!group) { wrap.append(el('div', 'database-missing', 'Ajoutez une propriété Sélection ou Statut pour regrouper les cartes.')); return wrap; }
+        const valueOf = (row: Page) => { const value = FotionMark.readCell(group, row.values?.[group.id]); return typeof value === 'string' ? value : ''; };
+        const names = group.options.map(option => option.name);
+        const columns = [...(rows.some(row => !names.includes(valueOf(row))) ? [''] : []), ...names];
+        for (const name of columns) {
+          const cards = rows.filter(row => name ? valueOf(row) === name : !names.includes(valueOf(row)));
+          const column = el('div', 'database-column'); column.dataset.group = name;
+          const header = el('div', 'database-column-header');
+          header.append(name ? pill(group, name) : el('span', 'database-tag', `Sans ${group.name.toLocaleLowerCase()}`), el('span', 'database-count', String(cards.length)));
+          column.append(header);
+          for (const row of cards) {
+            const card = el('div', 'database-card'); card.draggable = editor.isEditable; card.dataset.row = row.id;
+            const title = el('button', 'database-card-title', row.title || 'Sans titre'); title.type = 'button';
+            if (row.icon) title.prepend(el('span', 'database-card-icon', row.icon));
+            title.addEventListener('click', () => host.open(row.id));
+            card.append(title);
+            for (const property of properties.filter(p => p.id !== group.id && (p.type === 'select' || p.type === 'multi-select' || p.type === 'status'))) {
+              const used = FotionMark.optionNames(FotionMark.readCell(property, row.values?.[property.id]));
+              if (!used.length) continue;
+              const tags = el('div', 'database-card-tags'); used.forEach(n => tags.append(pill(property, n))); card.append(tags);
+            }
+            card.addEventListener('dragstart', event => { event.dataTransfer?.setData('application/x-fotion-row', row.id); card.classList.add('dragging'); });
+            card.addEventListener('dragend', () => card.classList.remove('dragging'));
+            column.append(card);
+          }
+          column.addEventListener('dragover', event => { if (event.dataTransfer?.types.includes('application/x-fotion-row')) { event.preventDefault(); column.classList.add('drop-target'); } });
+          column.addEventListener('dragleave', () => column.classList.remove('drop-target'));
+          column.addEventListener('drop', event => {
+            event.preventDefault(); column.classList.remove('drop-target');
+            const row = host.pages().find(page => page.id === event.dataTransfer?.getData('application/x-fotion-row'));
+            if (row && valueOf(row) !== name) store(host, database, row, group, FotionMark.writeCell(group, name));
+          });
+          const add = el('button', 'database-column-add', '+ Nouvelle page'); add.type = 'button';
+          add.addEventListener('click', () => void newRow(database, name ? { [group.id]: name } : undefined));
+          column.append(add); wrap.append(column);
         }
-        const input = el('input', 'database-input');
-        input.setAttribute('aria-label', label);
-        input.value = Array.isArray(value) ? value.join(', ') : value === null ? '' : String(value);
-        if (property.type === 'date') input.type = 'date';
-        if (property.type === 'number') input.inputMode = 'decimal';
-        if (['select', 'status', 'multi-select'].includes(property.type)) {
-          const list = el('datalist'); list.id = `database-options-${Math.random().toString(36).slice(2)}`;
-          for (const option of property.options) list.append(Object.assign(el('option'), { value: option.name }));
-          input.setAttribute('list', list.id);
-          const tags = el('div', 'database-tags');
-          for (const name of Array.isArray(value) ? value : value ? [String(value)] : []) tags.append(pill(property, name));
-          tags.addEventListener('click', () => { td.classList.add('editing'); input.focus(); });
-          input.addEventListener('blur', () => td.classList.remove('editing'));
-          td.append(tags, list);
-        }
-        input.addEventListener('change', () => commit(page, row, property, input.value));
-        input.addEventListener('keydown', event => { if (event.key === 'Enter') input.blur(); if (event.key === 'Escape') { input.value = Array.isArray(value) ? value.join(', ') : value === null ? '' : String(value); input.blur(); } });
-        td.append(input); return td;
+        return wrap;
       }
 
       function render() {
         // A field being typed in is never replaced; the view re-renders when it loses focus.
         if (document.activeElement instanceof HTMLInputElement && dom.contains(document.activeElement)) return;
         dom.replaceChildren();
-        const page = database();
-        if (!page || page.trashed || !FotionMark.readDatabase(page.database)) {
-          dom.append(el('div', 'database-missing', page ? 'Cette page n’est pas une base de données.' : 'Base de données introuvable.'));
+        const database = host.pages().find(page => page.id === source());
+        if (!database || database.trashed || !FotionMark.readDatabase(database.database)) {
+          dom.append(el('div', 'database-missing', database ? 'Cette page n’est pas une base de données.' : 'Base de données introuvable.'));
           return;
         }
-        const properties = schema(page);
-        const rows = host.pages().filter(row => row.parent === page.id && !row.trashed);
-        if (page.id !== host.pageId()) {
-          const title = el('input', 'database-title'); title.value = page.title; title.placeholder = 'Sans titre'; title.setAttribute('aria-label', 'Nom de la base de données');
-          title.addEventListener('change', () => host.update(page.id, { title: title.value }));
+        const properties = schemaOf(database);
+        const rows = host.pages().filter(row => row.parent === database.id && !row.trashed);
+        if (database.id !== host.pageId()) {
+          const title = el('input', 'database-title'); title.value = database.title; title.placeholder = 'Sans titre'; title.setAttribute('aria-label', 'Nom de la base de données');
+          title.addEventListener('change', () => host.update(database.id, { title: title.value }));
           title.addEventListener('keydown', event => { if (event.key === 'Enter') title.blur(); });
           dom.append(title);
         }
-        const tabs = el('div', 'database-tabs'); tabs.append(el('span', 'database-tab', `⊞ ${current.attrs.label || 'Tableau'}`)); dom.append(tabs);
-        const scroll = el('div', 'database-scroll');
-        const table = el('table', 'database-table');
-        const head = el('tr');
-        const nameHead = el('th', 'database-head'); nameHead.append(el('span', 'database-type-icon', 'Aa'), document.createTextNode('Nom')); head.append(nameHead);
-        for (const property of properties) {
-          const th = el('th', 'database-head'); const button = el('button'); button.type = 'button';
-          button.append(el('span', 'database-type-icon', typeIcons[property.type]), document.createTextNode(property.name));
-          button.addEventListener('click', () => propertyMenu(button, page, property));
-          th.append(button); head.append(th);
-        }
-        const add = el('th', 'database-head database-add'); const plus = el('button', '', '+'); plus.type = 'button'; plus.setAttribute('aria-label', 'Ajouter une propriété');
-        plus.addEventListener('click', () => addPropertyMenu(plus, page)); add.append(plus); head.append(add);
-        const thead = el('thead'); thead.append(head);
-        const body = el('tbody');
-        for (const row of rows) {
-          const tr = el('tr');
-          const titleCell = el('td', 'database-cell database-cell-title');
-          const title = el('input', 'database-input'); title.value = row.title; title.placeholder = 'Sans titre'; title.setAttribute('aria-label', 'Nom de la ligne');
-          title.addEventListener('change', () => host.update(row.id, { title: title.value }));
-          title.addEventListener('keydown', event => { if (event.key === 'Enter') title.blur(); });
-          const open = el('button', 'database-open', 'Ouvrir'); open.type = 'button'; open.addEventListener('click', () => host.open(row.id));
-          titleCell.append(title, open); tr.append(titleCell);
-          for (const property of properties) tr.append(cell(page, row, property));
-          tr.append(el('td', 'database-cell')); body.append(tr);
-        }
-        table.append(thead, body); scroll.append(table);
-        const newRow = el('button', 'database-new-row', '+ Nouvelle page'); newRow.type = 'button';
-        newRow.addEventListener('click', async () => {
-          const created = await host.createRow(page.id);
-          if (created) requestAnimationFrame(() => dom.querySelector<HTMLInputElement>('tbody tr:last-child .database-cell-title input')?.focus());
-        });
-        scroll.append(newRow); dom.append(scroll);
+        const layout = layouts.find(([id]) => id === settings().layout) ?? layouts[0];
+        const tabs = el('div', 'database-tabs'), tab = el('button', 'database-tab'); tab.type = 'button';
+        tab.append(el('span', 'database-type-icon', layout[2]), current.attrs.label || layout[1]);
+        tab.setAttribute('aria-label', 'Options de la vue');
+        tab.addEventListener('click', () => viewMenu(tab, database));
+        tabs.append(tab); dom.append(tabs);
+        dom.append(layout[0] === 'board' ? board(database, properties, rows) : table(database, properties, rows));
       }
       // Pages changed (saved, renamed, created): the editor marks those transactions.
       const changed = ({ transaction }: { transaction: Transaction }) => { if (transaction.getMeta('pageMentionsChanged')) render(); };
@@ -179,10 +164,10 @@ export const DatabaseView = EngineDatabaseView.extend<{ host: DatabaseHost }>({
       return {
         dom,
         update(updated) { if (updated.type !== current.type) return false; current = updated; render(); return true; },
-        // Keys and clicks inside the table belong to its fields, not to the document.
-        stopEvent: event => !!(event.target as HTMLElement).closest?.('input, button, .database-tags'),
+        // Keys, clicks and card drags inside the view belong to its fields, not to the document.
+        stopEvent: event => !!(event.target as HTMLElement).closest?.('input, button, .database-card, .database-column'),
         ignoreMutation: () => true,
-        destroy() { editor.off('transaction', changed); dom.removeEventListener('focusout', refocusOut); document.removeEventListener('pointerdown', outside, true); closeMenu(); },
+        destroy() { editor.off('transaction', changed); dom.removeEventListener('focusout', refocusOut); closePopover(); },
       };
     };
   },

@@ -94,7 +94,7 @@ Le plus gros chantier de parité. **Aucune interface avant que FM-053 à FM-058 
 - [x] **FM-054** [DÉCIDÉ 2026-11-07] Schéma : liste ordonnée `{ id, name, type, options… }` ; l’`id` stable sert de clé YAML pour survivre aux renommages (FN-172).
 - [ ] **FM-055** [PARTIEL] Lecture d’une base depuis le coffre sans cache : schéma + lignes reconstruits à chaque chargement, cache seulement en mémoire et invalidé par version de fichier (FN-181).
 - [ ] **FM-056** [PARTIEL] Valeur inconnue, mal typée ou propriété supprimée : conservée dans le YAML de la ligne, signalée, jamais effacée (FN-201).
-- [ ] **FM-057** Renommer une propriété ne réécrit aucune ligne ; changer son type affiche l’aperçu de conversion et garde l’ancienne valeur tant qu’elle n’est pas convertie (FN-173).
+- [ ] **FM-057** [PARTIEL] Renommer une propriété ne réécrit aucune ligne ; changer son type affiche l’aperçu de conversion et garde l’ancienne valeur tant qu’elle n’est pas convertie (FN-173).
 - [ ] **FM-058** [PARTIEL] Une ligne reste un fichier Markdown ordinaire lisible et éditable dans Obsidian (propriétés YAML natives d’Obsidian quand les types coïncident).
 
 ### Types de propriétés (écriture YAML)
@@ -115,7 +115,7 @@ Le plus gros chantier de parité. **Aucune interface avant que FM-053 à FM-058 
 - [x] **FM-069** [DÉCIDÉ 2026-11-07] Vue = feuille `::database-view{src=<base> layout=table …}` dans une page ; la page de la base contient ses propres vues. Plusieurs vues d’une même base sans dupliquer les données (FN-084, FN-168, FN-169).
 - [ ] **FM-070** [PARTIEL] Attributs communs : `layout` (`table`, `board`, `list`, `gallery`, `calendar`, `timeline`, `chart`, `form`, `feed`, `map`), `title`, `properties` (liste ordonnée, visibles), `wrap`, `limit` (FN-202 à FN-205, FN-222).
 - [ ] **FM-071** Filtres : syntaxe d’expression d’une ligne (`status = "En cours" and due < today`) dans un attribut `filter`, avec groupes ET/OU (FN-216, FN-217).
-- [ ] **FM-072** Tris `sort="due:asc,priority:desc"` et groupes `groupBy`, `subGroupBy`, `hideEmpty` (FN-218 à FN-220).
+- [ ] **FM-072** [PARTIEL] Tris `sort="due:asc,priority:desc"` et groupes `groupBy`, `subGroupBy`, `hideEmpty` (FN-218 à FN-220).
 - [ ] **FM-073** Paramètres propres à chaque disposition : `cardSize`, `cover`, `dateProperty`, `scale`, `chartType`… déclarés en `enum` (FN-206 à FN-211).
 - [ ] **FM-074** Largeur des colonnes et ordre manuel des cartes : `columnWidths` et ordre stocké dans le schéma, pas dans chaque ligne (FN-203, FN-219).
 - [ ] **FM-075** Calculs de pied de colonne `calc="price:sum,done:percent-checked"` (FN-224).
@@ -178,3 +178,7 @@ FM-053, FM-054, FM-069 : une base est une page dont l’en-tête porte `database
 Restent pour ces cases : formats numériques (FM-059), suppression/réordonnancement des options (FM-060), groupes de statut visibles (FM-061), heures, intervalles et fuseaux (FM-062), dispositions autres que `table` (FM-070), signalement visible des problèmes de schéma (FM-056).
 
 Preuves : `tests/unit/fotionmark.test.ts` (schéma, cellules, directive), `tests/unit/vault.test.ts` (valeurs YAML, cellule vidée, clés étrangères, schéma refusé), `tests/unit/engine.test.ts` (aller-retour éditeur), [scénario navigateur](../tests/e2e/database.spec.ts) (création par `/vue tableau`, ligne, propriété date, étiquettes, rechargement, lignes absentes de la barre latérale).
+
+## Avancement — Kanban, menus et fiche de ligne (7 novembre 2026)
+
+FM-070 : disposition `board` ; FM-072 : `groupBy` (Sélection ou Statut) ; les réglages sont écrits dans la directive, la valeur par défaut jamais. FM-057 : changement de type avec conversion (`convertValue`) — une valeur non convertible reste intacte ; renommer ne touche aucune ligne ; supprimer une propriété laisse ses valeurs dans les lignes. Restent l’aperçu de conversion avant validation (FM-057), `subGroupBy` et `hideEmpty` (FM-072). Preuves : `tests/unit/fotionmark.test.ts` (conversions, suppression, directive `board`), [scénarios navigateur](../tests/e2e/database.spec.ts).

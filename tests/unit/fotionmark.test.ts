@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { parseDirective, parseAttributes, serializeAttributes, serializeContainer, serializeLeaf, directiveStart, parse, stringify, validate, readAttributes, writeAttributes, defineBlock, createRegistry, readDatabase, readCell, writeCell, newPropertyId, updateProperty, addProperty, newDatabase, reservedKeys, type Property } from '../../engine/fotionmark';
+import { parseDirective, parseAttributes, serializeAttributes, serializeContainer, serializeLeaf, directiveStart, parse, stringify, validate, readAttributes, writeAttributes, defineBlock, createRegistry, readDatabase, readCell, writeCell, newPropertyId, updateProperty, addProperty, newDatabase, reservedKeys, convertValue, optionNames, removeProperty, type Property } from '../../engine/fotionmark';
 
 test('attributes accept bare, quoted and escaped values and round-trip', () => {
   const attributes = parseAttributes('{width=50% title="Deux mots" note=\'a "b"\' flag}');
@@ -108,4 +108,23 @@ test('database views are leaf directives with an optional source and a table lay
   const document = parse('::database-view[Tableau]{src=projets.md}\n::database-view\n::database-view{layout=galaxy}');
   assert.deepEqual(validate(document.children).map(d => d.severity), ['error']);
   assert.equal(stringify(document), '::database-view[Tableau]{src=projets.md}\n::database-view\n::database-view{layout=galaxy}');
+});
+
+test('property type changes convert values like Notion and refuse what cannot convert', () => {
+  assert.equal(convertValue(12, 'text'), '12');
+  assert.deepEqual(convertValue('a, b', 'multi-select'), ['a', 'b']);
+  assert.equal(convertValue(['a', 'b'], 'select'), 'a');
+  assert.equal(convertValue(['a', 'b'], 'text'), 'a, b');
+  assert.equal(convertValue('3,5', 'number'), 3.5);
+  assert.equal(convertValue('trois', 'number'), undefined);
+  assert.equal(convertValue('oui', 'checkbox'), true);
+  assert.equal(convertValue('non', 'checkbox'), null);
+  assert.equal(convertValue('peut-être', 'checkbox'), undefined);
+  assert.equal(convertValue('', 'text'), null);
+  assert.equal(convertValue('2026-11-07', 'date'), '2026-11-07');
+  assert.equal(convertValue('hier', 'date'), undefined);
+  assert.deepEqual(optionNames(['a', 'b']), ['a', 'b']);
+  const raw = { properties: [{ id: 'a', type: 'text' }, { id: 'b', type: 'date' }], other: 1 };
+  assert.deepEqual(removeProperty(raw, 'a'), { properties: [{ id: 'b', type: 'date' }], other: 1 });
+  assert.deepEqual(validate(parse('::database-view{layout=board groupBy=status}').children), []);
 });

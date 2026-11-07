@@ -15,7 +15,7 @@ import SelectionRectangle from './SelectionRectangle';
 import MediaDialog, { upload, mediaKindOf, type MediaKind, type MediaResult } from './MediaDialog';
 import { Menu, MenuItem, MenuDivider, MenuSearch, EmojiPicker, Switch, modKey } from '../../../kit';
 import { blockAt, moveBlockTransaction, isListItem, caretPosition, BlockSelection, blockRange, type Block } from '../../../../engine';
-import { Bold, Italic, Underline, Strikethrough, Code, Link, ChevronDown, ChevronRight, Trash2, Copy, Type, Search, Check, Plus, ImagePlus, X, Repeat2, PaintRoller, AtSign, Smile, CalendarDays, AlarmClock, CornerUpRight, ArrowUpRight, Video, Music, FileType, Paperclip, Bookmark, Globe, ChevronsRight, MousePointerClick, Sigma, Radical, Heading1, Heading2, Heading3, List, ListOrdered, SquareCheckBig, ListCollapse, FileText, MessageSquareText, Quote, Table, Minus, Image as ImageIcon, CodeXml, TableOfContents, Columns2, Columns3, Columns4 , Database as DatabaseIcon } from 'lucide-solid';
+import { Bold, Italic, Underline, Strikethrough, Code, Link, ChevronDown, ChevronRight, Trash2, Copy, Type, Search, Check, Plus, ImagePlus, X, Repeat2, PaintRoller, AtSign, Smile, CalendarDays, AlarmClock, CornerUpRight, ArrowUpRight, Video, Music, FileType, Paperclip, Bookmark, Globe, ChevronsRight, MousePointerClick, Sigma, Radical, Heading1, Heading2, Heading3, List, ListOrdered, SquareCheckBig, ListCollapse, FileText, MessageSquareText, Quote, Table, Minus, Image as ImageIcon, CodeXml, TableOfContents, Columns2, Columns3, Columns4 , Database as DatabaseIcon, SquareKanban } from 'lucide-solid';
 
 
 const blockActions: Record<string, { icon: () => JSX.Element; action: (chain: ChainedCommands) => ChainedCommands }> = {
@@ -29,6 +29,7 @@ const blockActions: Record<string, { icon: () => JSX.Element; action: (chain: Ch
   toggle: { icon: () => <ListCollapse size={18}/>, action: c => c.insertContent({ type: 'toggle', content: [{ type: 'toggleSummary', content: [{ type: 'text', text: 'Liste dépliante' }] }, { type: 'paragraph' }] }) },
   page: { icon: () => <FileText size={18}/>, action: c => c },
   database: { icon: () => <DatabaseIcon size={18}/>, action: c => c },
+  databaseBoard: { icon: () => <SquareKanban size={18}/>, action: c => c },
   link: { icon: () => <ArrowUpRight size={18}/>, action: c => c },
   math: { icon: () => <Sigma size={18}/>, action: c => c.insertContent({ type: 'blockMath', attrs: { latex: '' } }) },
   button: { icon: () => <MousePointerClick size={18}/>, action: c => c.insertContent({ type: 'button', attrs: { label: 'Nouvelle tâche', attributes: {} }, content: [{ type: 'taskList', content: [{ type: 'taskItem', attrs: { checked: false }, content: [{ type: 'paragraph' }] }] }] }) },
@@ -207,9 +208,9 @@ export default function DocumentEditor(props: { content: string; onChange: (cont
     continueBelowBlock();
     if (item.id === 'page') props.onCreatePage();
     // Notion's inline database: a child page holds the schema and rows; this page shows a view of it.
-    if (item.id === 'database') {
-      const pos = editor.state.selection.from;
-      void props.onCreateSubpage('', { database: FotionMark.newDatabase() }).then(page => { if (page) { insertBlockHere(pos, { type: 'database-view', attrs: { attributes: { src: page.id }, label: null } }); continueBelowBlock(); } });
+    if (item.id === 'database' || item.id === 'databaseBoard') {
+      const pos = editor.state.selection.from, board = item.id === 'databaseBoard';
+      void props.onCreateSubpage('', { database: board ? FotionMark.newBoardDatabase() : FotionMark.newDatabase() }).then(page => { if (page) { insertBlockHere(pos, { type: 'database-view', attrs: { attributes: { src: page.id, ...(board ? { layout: 'board' } : {}) }, label: null } }); continueBelowBlock(); } });
     }
     if (item.id === 'link') { const block = blockAt(editor.state.doc, editor.state.selection.from); if (block) openPagePicker('link', block.pos); }
     if (mediaKinds.includes(item.id as MediaKind)) setMediaDraft({ kind: item.id as MediaKind, pos: editor.state.selection.from });
@@ -396,7 +397,7 @@ export default function DocumentEditor(props: { content: string; onChange: (cont
     } catch { /* Ignore invalid preferences without affecting the document. */ }
     editor = new Editor({
       element,
-      extensions: [...editorExtensions(id => props.pages.find(page => page.id === id), trail, { pageId: () => props.pageId, pages: () => props.pages, update: props.onUpdatePage, createRow: database => props.onCreateSubpage('', { parent: database }), open: props.onOpenPage }), Placeholder.configure({ placeholder: 'Appuyez sur « / » pour les commandes…' })],
+      extensions: [...editorExtensions(id => props.pages.find(page => page.id === id), trail, { pageId: () => props.pageId, pages: () => props.pages, update: props.onUpdatePage, createRow: (database, values) => props.onCreateSubpage('', { parent: database, ...(values ? { values } : {}) }), open: props.onOpenPage }), Placeholder.configure({ placeholder: 'Appuyez sur « / » pour les commandes…' })],
       content: props.content,
       editable: props.editable,
       contentType: 'markdown',

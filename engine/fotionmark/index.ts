@@ -11,7 +11,7 @@ export { defineBlock, type BlockDefinition, type Content } from './schema/define
 export { createRegistry, type Registry } from './schema/registry';
 export { hasErrors, type Diagnostic } from './schema/validate';
 export { blocks } from './blocks';
-export { propertyTypes, reservedKeys, defaultStatusOptions, readDatabase, readCell, writeCell, newPropertyId, nextOptionColor, updateProperty, addProperty, newDatabase, type PropertyType, type PropertyOption, type Property, type CellValue, type DatabaseReading } from './database/properties';
+export { propertyTypes, reservedKeys, defaultStatusOptions, readDatabase, readCell, writeCell, newPropertyId, nextOptionColor, updateProperty, addProperty, removeProperty, convertValue, optionNames, newDatabase, newBoardDatabase, type PropertyType, type PropertyOption, type Property, type CellValue, type DatabaseReading } from './database/properties';
 
 /** Validates a tree against the built-in registry. */
 export const validate = (nodes: FotionNode[], registry = blocks): Diagnostic[] => validateWith(nodes, registry);

@@ -80,7 +80,7 @@ Les déclarations ([`blocks/`](../engine/fotionmark/blocks/)) fixent pour chaque
 | `bookmark` | ligne | — | `url`, `title`, `description`, `image` (lu une fois à la création) |
 | `breadcrumb` | ligne | — | — · chemin calculé à l’affichage |
 | `button` | conteneur, libellé `[…]` | FotionMark (modèle inséré à chaque clic) | — |
-| `database-view` | ligne, libellé `[…]` = nom de la vue | — | `src` : `page` (la base ; absent = la page qui contient la vue), `layout` : `enum` `table` (défaut) |
+| `database-view` | ligne, libellé `[…]` = nom de la vue | — | `src` : `page` (la base ; absent = la page qui contient la vue), `layout` : `enum` `table` (défaut), `board` ; `groupBy` : `string` (identifiant d’une propriété Sélection ou Statut, défaut : la première) |
 
 Le libellé `[…]` d’une directive est conservé par l’éditeur pour tous les blocs ; il ne peut contenir ni `]` ni saut de ligne.
 
@@ -131,10 +131,11 @@ database:                                   parent: projets.md
 
 - **Schéma** : `database.properties` est une liste ordonnée `{ id, name, type, options? }`. `id` (`[a-z][a-z0-9-]*`) est stable et ne se renomme jamais ; `name` est le libellé visible. Les clés propres à la page (`title`, `icon`, `parent`, `database`…) sont réservées. Types v1 : `text`, `number`, `select`, `multi-select`, `status`, `date`, `checkbox`, `url`, `email`, `phone`. Une option a un `name` et une `color` de la palette ; un statut sans options reçoit « Pas commencé / En cours / Terminé ».
 - **Lignes** : toute page dont `parent` est la base. Le titre de la ligne est son `title`. Chaque valeur est une clé YAML de premier niveau nommée par l’`id` de la propriété : chaîne, nombre, booléen, liste (sélection multiple) ou date ISO 8601. Une cellule vide n’écrit pas de clé.
-- **Vues** : `::database-view` dans la page de la base (base pleine page) ou dans n’importe quelle page avec `src` (base en ligne, vue liée). Plusieurs vues d’une même base ne dupliquent rien.
+- **Vues** : `::database-view{layout=board groupBy=status}` ; les réglages d’une vue sont des attributs de sa directive. `::database-view` dans la page de la base (base pleine page) ou dans n’importe quelle page avec `src` (base en ligne, vue liée). Plusieurs vues d’une même base ne dupliquent rien.
+- **Changement de type** : chaque valeur est convertie comme dans Notion (texte → sélection, « 3,5 » → nombre…) ; une valeur non convertible reste telle quelle dans la ligne. Supprimer une propriété la retire du schéma, ses valeurs restent dans le YAML des lignes.
 - **Sans perte** : une propriété de type inconnu ou mal formée est ignorée par la vue, signalée, et conservée dans le fichier ; une valeur qui ne correspond pas à son type est affichée comme conservée et jamais réécrite tant que l’utilisateur ne la change pas. Les autres clés YAML d’une ligne (écrites par Obsidian, par exemple) restent intactes.
 
-API : `readDatabase`, `readCell`, `writeCell`, `addProperty`, `updateProperty`, `newPropertyId` dans [`database/properties.ts`](../engine/fotionmark/database/properties.ts).
+API : `readDatabase`, `readCell`, `writeCell`, `convertValue`, `addProperty`, `updateProperty`, `removeProperty`, `newPropertyId` dans [`database/properties.ts`](../engine/fotionmark/database/properties.ts).
 
 ## Feuille de route
 

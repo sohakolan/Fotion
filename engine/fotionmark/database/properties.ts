@@ -75,6 +75,31 @@ export function writeCell(property: Property, input: string | boolean | string[]
   return text;
 }
 
+/**
+ * Value after a property changes type, as Notion converts it. `null` removes the key (empty or unchecked);
+ * undefined means it cannot be converted: the caller keeps the stored value untouched (shown as preserved, never lost).
+ */
+export function convertValue(value: unknown, to: PropertyType): unknown {
+  if (value === undefined || value === null || value === '') return null;
+  const text = Array.isArray(value) ? value.map(String).join(', ') : String(value);
+  switch (to) {
+    case 'multi-select': return Array.isArray(value) ? value.map(String) : writeCell({ id: '', name: '', type: to, options: [] }, text);
+    case 'checkbox': return value === true || /^(true|oui|yes|1|x)$/i.test(text) ? true : value === false || /^(false|non|no|0)$/i.test(text) ? null : undefined;
+    case 'number': { const number = typeof value === 'number' ? value : Number(text.replace(',', '.')); return Number.isFinite(number) && text.trim() !== '' ? number : undefined; }
+    case 'date': return writeCell({ id: '', name: '', type: 'date', options: [] }, text);
+    default: return Array.isArray(value) && to !== 'text' ? value.map(String)[0] : text;
+  }
+}
+
+/** Option names a value uses, to add the missing ones to a select schema after a conversion. */
+export const optionNames = (value: unknown): string[] => Array.isArray(value) ? value.map(String) : typeof value === 'string' && value ? [value] : [];
+
+/** Returns new front matter `database` without one property; its values stay in the rows' YAML, as unknown keys. */
+export function removeProperty(raw: unknown, id: string): Record<string, unknown> {
+  const base = record(raw) ? raw : {};
+  return { ...base, properties: (Array.isArray(base.properties) ? base.properties : []).filter(entry => !(record(entry) && entry.id === id)) };
+}
+
 /** A free property id derived from its name: `Échéance` → `echeance`, then `echeance-2`… */
 export function newPropertyId(name: string, taken: readonly string[]): string {
   const base = name.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').replace(/^[^a-z]+/, '').slice(0, 56) || 'propriete';
@@ -103,3 +128,5 @@ export function addProperty(raw: unknown, property: Omit<Property, 'options'> & 
 
 /** Front matter of a new database, as Notion creates it: a title column (the page title) and « Étiquettes ». */
 export const newDatabase = () => ({ properties: [{ id: 'tags', name: 'Étiquettes', type: 'multi-select' }] });
+/** Front matter of a new board database: Notion starts it with a status property. */
+export const newBoardDatabase = () => ({ properties: [{ id: 'status', name: 'Statut', type: 'status' }, { id: 'tags', name: 'Étiquettes', type: 'multi-select' }] });

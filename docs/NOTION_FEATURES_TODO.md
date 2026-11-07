@@ -230,12 +230,12 @@ Format FotionMark : [format disque des bases](FOTIONMARK_TODO.md#format-disque) 
 - [ ] **FN-170** Gérer plusieurs sources lorsque la référence le permet.
 - [ ] **FN-171** Renommer, décrire, déplacer et dupliquer une base.
 - [ ] **FN-172** [PARTIEL] Créer, renommer, réordonner, masquer et supprimer des propriétés.
-- [ ] **FN-173** Changer le type d’une propriété avec aperçu de conversion et protection contre les pertes.
+- [ ] **FN-173** [PARTIEL] Changer le type d’une propriété avec aperçu de conversion et protection contre les pertes.
 - [ ] **FN-174** Créer, dupliquer, archiver et supprimer des entrées individuellement ou en lot.
 - [ ] **FN-175** Copier/coller des cellules et des plages de données.
 - [ ] **FN-176** Modifier plusieurs entrées en une action.
 - [ ] **FN-177** Verrouiller la structure d’une base tout en permettant les éditions autorisées.
-- [ ] **FN-178** Ouvrir une ligne en aperçu centré, latéral ou pleine page.
+- [ ] **FN-178** [PARTIEL] Ouvrir une ligne en aperçu centré, latéral ou pleine page.
 - [ ] **FN-179** Conserver les liens entre entrées lors d’une duplication/exportation.
 - [x] **FN-180** Définir une représentation disque documentée pour schémas, vues et propriétés ([FotionMark](FOTIONMARK.md#bases-de-données), FM-053/FM-054/FM-069).
 - [ ] **FN-181** Reconstituer la base à partir du coffre sans dépendre d’un cache opaque.
@@ -277,7 +277,7 @@ Format FotionMark : [directive `::database-view`](FOTIONMARK_TODO.md#vues), FM-0
 - [ ] **FN-203** [PARTIEL] Vue tableau : colonnes redimensionnables, cellules éditables, pied de calcul.
 - [ ] **FN-204** Vue tableau : visibilité des propriétés et retour à la ligne.
 - [ ] **FN-205** Vue liste : propriétés affichées, icônes et densité.
-- [ ] **FN-206** Vue Kanban : groupes, sous-groupes, colonnes vides et déplacement des cartes.
+- [ ] **FN-206** [PARTIEL] Vue Kanban : groupes, sous-groupes, colonnes vides et déplacement des cartes.
 - [ ] **FN-207** Vue galerie : aperçu, taille des cartes, cadrage et propriétés.
 - [ ] **FN-208** Vue calendrier : mois/semaine selon référence, création et déplacement d’événements.
 - [ ] **FN-209** Vue chronologie : plages, échelles, regroupement et déplacement de dates.
@@ -698,3 +698,7 @@ Preuves : [visionneuse](../ui/features/editor/extensions/image-view.ts) (double-
 ### Bases de données v1 : vue tableau — 7 novembre 2026
 
 FN-166, FN-167, FN-084 : `/vue tableau` crée une base en ligne (une sous-page qui porte le schéma) et insère sa vue dans la page ; « + Nouvelle page » crée une ligne, qui est une vraie page ouvrable. Les lignes n’apparaissent pas dans l’arborescence de la barre latérale, comme dans Notion. FN-172 : ajout de propriété par type et renommage ; masquage, réordonnancement et suppression restent à faire. FN-182 à FN-190 : texte, nombre, sélection, sélection multiple, statut, date (jour), case à cocher, URL, e-mail et téléphone sont éditables dans les cellules ; une option nouvelle est ajoutée au schéma avec la couleur suivante de Notion. FN-203 : tableau sans redimensionnement ni pied de calcul. Format : [FotionMark — bases](FOTIONMARK.md#bases-de-données). Preuves : [scénario navigateur](../tests/e2e/database.spec.ts), tests unitaires FotionMark et coffre.
+
+### Bases de données : Kanban, menus de propriété et fiche de ligne — 7 novembre 2026
+
+FN-206 : `/vue kanban` crée une base avec une propriété Statut (Pas commencé / En cours / Terminé) ; une colonne par option, « Sans … » en tête quand des cartes n’ont pas de valeur, compteur, « + Nouvelle page » par colonne (la ligne reçoit la valeur de la colonne), glisser une carte vers une autre colonne change sa valeur. Le menu de la vue bascule entre Tableau et Kanban et choisit le regroupement. FN-172, FN-173 : menu de propriété (renommer, changer le type avec conversion des valeurs, supprimer). FN-178 : une ligne s’ouvre en pleine page avec ses propriétés sous le titre, éditables comme dans le tableau ; aperçu centré et latéral restent à faire. Le fil d’Ariane affiche « Sans titre » pour une page sans titre. Preuves : [scénarios navigateur](../tests/e2e/database.spec.ts).
